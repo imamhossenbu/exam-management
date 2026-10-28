@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------------------
+ * Design tokens. Components reference these semantic names only — never raw
+ * palette colors — so themes stay consistent.
+ * ---------------------------------------------------------------------- */
+:root {
+  --background: oklch(0.985 0.0015 286);
+  --foreground: oklch(0.2 0.012 286);
+  --surface: oklch(1 0 0);
+  --surface-foreground: var(--foreground);
+  --muted: oklch(0.967 0.003 286);
+  --muted-foreground: oklch(0.52 0.014 286);
+  --border: oklch(0.922 0.004 286);
+  --input: oklch(0.89 0.006 286);
+  --ring: oklch(0.58 0.2 277);
+
+  --primary: oklch(0.53 0.22 277);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-soft: oklch(0.955 0.025 277);
+  --primary-soft-foreground: oklch(0.45 0.2 277);
+  --accent-2: oklch(0.62 0.2 320);
+
+  --secondary: oklch(0.96 0.003 286);
+  --secondary-foreground: oklch(0.25 0.012 286);
+
+  --success: oklch(0.6 0.14 158);
+  --success-soft: oklch(0.96 0.035 158);
+  --success-soft-foreground: oklch(0.42 0.11 158);
+  --warning: oklch(0.75 0.15 70);
+  --warning-soft: oklch(0.97 0.045 85);
+  --warning-soft-foreground: oklch(0.47 0.11 60);
+  --danger: oklch(0.58 0.21 25);
+  --danger-foreground: oklch(0.99 0 0);
+  --danger-soft: oklch(0.96 0.025 20);
+  --danger-soft-foreground: oklch(0.48 0.18 25);
+  --info-soft: oklch(0.96 0.025 235);
+  --info-soft-foreground: oklch(0.44 0.12 240);
+
+  --sidebar: oklch(0.98 0.002 286);
+  --sidebar-foreground: oklch(0.42 0.014 286);
+  --sidebar-active: oklch(1 0 0);
+  --sidebar-active-foreground: oklch(0.2 0.012 286);
+
+  --annotation-tick: oklch(0.56 0.15 150);
+  --annotation-cross: oklch(0.58 0.22 25);
+  --annotation-highlight: oklch(0.88 0.17 95 / 0.4);
+  --annotation-arrow: oklch(0.53 0.22 277);
+  --annotation-comment: oklch(0.7 0.16 60);
+
+  --radius: 0.75rem;
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 286 / 0.04), 0 1px 3px oklch(0.2 0.02 286 / 0.03);
+  --shadow-elevated: 0 1px 2px oklch(0.2 0.02 286 / 0.04), 0 8px 24px -6px oklch(0.2 0.02 286 / 0.1);
+  --shadow-overlay: 0 24px 64px -12px oklch(0.15 0.02 286 / 0.25), 0 0 0 1px oklch(0.2 0.02 286 / 0.05);
+}
+
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-accent-2: var(--accent-2);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-foreground: var(--danger-soft-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-foreground: var(--info-soft-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-annotation-tick: var(--annotation-tick);
+  --color-annotation-cross: var(--annotation-cross);
+  --color-annotation-highlight: var(--annotation-highlight);
+  --color-annotation-arrow: var(--annotation-arrow);
+  --color-annotation-comment: var(--annotation-comment);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-overlay: var(--shadow-overlay);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Shared typography and layout utilities.
+ * ---------------------------------------------------------------------- */
+@utility page-title {
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+@utility section-title {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@utility text-subtle {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+
+@utility surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+@utility page-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 84rem;
+  padding: 1.75rem 1rem 4rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility prose-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Interactive surface: lifts subtly on hover (link cards, tiles). */
+@utility surface-interactive {
+  transition: box-shadow 150ms ease, border-color 150ms ease, transform 150ms ease;
+  &:hover {
+    box-shadow: var(--shadow-elevated);
+    border-color: color-mix(in oklch, var(--primary) 25%, var(--border));
+  }
+}
+
+/* Brand gradient used for the logo mark, hero accents and highlights. */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(135deg, var(--primary), var(--accent-2));
+}
+
+@utility text-brand-gradient {
+  background-image: linear-gradient(120deg, var(--primary), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Faint grid backdrop for hero / auth panels. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Overlay motion for dialogs, menus and sheets (Radix data-state). */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes sheet-in { from { transform: translateX(-100%); } to { transform: none; } }
+
+@utility animate-fade-in { animation: fade-in 150ms ease-out; }
+@utility animate-pop-in { animation: pop-in 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+@utility animate-menu-in { animation: menu-in 140ms cubic-bezier(0.16, 1, 0.3, 1); }
+@utility animate-sheet-in { animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Auth screens: one fixed glass look on a dark mesh backdrop (no light/dark variants). */
+.auth-glass {
+  --foreground: oklch(0.98 0.003 286);
+  --surface: oklch(1 0 0 / 0.06);
+  --muted: oklch(1 0 0 / 0.08);
+  --muted-foreground: oklch(0.8 0.02 286);
+  --border: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.18);
+  --ring: oklch(0.78 0.13 277);
+  --primary: oklch(0.6 0.22 277);
+  --primary-foreground: oklch(1 0 0);
+  --danger: oklch(0.72 0.17 22);
+  --success: oklch(0.78 0.14 158);
+  --warning: oklch(0.82 0.14 80);
+  color: var(--foreground);
+  color-scheme: dark;
+
+  & a.text-primary {
+    color: oklch(0.82 0.11 277);
+  }
+  & label {
+    color: oklch(0.95 0.005 286);
+  }
+  & input::placeholder {
+    color: oklch(0.75 0.02 286 / 0.7);
+  }
+}

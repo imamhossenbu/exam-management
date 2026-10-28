@@ -1,0 +1,233 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { Award, BarChart3, ClipboardList, Download, Hourglass, TrendingDown, TrendingUp } from "lucide-react";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatCard, StatCardsSkeleton } from "@/components/shared/stat-card";
+import { TableSkeleton } from "@/components/shared/skeletons";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input, Label, NativeSelect } from "@/components/ui/input";
+import { requireTeacher } from "@/lib/auth/dal";
+import { uuid } from "@/lib/validations/courses";
+import { listAttempts } from "@/features/grading/queries";
+import { studentTrends, summarizeExams } from "@/features/grading/analytics";
+import { AttemptsTable } from "@/features/grading/components/attempts-table";
+import { ExamAverageChart } from "@/features/grading/components/exam-average-chart";
+
+export const metadata: Metadata = { title: "Results" };
+
+type Filters = { course?: string; exam?: string; from?: string; to?: string };
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
+  const raw = await searchParams;
+  const f = {
+    course: raw.course && uuid.safeParse(raw.course).success ? raw.course : "",
+    exam: raw.exam && uuid.safeParse(raw.exam).success ? raw.exam : "",
+    from: raw.from && DATE.test(raw.from) ? raw.from : "",
+    to: raw.to && DATE.test(raw.to) ? raw.to : "",
+  };
+  const { profile, supabase } = await requireTeacher();
+  const [all, { data: courses }, { data: exams }] = await Promise.all([
+    listAttempts(supabase, { examId: f.exam || undefined }),
+    supabase.from("courses").select("id, title").order("title"),
+    supabase.from("exams").select("id, title, course_id").neq("status", "draft").order("starts_at", { ascending: false }),
+  ]);
+  const rows = all.filter(
+    (r) =>
+      r.status !== "in_progress" &&
+      (!f.course || r.courseId === f.course) &&
+      (!f.from || (r.submittedAt ?? "") >= f.from) &&
+      (!f.to || (r.submittedAt ?? "") <= `${f.to}T23:59:59.999Z`),
+  );
+  const summaries = summarizeExams(rows);
+  const trends = studentTrends(rows);
+  const graded = rows.filter((r) => r.gradingStatus === "graded" && r.percentage !== null);
+  const avg = graded.length ? Math.round((graded.reduce((s, r) => s + r.percentage!, 0) / graded.length) * 10) / 10 : null;
+  const withPass = graded.filter((r) => r.passed !== null);
+  const passRate = withPass.length ? Math.round((withPass.filter((r) => r.passed).length / withPass.length) * 1000) / 10 : null;
+  const csvParams = new URLSearchParams(Object.entries({ examId: f.exam, courseId: f.course, from: f.from, to: f.to }).filter(([, v]) => v));
+  const examOptions = (exams ?? []).filter((e) => !f.course || e.course_id === f.course);
+
+  return (
+    <div className="space-y-6">
+      <form method="get" className="surface flex flex-col gap-3 p-4 md:flex-row md:items-end" aria-label="Filter results">
+        <div className="grid flex-1 gap-1.5">
+          <Label htmlFor="course">Course</Label>
+          <NativeSelect id="course" name="course" defaultValue={f.course}>
+            <option value="">All courses</option>
+            {courses?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="grid flex-1 gap-1.5">
+          <Label htmlFor="exam">Exam</Label>
+          <NativeSelect id="exam" name="exam" defaultValue={f.exam}>
+            <option value="">All exams</option>
+            {examOptions.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.title}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="from">Submitted from</Label>
+          <Input id="from" name="from" type="date" defaultValue={f.from} />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="to">to</Label>
+          <Input id="to" name="to" type="date" defaultValue={f.to} />
+        </div>
+        <div className="flex gap-2">
+          <Button type="submit">Apply</Button>
+          <Button asChild variant="ghost">
+            <Link href="/teacher/results">Reset</Link>
+          </Button>
+        </div>
+      </form>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Submitted attempts" value={rows.length} icon={ClipboardList} />
+        <StatCard label="Awaiting grading" value={rows.length - graded.length} icon={Hourglass} tone="warning" />
+        <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint="Fully graded attempts" icon={BarChart3} tone="info" />
+        <StatCard label="Pass rate" value={passRate === null ? "—" : `${passRate}%`} hint="Exams with a pass mark" icon={Award} tone="success" />
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState icon={BarChart3} title="No results for this selection" description="Results appear once students submit attempts." />
+      ) : (
+        <>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Average score by exam</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ExamAverageChart summaries={summaries} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Student performance trends</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="max-h-80 overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 border-b bg-surface text-left text-xs text-muted-foreground uppercase">
+                      <tr>
+                        <th scope="col" className="px-4 py-2 font-medium">Student</th>
+                        <th scope="col" className="px-4 py-2 font-medium">Average</th>
+                        <th scope="col" className="px-4 py-2 font-medium">Recent (oldest → newest)</th>
+                        <th scope="col" className="px-4 py-2 font-medium">Trend</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trends.map((t) => (
+                        <tr key={t.studentId} className="border-b last:border-0">
+                          <td className="px-4 py-2">
+                            <Link href={`/teacher/students/${t.studentId}`} className="hover:underline">
+                              {t.studentName}
+                            </Link>
+                          </td>
+                          <td className="px-4 py-2 tabular-nums">{t.average}%</td>
+                          <td className="px-4 py-2 text-xs text-muted-foreground tabular-nums">{t.recent.map((p) => `${p}%`).join(" → ")}</td>
+                          <td className="px-4 py-2">
+                            {t.change === null ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 tabular-nums">
+                                {t.change >= 0 ? <TrendingUp className="size-4 text-success" aria-hidden /> : <TrendingDown className="size-4 text-danger" aria-hidden />}
+                                {t.change > 0 ? "+" : ""}
+                                {t.change} pts
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Exam summaries</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto p-0">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-muted/50 text-left text-xs text-muted-foreground uppercase">
+                  <tr>
+                    {["Exam", "Graded", "Pending", "Average", "Highest", "Lowest", "Pass rate"].map((h) => (
+                      <th key={h} scope="col" className="px-4 py-2 font-medium">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaries.map((s) => (
+                    <tr key={s.examId} className="border-b last:border-0">
+                      <td className="px-4 py-2">
+                        <Link href={`/teacher/exams/${s.examId}/attempts`} className="font-medium hover:underline">
+                          {s.examTitle}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">{s.courseTitle}</p>
+                      </td>
+                      <td className="px-4 py-2 tabular-nums">{s.graded}</td>
+                      <td className="px-4 py-2 tabular-nums">{s.pending}</td>
+                      <td className="px-4 py-2 tabular-nums">{s.average === null ? "—" : `${s.average}%`}</td>
+                      <td className="px-4 py-2 tabular-nums">{s.highest === null ? "—" : `${s.highest}%`}</td>
+                      <td className="px-4 py-2 tabular-nums">{s.lowest === null ? "—" : `${s.lowest}%`}</td>
+                      <td className="px-4 py-2 tabular-nums">{s.passRate === null ? "—" : `${s.passRate}%`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+
+          <div>
+            <h2 className="section-title mb-3">All attempts</h2>
+            <AttemptsTable
+              attempts={rows}
+              timezone={profile.timezone}
+              toolbar={
+                <Button asChild variant="outline">
+                  <a href={`/api/results?${csvParams.toString()}`} download>
+                    <Download aria-hidden /> Export CSV
+                  </a>
+                </Button>
+              }
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function ResultsPage({ searchParams }: PageProps<"/teacher/results">) {
+  return (
+    <>
+      <PageHeader title="Results" description="Scores, trends and exports across your courses. Only fully graded attempts count towards averages." />
+      <Suspense
+        fallback={
+          <div className="space-y-6">
+            <StatCardsSkeleton />
+            <TableSkeleton columns={6} />
+          </div>
+        }
+      >
+        <Results searchParams={searchParams as Promise<Filters>} />
+      </Suspense>
+    </>
+  );
+}
