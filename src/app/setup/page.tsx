@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { Settings2 } from "lucide-react";
+
+export const metadata: Metadata = { title: "Configuration required", robots: { index: false, follow: false } };
 
 /** Shown when required environment variables are missing (see proxy). Never displays values. */
 export default function SetupPage() {

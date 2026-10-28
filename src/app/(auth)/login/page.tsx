@@ -6,7 +6,11 @@ import { FormSkeleton } from "@/components/shared/skeletons";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 import { safeNextPath } from "@/lib/validations/auth";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to ExamDesk to take exams, check results and manage your courses.",
+  alternates: { canonical: "/login" },
+};
 
 async function LoginForm({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next, error } = await searchParams;

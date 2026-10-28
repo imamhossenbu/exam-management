@@ -1,7 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Clock, FileText, NotebookPen, ScanText, ShieldCheck, Sparkles, Ticket } from "lucide-react";
 import { Brand } from "@/components/shared/brand";
 import { Button } from "@/components/ui/button";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  applicationCategory: "EducationalApplication",
+  operatingSystem: "Any",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
 
 const FEATURES = [
   { icon: Clock, title: "Timed online exams", body: "MCQ, written and mixed exams with server-enforced deadlines, autosave and recovery from network drops." },
@@ -21,6 +36,7 @@ const STEPS = [
 export default function HomePage() {
   return (
     <div className="flex min-h-dvh flex-col">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }} />
       <header className="sticky top-0 z-30 border-b border-transparent bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 md:px-6">
           <Brand />
