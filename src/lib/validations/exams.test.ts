@@ -23,6 +23,11 @@ describe("exam settings validation", () => {
     expect(v.subjectId).toBeNull();
   });
 
+  it('treats a missing subject (null/undefined from a disabled select) as "No subject"', () => {
+    expect(examSettingsSchema.parse({ ...exam, subjectId: null }).subjectId).toBeNull();
+    expect(examSettingsSchema.parse({ ...exam, subjectId: undefined }).subjectId).toBeNull();
+  });
+
   it("rejects an end before the start and pass marks above the total", () => {
     const r = examSettingsSchema.safeParse({ ...exam, endsAt: "2026-05-01T08:00", passMarks: "25" });
     expect(r.success).toBe(false);

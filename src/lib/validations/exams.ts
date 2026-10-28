@@ -10,7 +10,8 @@ const optionalText = (max: number) => z.string().trim().max(max).default("");
 export const examSettingsSchema = z
   .object({
     courseId: uuid,
-    subjectId: z.union([z.literal(""), uuid]).transform((v) => v || null),
+    // "No subject" may arrive as "", null or undefined (the select is disabled until a course is chosen).
+    subjectId: z.preprocess((v) => v ?? "", z.union([z.literal(""), uuid])).transform((v) => v || null),
     chapterIds: z.array(uuid).max(50).default([]),
     title: z.string().trim().min(2, { message: "Use at least 2 characters" }).max(200),
     description: optionalText(4000),

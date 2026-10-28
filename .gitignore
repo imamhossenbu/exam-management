@@ -40,6 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.local.example
+!.env.e2e.example
 
 # local database test cluster
 /.tmp/

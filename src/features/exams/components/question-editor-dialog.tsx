@@ -74,9 +74,19 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
   const imagePath = useWatch({ control: form.control, name: "imagePath" }) ?? null;
   const { errors } = form.formState;
 
+  // Clear the other type's fields: they're hidden, so leftover empty options or
+  // sub-questions would fail validation without a visible error.
   function switchType(next: "mcq" | "cq") {
     form.setValue("type", next);
-    if (next === "mcq" && options.fields.length === 0) options.replace([{ body: "" }, { body: "" }, { body: "" }, { body: "" }]);
+    form.clearErrors();
+    if (next === "mcq") {
+      parts.replace([]);
+      if (options.fields.length === 0) options.replace([{ body: "" }, { body: "" }, { body: "" }, { body: "" }]);
+    } else {
+      options.replace([]);
+      form.setValue("correctIndex", -1);
+      form.setValue("negativeMarks", "0");
+    }
   }
 
   return (

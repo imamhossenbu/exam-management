@@ -10,7 +10,8 @@
     "test": "vitest run --project unit",
     "test:db": "bash scripts/test-db.sh",
     "typecheck": "tsc --noEmit",
-    "db:types": "bash scripts/gen-types-local.sh"
+    "db:types": "bash scripts/gen-types-local.sh",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
@@ -33,6 +34,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",

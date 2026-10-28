@@ -2,20 +2,32 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthCard, AuthSteps } from "@/components/shared/auth-card";
 
 export const metadata: Metadata = { title: "Link expired", robots: { index: false, follow: false } };
 
 export default function AuthErrorPage() {
   return (
-    <div className="flex flex-col items-center text-center">
-      <span className="grid size-16 place-items-center rounded-2xl bg-warning/15 ring-1 ring-warning/30">
-        <LinkIcon className="size-7 text-warning" aria-hidden />
-      </span>
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white">This link has expired</h1>
-      <p className="mt-2 text-sm leading-relaxed text-white/75">
-        Email links work only once and expire after a short time. If you already confirmed your email, just sign in.
-      </p>
-      <div className="mt-7 grid w-full gap-3">
+    <AuthCard
+      icon={LinkIcon}
+      tone="warning"
+      title="This link has expired"
+      description="Email links work only once and expire after 1 hour. Here's how to continue:"
+    >
+      <AuthSteps
+        steps={[
+          <>
+            <span className="font-medium text-white">Already confirmed your email?</span> Just sign in.
+          </>,
+          <>
+            <span className="font-medium text-white">Resetting your password?</span> Request a new reset link.
+          </>,
+          <>
+            <span className="font-medium text-white">Still need to confirm?</span> Sign in — we&apos;ll tell you, and you can sign up again to get a new link.
+          </>,
+        ]}
+      />
+      <div className="mt-6 grid gap-3">
         <Button asChild size="lg" className="w-full">
           <Link href="/login">Sign in</Link>
         </Button>
@@ -23,6 +35,6 @@ export default function AuthErrorPage() {
           <Link href="/forgot-password">Send a new reset link</Link>
         </Button>
       </div>
-    </div>
+    </AuthCard>
   );
 }

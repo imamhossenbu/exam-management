@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,20 @@ function CheckboxField({ id, label, description, disabled, ...rest }: { id: stri
   );
 }
 
+const zod = zodResolver(examSettingsSchema);
+
 export function ExamSettingsForm({ courses, defaultValues, examId, locked = false, timezone }: Props) {
-  const form = useForm<ExamSettingsInput, unknown, ExamSettingsOutput>({ resolver: zodResolver(examSettingsSchema), defaultValues });
+  // react-hook-form reports disabled fields (locked settings, the course when editing, the
+  // subject before a course is chosen) as undefined. Validate them with their original values.
+  const resolver = React.useCallback<Resolver<ExamSettingsInput, unknown, ExamSettingsOutput>>(
+    (values, context, options) => {
+      const filled = { ...values } as Record<string, unknown>;
+      for (const [key, value] of Object.entries(defaultValues)) if (filled[key] === undefined) filled[key] = value;
+      return zod(filled as ExamSettingsInput, context, options);
+    },
+    [defaultValues],
+  );
+  const form = useForm<ExamSettingsInput, unknown, ExamSettingsOutput>({ resolver, defaultValues });
   const save = React.useCallback((v: ExamSettingsOutput) => (examId ? updateExamAction(examId, v) : createExamAction(v)), [examId]);
   const { run, pending } = useServerAction(save);
   const { errors, isDirty } = form.formState;

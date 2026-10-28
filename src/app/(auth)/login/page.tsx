@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { LogIn } from "lucide-react";
 import { AuthCard } from "@/components/shared/auth-card";
 import { FormSkeleton } from "@/components/shared/skeletons";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
@@ -17,7 +18,7 @@ async function LoginForm({ searchParams }: { searchParams: Promise<{ next?: stri
   return (
     <>
       {error === "session_expired" ? (
-        <p role="alert" className="mb-4 rounded-md bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
+        <p role="alert" className="mb-4 rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
           Your session expired. Please sign in again.
         </p>
       ) : null}
@@ -29,6 +30,7 @@ async function LoginForm({ searchParams }: { searchParams: Promise<{ next?: stri
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <AuthCard
+      icon={LogIn}
       title="Welcome back"
       description="Sign in to your exam workspace."
       footer={

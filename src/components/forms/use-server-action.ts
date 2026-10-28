@@ -8,6 +8,8 @@ import type { ActionResult } from "@/lib/action-result";
 type Options<TData> = {
   /** Toast shown on success when the action doesn't provide its own message. */
   successMessage?: string;
+  /** Set to false when the UI itself shows the success state. */
+  successToast?: boolean;
   onSuccess?: (data: TData) => void;
   onError?: (result: Extract<ActionResult<TData>, { ok: false }>) => void;
 };
@@ -30,14 +32,14 @@ export function useServerAction<TArgs extends unknown[], TData>(
     (...args: TArgs) =>
       new Promise<ActionResult<TData> | undefined>((resolve) => {
         startTransition(async () => {
-          const { successMessage, onSuccess, onError } = optionsRef.current;
+          const { successMessage, successToast = true, onSuccess, onError } = optionsRef.current;
           try {
             const result = await action(...args);
             // A redirecting action resolves without a result; navigation is handled by Next.js.
             if (!result) return resolve(undefined);
             if (result.ok) {
               const message = result.message ?? successMessage;
-              if (message) toast.success(message);
+              if (message && successToast) toast.success(message);
               onSuccess?.(result.data);
             } else {
               toast.error(result.error);

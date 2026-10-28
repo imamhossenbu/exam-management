@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fail, invalid, ok, type ActionResult } from "@/lib/action-result";
 import { getSiteUrl } from "@/lib/site-url";
-import { requireUser } from "@/lib/auth/dal";
+import { homeFor, requireUser } from "@/lib/auth/dal";
 import { isValidTimeZone } from "@/lib/utils/datetime";
 import {
   forgotPasswordSchema,
@@ -37,13 +37,21 @@ function authMessage(error: { code?: string; message: string; status?: number })
   }
 }
 
+async function roleHome(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  return data ? homeFor(data.role) : "/dashboard";
+}
+
 export async function signInAction(input: unknown): Promise<ActionResult> {
   const parsed = signInSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
   if (error) return fail(authMessage(error));
-  redirect(safeNextPath(parsed.data.next));
+  const next = safeNextPath(parsed.data.next);
+  // Go straight to the role's home: redirecting to the /dashboard route handler from an
+  // action would render the right page but leave /dashboard in the address bar.
+  redirect(next === "/dashboard" ? await roleHome(supabase, data.user.id) : next);
 }
 
 export async function signUpAction(input: unknown): Promise<ActionResult<{ needsConfirmation: boolean }>> {
@@ -84,7 +92,22 @@ export async function requestPasswordResetAction(input: unknown): Promise<Action
   return ok(undefined, "If an account exists for that email, a reset link is on its way.");
 }
 
-export async function resetPasswordAction(input: unknown): Promise<ActionResult> {
+export async function resendConfirmationAction(input: unknown): Promise<ActionResult> {
+  const parsed = forgotPasswordSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const supabase = await createClient();
+  const site = await getSiteUrl();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: { emailRedirectTo: `${site}/auth/confirm?next=/student` },
+  });
+  // Same response whether or not the account exists, except for rate limits.
+  if (error && (error.status === 429 || error.code?.startsWith("over_"))) return fail(authMessage(error));
+  return ok(undefined, "A new confirmation email is on its way.");
+}
+
+export async function resetPasswordAction(input: unknown): Promise<ActionResult<{ home: string }>> {
   const parsed = resetPasswordSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
@@ -92,7 +115,7 @@ export async function resetPasswordAction(input: unknown): Promise<ActionResult>
   if (!claims?.claims?.sub) return fail("Your reset link has expired. Request a new one.");
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return fail(authMessage(error));
-  redirect("/dashboard");
+  return ok({ home: await roleHome(supabase, claims.claims.sub) });
 }
 
 export async function updateProfileAction(input: unknown): Promise<ActionResult> {

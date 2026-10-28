@@ -366,6 +366,7 @@ No secrets are needed at runtime; the app only uses the publishable key and the 
 | `npm run typecheck` | `tsc --noEmit` (strict) |
 | `npm test` | Unit tests (validation, timezone conversion, invite codes, autosave queue, question parser, analytics, CSV) |
 | `npm run test:db` | Database / RLS suite (see below) |
+| `npm run test:e2e` | End-to-end browser test against your Supabase project (see below) |
 | `npm run db:types` | Regenerates `src/types/database.ts` from the migrations |
 
 ### Database test suite
@@ -381,6 +382,34 @@ No secrets are needed at runtime; the app only uses the publishable key and the 
 - negative marking, result release (immediate / after close / manual)
 - CQ grading permissions and validation, answer-key correction with regrading
 - storage policies
+
+### End-to-end test
+
+`npm run test:e2e` drives a real browser (Playwright) through the whole product against your linked Supabase project:
+
+1. Public pages, route protection, `robots.txt` / `sitemap.xml`.
+2. Auth forms: wrong password, validation errors, password strength meter, forgot-password (no account enumeration).
+3. Teacher creates a course and an invitation code (only its hash is stored).
+4. Two temporary students join with the code; a wrong code is rejected.
+5. Teacher builds a mixed exam (MCQ with negative marking + written question) and publishes it.
+6. Student A answers correctly and uploads/removes answer-sheet pages; student B answers wrongly. Second attempts are blocked.
+7. Students can't open teacher pages or each other's results.
+8. MCQs are graded on the server (2 and −0.5).
+9. Teacher grades the written answers, finalizes and publishes results.
+10. Students see the right scores (4.5/5 Passed, 0.5/5 Not passed).
+11. Sign out from the user menu.
+
+**Setup (once):**
+
+```bash
+cp .env.e2e.example .env.e2e.local   # git-ignored; put the teacher's email and password here
+npx playwright install chromium
+npx supabase login && npx supabase link --project-ref <your-project-ref>
+```
+
+**Run:** start the app (`npm run dev`, or `npm run build && npx next start` for a faster, production-like run with `E2E_BASE_URL=http://localhost:3000`), then `npm run test:e2e`.
+
+Temporary students (`e2e-…@example.com`) are created already confirmed through SQL, so no emails are sent. Everything the test creates ("E2E …" courses and exams, students, attempts, uploads) is deleted afterwards and the teardown verifies nothing is left. Set `E2E_KEEP_DATA=1` to keep the data for inspection. Reports and traces of failures are written to `.tmp/e2e-report`.
 
 Before opening a pull request, run: `npm run typecheck && npm run lint && npm test && npm run build`.
 
@@ -446,4 +475,4 @@ Before opening a pull request, run: `npm run typecheck && npm run lint && npm te
 - **Single teacher:** the system is intentionally built for one teacher. Multiple teachers would need changes to the unique index and RLS helpers.
 - **Lists** load up to 2,000 attempts / 500 notes and paginate client-side — ample for a single teacher.
 - **Design:** one light theme for the app; the sign-in screens use a fixed glass design.
-- **End-to-end browser tests** are not included because they need a live Supabase project; the critical rules are covered at the database layer by `npm run test:db`.
+- **End-to-end tests** run against a real Supabase project (`npm run test:e2e`); the database rules are also covered in isolation by `npm run test:db`.
