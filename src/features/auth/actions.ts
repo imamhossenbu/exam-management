@@ -17,6 +17,8 @@ import {
 } from "@/lib/validations/auth";
 import { revalidatePath, refresh } from "next/cache";
 import { deleteAvatar, isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { sendVerificationOtpEmail } from "@/lib/email/mailer";
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   switch (error.code) {
@@ -61,6 +63,41 @@ export async function signUpAction(input: unknown): Promise<ActionResult<{ needs
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
   const site = await getSiteUrl();
+
+  // If SUPABASE_SECRET_KEY is configured, generate link and send OTP via Nodemailer
+  if (process.env.SUPABASE_SECRET_KEY) {
+    try {
+      const admin = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SECRET_KEY,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        type: "signup",
+        email: parsed.data.email,
+        password: parsed.data.password,
+        options: {
+          data: { full_name: parsed.data.fullName },
+          redirectTo: `${site}/auth/confirm?next=/student`,
+        },
+      });
+      if (linkErr) {
+        return fail(authMessage(linkErr));
+      }
+      const otp = linkData?.properties?.email_otp;
+      if (otp) {
+        await sendVerificationOtpEmail({
+          to: parsed.data.email,
+          code: otp,
+          fullName: parsed.data.fullName,
+        });
+        return ok({ needsConfirmation: true }, "Check your email to confirm your account.");
+      }
+    } catch (err) {
+      console.error("[signUpAction:nodemailer]", err);
+    }
+  }
+
   // Only full_name is sent as metadata; the role is always assigned by the database.
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -99,6 +136,7 @@ export async function resendConfirmationAction(input: unknown): Promise<ActionRe
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
   const site = await getSiteUrl();
+
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
@@ -108,6 +146,23 @@ export async function resendConfirmationAction(input: unknown): Promise<ActionRe
   if (error && (error.status === 429 || error.code?.startsWith("over_"))) return fail(authMessage(error));
   return ok(undefined, "A new confirmation email is on its way.");
 }
+
+export async function testSmtpAction(recipient?: string): Promise<ActionResult<{ messageId: string }>> {
+  try {
+    const to = recipient?.trim() || process.env.SMTP_USER;
+    if (!to) return fail("No recipient or SMTP_USER configured.");
+    const res = await sendVerificationOtpEmail({
+      to,
+      code: "123456",
+      fullName: "Test User",
+    });
+    return ok({ messageId: res.messageId }, `Test email sent successfully to ${to}!`);
+  } catch (err) {
+    console.error("[testSmtpAction]", err);
+    return fail(err instanceof Error ? err.message : "Failed to send test email");
+  }
+}
+
 
 export async function resetPasswordAction(input: unknown): Promise<ActionResult<{ home: string }>> {
   const parsed = resetPasswordSchema.safeParse(input);
