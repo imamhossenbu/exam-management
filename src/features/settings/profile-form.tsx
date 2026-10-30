@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/field";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
 import { updateProfileAction } from "@/features/auth/actions";
 import { profileSchema, type ProfileInput } from "@/lib/validations/auth";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 function timezoneOptions(current: string) {
@@ -56,6 +57,7 @@ export function ProfileForm({
     },
   });
 
+  const router = useRouter();
   const { run, pending } = useServerAction(updateProfileAction);
   const zones = React.useMemo(() => timezoneOptions(timezone), [timezone]);
   const { errors, isDirty } = form.formState;
@@ -124,7 +126,10 @@ export function ProfileForm({
       onSubmit={form.handleSubmit(async (values) => {
         const result = await run(values);
         applyFieldErrors(form.setError, result);
-        if (result?.ok) form.reset(values);
+        if (result?.ok) {
+          form.reset(values);
+          router.refresh();
+        }
       })}
     >
       {/* Avatar upload section */}

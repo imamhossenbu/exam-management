@@ -15,7 +15,7 @@ import {
   signUpSchema,
   verifyOtpSchema,
 } from "@/lib/validations/auth";
-import { refresh } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   switch (error.code) {
@@ -194,6 +194,7 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
     }
   }
 
+  revalidatePath("/", "layout");
   refresh();
   return ok(undefined, "Profile updated successfully");
 }

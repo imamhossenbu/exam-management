@@ -18,7 +18,7 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
         Skip to content
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
-        <div className="flex h-16 items-center px-6">
+        <div className="flex h-14 items-center px-5">
           <Link href={kind === "teacher" ? "/teacher" : "/student"} className="focus-ring rounded-lg">
             <Brand />
           </Link>
@@ -37,12 +37,12 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/75 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-8">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-6">
           <MobileNav kind={kind} />
           <div className="lg:hidden">
             <Brand />
           </div>
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-2">
             {userSlot}
           </div>
         </header>

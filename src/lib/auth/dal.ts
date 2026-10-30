@@ -22,22 +22,38 @@ export type CurrentProfile = {
  */
 export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  const uid = data?.claims?.sub;
+  const { data: claimsData, error } = await supabase.auth.getClaims();
+  const uid = claimsData?.claims?.sub;
   if (error || !uid) return null;
+
+  // 1. Fetch live auth user for latest metadata (avatar_url, student_class, etc.)
+  const { data: userData } = await supabase.auth.getUser();
+  const userMeta = (userData?.user?.user_metadata as Record<string, unknown>) ?? (claimsData?.claims?.user_metadata as Record<string, unknown>) ?? {};
+
+  // 2. Fetch profile from database
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, role, full_name, email, timezone")
     .eq("id", uid)
     .maybeSingle();
+
   if (!profile) return null;
-  const meta = (data?.claims?.user_metadata as Record<string, unknown>) ?? {};
+
+  const raw = profile as unknown as Record<string, unknown>;
+  const avatar = (userMeta.avatar_url as string) || (raw.avatar_url as string) || null;
+  const studentClass = (userMeta.student_class as string) || (raw.student_class as string) || null;
+  const phone = (userMeta.phone as string) || (raw.phone as string) || null;
+  const fullName = (userMeta.full_name as string) || profile.full_name || "";
+
   return {
-    ...profile,
-    avatar_url: (meta.avatar_url as string) || null,
-    student_class: (meta.student_class as string) || null,
-    phone: (meta.phone as string) || null,
-    full_name: (meta.full_name as string) || profile.full_name,
+    id: profile.id,
+    role: profile.role,
+    full_name: fullName,
+    email: profile.email,
+    timezone: profile.timezone,
+    avatar_url: avatar,
+    student_class: studentClass,
+    phone: phone,
   };
 });
 

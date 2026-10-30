@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { ChevronDown, Settings } from "lucide-react";
 import { getCurrentProfile, homeFor } from "@/lib/auth/dal";
 import { redirect } from "next/navigation";
 import { SignOutItem } from "./sign-out-item";
@@ -22,31 +22,71 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
   if (!profile) redirect("/login");
   if (profile.role !== kind) redirect(homeFor(profile.role));
 
+  const roleLabel = profile.role === "teacher" ? "Teacher" : profile.student_class ? `Class ${profile.student_class}` : "Student";
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-full focus-ring" aria-label="Account menu">
-        {profile.avatar_url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={profile.avatar_url}
-            alt={profile.full_name || "Profile avatar"}
-            className="size-9 rounded-full object-cover ring-2 ring-background shadow-card"
-          />
-        ) : (
-          <span className="grid size-9 place-items-center rounded-full bg-brand-gradient text-sm font-semibold text-white ring-2 ring-background shadow-card">
-            {initials(profile.full_name, profile.email)}
+      <DropdownMenuTrigger
+        className="flex items-center gap-2 rounded-full border border-border/70 bg-surface/80 py-1 pl-1 pr-2.5 shadow-sm transition-all hover:bg-surface hover:border-border hover:shadow-card focus-ring"
+        aria-label="Account menu"
+      >
+        <div className="relative shrink-0">
+          {profile.avatar_url ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={profile.avatar_url}
+              alt={profile.full_name || "Profile avatar"}
+              className="size-7.5 sm:size-8 rounded-full object-cover ring-1.5 ring-background shadow-sm"
+            />
+          ) : (
+            <span className="grid size-7.5 sm:size-8 place-items-center rounded-full bg-brand-gradient text-xs font-semibold text-white ring-1.5 ring-background shadow-sm">
+              {initials(profile.full_name, profile.email)}
+            </span>
+          )}
+          <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full bg-success ring-1.5 ring-background" aria-hidden />
+        </div>
+        <div className="hidden sm:flex flex-col text-left">
+          <span className="max-w-[120px] truncate text-xs font-semibold leading-tight text-foreground">
+            {profile.full_name || "Account"}
           </span>
-        )}
+          <span className="text-[10px] font-medium text-muted-foreground leading-none">
+            {roleLabel}
+          </span>
+        </div>
+        <ChevronDown className="hidden sm:inline-block size-3 text-muted-foreground/80 shrink-0" aria-hidden />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60">
-        <DropdownMenuLabel>
-          <span className="block truncate text-sm font-medium text-foreground">{profile.full_name || "Unnamed user"}</span>
-          <span className="block truncate">{profile.email}</span>
+      <DropdownMenuContent className="w-64 p-1.5" align="end">
+        <DropdownMenuLabel className="p-2">
+          <div className="flex items-center gap-3">
+            {profile.avatar_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={profile.avatar_url}
+                alt={profile.full_name || "Profile avatar"}
+                className="size-10 rounded-full object-cover ring-1 ring-border shadow-sm"
+              />
+            ) : (
+              <span className="grid size-10 place-items-center rounded-full bg-brand-gradient text-xs font-semibold text-white shadow-sm">
+                {initials(profile.full_name, profile.email)}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-semibold text-foreground">
+                {profile.full_name || "Unnamed user"}
+              </span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {profile.email}
+              </span>
+              <span className="mt-1 inline-block rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-medium text-primary-soft-foreground">
+                {roleLabel}
+              </span>
+            </div>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/${kind}/settings`}>
-            <Settings aria-hidden /> Settings
+          <Link href={`/${kind}/settings`} className="flex items-center gap-2 text-xs">
+            <Settings className="size-3.5" aria-hidden /> Settings & Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -57,5 +97,13 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
 }
 
 export function UserMenuSkeleton() {
-  return <Skeleton className="size-9 rounded-full" />;
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-border/40 py-1 pl-1 pr-2.5">
+      <Skeleton className="size-7.5 sm:size-8 rounded-full" />
+      <div className="hidden sm:flex flex-col gap-1">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-2 w-10" />
+      </div>
+    </div>
+  );
 }

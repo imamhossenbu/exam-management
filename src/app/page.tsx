@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Clock, FileText, NotebookPen, ScanText, ShieldCheck, Sparkles, Ticket } from "lucide-react";
 import { Brand } from "@/components/shared/brand";
+import { PublicNavUser, PublicNavUserSkeleton } from "@/components/shared/public-nav-user";
 import { Button } from "@/components/ui/button";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 
@@ -40,14 +42,9 @@ export default function HomePage() {
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 md:px-6">
           <Brand />
-          <div className="flex items-center gap-1.5">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild size="sm" className="hidden sm:inline-flex">
-              <Link href="/signup">Get started</Link>
-            </Button>
-          </div>
+          <Suspense fallback={<PublicNavUserSkeleton />}>
+            <PublicNavUser />
+          </Suspense>
         </div>
       </header>
 
