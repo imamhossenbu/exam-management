@@ -32,7 +32,7 @@ export const verifyOtpSchema = z.object({
   token: z
     .string()
     .trim()
-    .regex(/^[0-9]{6}$/, { message: "Enter the 6-digit code sent to your email" }),
+    .regex(/^[0-9]{6,8}$/, { message: "Enter the verification code sent to your email" }),
 });
 
 export const profileSchema = z.object({

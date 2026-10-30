@@ -21,15 +21,15 @@ export function renderVerificationEmail({
       ${greeting}
     </p>
     <p style="margin: 0 0 24px; font-size: 15px; color: #475569; line-height: 1.6;">
-      Thank you for signing up for <strong>ExamDesk</strong>. Please use the following 6-digit security code to verify your email address:
+      Thank you for signing up for <strong>ExamDesk</strong>. Please use the following ${code.length}-digit security code to verify your email address:
     </p>
 
-    <!-- 6-digit OTP Display Box -->
+    <!-- OTP Display Box -->
     <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0 0 24px;">
       <tr>
         <td align="center" style="background-color: #f5f3ff; border: 2px dashed #818cf8; border-radius: 16px; padding: 26px 20px;">
           <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4f46e5; margin-bottom: 8px;">
-            Your 6-Digit Verification Code
+            Your Verification Code
           </div>
           <div class="otp-digit" style="font-family: 'SF Mono', Monaco, Menlo, Consolas, 'Courier New', monospace; font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #312e81; padding-left: 10px; margin: 4px 0 8px;">
             ${code}
