@@ -4,10 +4,28 @@ import * as React from "react";
 import { RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { cn } from "@/lib/utils/cn";
+
 const COOLDOWN_SECONDS = 60;
 
-/** "Resend email" with a cooldown so students can't trip the email rate limit. */
-export function ResendButton({ onResend, pending }: { onResend: () => Promise<boolean>; pending: boolean }) {
+type ResendButtonProps = {
+  onResend: () => Promise<boolean>;
+  pending: boolean;
+  label?: string;
+  variant?: React.ComponentProps<typeof Button>["variant"];
+  size?: React.ComponentProps<typeof Button>["size"];
+  className?: string;
+};
+
+/** "Resend email/code" with a cooldown so students can't trip the email rate limit. */
+export function ResendButton({
+  onResend,
+  pending,
+  label = "email",
+  variant = "outline",
+  size = "lg",
+  className,
+}: ResendButtonProps) {
   const [remaining, setRemaining] = React.useState(COOLDOWN_SECONDS);
 
   React.useEffect(() => {
@@ -19,17 +37,23 @@ export function ResendButton({ onResend, pending }: { onResend: () => Promise<bo
   return (
     <Button
       type="button"
-      variant="outline"
-      size="lg"
-      className="w-full border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-60"
+      variant={variant}
+      size={size}
+      className={cn(
+        "border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-60 transition-colors",
+        size === "lg" && "w-full",
+        className,
+      )}
       disabled={remaining > 0}
       pending={pending}
       onClick={async () => {
         if (await onResend()) setRemaining(COOLDOWN_SECONDS);
       }}
     >
-      {pending ? null : <RotateCw aria-hidden />}
-      {remaining > 0 ? `Resend email in ${remaining}s` : "Resend email"}
+      {pending ? null : <RotateCw className="size-3.5 shrink-0" aria-hidden />}
+      <span>
+        {remaining > 0 ? `Resend ${label} in ${remaining}s` : `Resend ${label}`}
+      </span>
     </Button>
   );
 }

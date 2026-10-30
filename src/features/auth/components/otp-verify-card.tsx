@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AuthCard, EmailChip } from "@/components/shared/auth-card";
 import { useServerAction } from "@/components/forms/use-server-action";
 import { resendConfirmationAction, verifyEmailOtpAction } from "@/features/auth/actions";
+import { cn } from "@/lib/utils/cn";
 import { ResendButton } from "./resend-button";
 
 type OtpVerifyCardProps = {
@@ -91,29 +92,29 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
       icon={ShieldCheck}
       tone="brand"
       title="Enter verification code"
-      description="We sent a 6-digit code to"
+      description="We sent a 6-digit security code to"
       footer={
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 font-medium text-white/80 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white transition-colors"
         >
-          <ArrowLeft className="size-4" aria-hidden /> Use a different email
+          <ArrowLeft className="size-3.5" aria-hidden /> Use a different email
         </button>
       }
     >
-      <div role="status" className="-mt-2.5 mb-4 sm:mb-5 text-center">
+      <div role="status" className="-mt-2 mb-3.5 sm:mb-4 text-center">
         <EmailChip email={email} />
       </div>
 
       <form onSubmit={handleVerify} className="grid gap-4">
-        <div className="grid gap-1.5 text-center">
-          <label className="text-xs sm:text-sm font-medium text-white/90">
+        <div className="grid gap-2 text-center">
+          <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-white/70">
             6-digit security code
           </label>
           
           <div
-            className="flex items-center justify-center gap-1.5 sm:gap-2 py-1"
+            className="flex items-center justify-center gap-2 py-1"
             onPaste={(e) => {
               e.preventDefault();
               handlePaste(e.clipboardData.getData("text"));
@@ -133,7 +134,13 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 aria-label={`Digit ${idx + 1}`}
-                className="size-8.5 sm:size-9 rounded-lg border border-white/15 bg-white/5 text-center font-mono text-base sm:text-lg font-bold text-white shadow-inner transition-all focus:border-primary focus:bg-primary/10 focus:ring-2 focus:ring-primary/40 focus:outline-none"
+                className={cn(
+                  "size-10 sm:size-11 rounded-xl border text-center font-mono text-lg sm:text-xl font-bold transition-all duration-150 outline-none select-none",
+                  digit
+                    ? "border-primary/80 bg-primary/15 text-white ring-1 ring-primary/40 shadow-xs"
+                    : "border-white/20 bg-white/[0.06] text-white/40 hover:border-white/35",
+                  "focus:border-primary focus:bg-primary/20 focus:text-white focus:ring-2 focus:ring-primary/50 focus:scale-[1.05]",
+                )}
               />
             ))}
           </div>
@@ -148,22 +155,26 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
         <Button
           type="submit"
           size="md"
-          className="w-full mt-0.5 h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm"
+          className="w-full h-10 text-xs sm:text-sm font-semibold shadow-md gap-2"
           pending={verifyAction.pending}
           disabled={!isComplete}
         >
-          Verify and continue
+          {verifyAction.pending ? "Verifying code…" : "Verify and continue"}
         </Button>
 
-        <div className="pt-2 border-t border-white/10 grid gap-2.5">
-          <div className="flex items-center justify-between text-xs text-white/60">
-            <span>Didn&apos;t get the code?</span>
+        <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between text-xs w-full gap-2">
+            <span className="text-white/60 whitespace-nowrap">Didn&apos;t get the code?</span>
             <ResendButton
+              variant="outline"
+              size="sm"
+              label="code"
+              className="h-8 px-3 text-xs rounded-lg border-white/15 bg-white/5 text-white/90 hover:bg-white/10 shrink-0 gap-1.5"
               pending={resend.pending}
               onResend={async () => Boolean((await resend.run({ email }))?.ok)}
             />
           </div>
-          <p className="text-center text-xs text-white/45">
+          <p className="text-center text-[11px] leading-relaxed text-white/45">
             You can also click the confirmation link in the email to verify instantly. The code expires in 1 hour.
           </p>
         </div>
