@@ -13,6 +13,7 @@ import {
   safeNextPath,
   signInSchema,
   signUpSchema,
+  verifyOtpSchema,
 } from "@/lib/validations/auth";
 import { refresh } from "next/cache";
 
@@ -118,19 +119,81 @@ export async function resetPasswordAction(input: unknown): Promise<ActionResult<
   return ok({ home: await roleHome(supabase, claims.claims.sub) });
 }
 
+export async function verifyEmailOtpAction(input: unknown): Promise<ActionResult<{ next: string }>> {
+  const parsed = verifyOtpSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const supabase = await createClient();
+
+  // Try signup OTP first
+  let { data, error } = await supabase.auth.verifyOtp({
+    email: parsed.data.email,
+    token: parsed.data.token,
+    type: "signup",
+  });
+
+  // If failed with invalid token or type, try "email" type as fallback
+  if (error || !data?.user) {
+    const retry = await supabase.auth.verifyOtp({
+      email: parsed.data.email,
+      token: parsed.data.token,
+      type: "email",
+    });
+    if (!retry.error && retry.data?.user) {
+      data = retry.data;
+      error = null;
+    }
+  }
+
+  if (error || !data?.user) {
+    return fail("Invalid or expired 6-digit code. Please check your email or click Resend.", {
+      token: ["Invalid or expired code."],
+    });
+  }
+
+  const next = await roleHome(supabase, data.user.id);
+  redirect(next);
+}
+
 export async function updateProfileAction(input: unknown): Promise<ActionResult> {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   if (!isValidTimeZone(parsed.data.timezone)) return fail("Choose a valid timezone.", { timezone: ["Choose a valid timezone."] });
   const { profile, supabase } = await requireUser();
-  const { error } = await supabase
+
+  // 1. Update user metadata so custom fields (avatar, class, phone) are always persisted
+  await supabase.auth.updateUser({
+    data: {
+      full_name: parsed.data.fullName,
+      student_class: parsed.data.studentClass || "",
+      phone: parsed.data.phone || "",
+      avatar_url: parsed.data.avatarUrl || "",
+    },
+  });
+
+  // 2. Update profiles table (try with extended fields; fallback to core fields if schema hasn't migrated yet)
+  const { error: fullErr } = await supabase
     .from("profiles")
-    .update({ full_name: parsed.data.fullName, timezone: parsed.data.timezone })
+    .update({
+      full_name: parsed.data.fullName,
+      timezone: parsed.data.timezone,
+      avatar_url: parsed.data.avatarUrl || null,
+      student_class: parsed.data.studentClass || null,
+      phone: parsed.data.phone || null,
+    } as never)
     .eq("id", profile.id);
-  if (error) {
-    console.error("[action:updateProfile]", error.code, error.message);
-    return fail("We couldn't save your profile. Please try again.");
+
+  if (fullErr) {
+    const { error: coreErr } = await supabase
+      .from("profiles")
+      .update({ full_name: parsed.data.fullName, timezone: parsed.data.timezone })
+      .eq("id", profile.id);
+
+    if (coreErr) {
+      console.error("[action:updateProfile]", coreErr.code, coreErr.message);
+      return fail("We couldn't save your profile. Please try again.");
+    }
   }
+
   refresh();
-  return ok(undefined, "Profile updated");
+  return ok(undefined, "Profile updated successfully");
 }

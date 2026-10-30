@@ -25,17 +25,17 @@ export function StatCard({
   tone?: keyof typeof TONES;
 }) {
   return (
-    <div className="surface relative overflow-hidden p-5">
+    <div className="surface relative overflow-hidden p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1.5 sm:mt-2 text-2xl sm:text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
         </div>
-        <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", TONES[tone])}>
-          <Icon className="size-5" aria-hidden />
+        <span className={cn("grid size-9 sm:size-10 shrink-0 place-items-center rounded-xl", TONES[tone])}>
+          <Icon className="size-4.5 sm:size-5" aria-hidden />
         </span>
       </div>
-      {hint ? <p className="mt-2 text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 sm:mt-2 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

@@ -60,11 +60,11 @@ export function ForgotPasswordForm() {
 
   return (
     <AuthCard icon={KeyRound} title="Forgot your password?" description="No worries. Enter the email you signed up with and we'll send you a secure reset link." footer={backToSignIn}>
-      <form noValidate className="grid gap-4" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
+      <form noValidate className="grid gap-3" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
         <Field id="email" label="Email" error={form.formState.errors.email?.message}>
           {(a) => <IconInput icon={Mail} type="email" autoComplete="email" autoFocus placeholder="you@example.com" {...a} {...form.register("email")} />}
         </Field>
-        <Button type="submit" size="lg" className="mt-1 w-full" pending={pending}>
+        <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
           Send reset link
         </Button>
       </form>

@@ -4,19 +4,19 @@ import * as React from "react";
 import Link from "next/link";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Mail, MailCheck, User, UserPlus } from "lucide-react";
+import { Mail, User, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IconInput } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Field } from "@/components/ui/field";
-import { AuthCard, AuthSteps, EmailChip } from "@/components/shared/auth-card";
+import { AuthCard } from "@/components/shared/auth-card";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
-import { resendConfirmationAction, signUpAction } from "@/features/auth/actions";
+import { signUpAction } from "@/features/auth/actions";
 import { signUpSchema, type SignUpInput } from "@/lib/validations/auth";
 import { PasswordStrength } from "./password-strength";
-import { ResendButton } from "./resend-button";
+import { OtpVerifyCard } from "./otp-verify-card";
 
-/** The whole sign-up card: the form, then a "check your inbox" screen once the email is sent. */
+/** The whole sign-up card: the form, then a 6-digit OTP verification screen once the email is sent. */
 export function SignUpForm() {
   const [sentTo, setSentTo] = React.useState<string | null>(null);
   const form = useForm<SignUpInput>({
@@ -24,43 +24,11 @@ export function SignUpForm() {
     defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
   });
   const { run, pending } = useServerAction(signUpAction, { successToast: false, onSuccess: () => setSentTo(form.getValues("email").trim().toLowerCase()) });
-  const resend = useServerAction(resendConfirmationAction);
   const password = useWatch({ control: form.control, name: "password" }) ?? "";
   const { errors } = form.formState;
 
   if (sentTo) {
-    return (
-      <AuthCard
-        icon={MailCheck}
-        tone="success"
-        title="Verify your email"
-        description="We sent a confirmation link to"
-        footer={
-          <button type="button" onClick={() => setSentTo(null)} className="inline-flex items-center gap-1.5 font-medium text-white/80 hover:text-white">
-            <ArrowLeft className="size-4" aria-hidden /> Use a different email
-          </button>
-        }
-      >
-        <div role="status" className="-mt-4 mb-6 text-center">
-          <EmailChip email={sentTo} />
-        </div>
-        <AuthSteps
-          steps={[
-            <>
-              Open the email from <span className="font-medium text-white">ExamDesk</span>.
-            </>,
-            <>
-              Click <span className="font-medium text-white">Confirm my email</span> — you&apos;ll be signed in automatically.
-            </>,
-            <>Join your course with the invitation code from your teacher.</>,
-          ]}
-        />
-        <div className="mt-5 grid gap-3">
-          <ResendButton pending={resend.pending} onResend={async () => Boolean((await resend.run({ email: sentTo }))?.ok)} />
-          <p className="text-center text-xs text-white/55">Didn&apos;t get it? Check your spam or promotions folder. The link expires in 1 hour.</p>
-        </div>
-      </AuthCard>
-    );
+    return <OtpVerifyCard email={sentTo} onBack={() => setSentTo(null)} />;
   }
 
   return (
@@ -77,7 +45,7 @@ export function SignUpForm() {
         </>
       }
     >
-      <form noValidate className="grid gap-4" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
+      <form noValidate className="grid gap-2.5 sm:gap-3" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
         <Field id="fullName" label="Full name" error={errors.fullName?.message}>
           {(a) => <IconInput icon={User} autoComplete="name" placeholder="e.g. Ayesha Rahman" {...a} {...form.register("fullName")} />}
         </Field>
@@ -91,7 +59,7 @@ export function SignUpForm() {
         <Field id="confirmPassword" label="Confirm password" error={errors.confirmPassword?.message}>
           {(a) => <PasswordInput autoComplete="new-password" placeholder="Re-enter your password" {...a} {...form.register("confirmPassword")} />}
         </Field>
-        <Button type="submit" size="lg" className="mt-1 w-full" pending={pending}>
+        <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
           Create student account
         </Button>
       </form>

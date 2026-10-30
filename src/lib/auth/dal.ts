@@ -10,6 +10,9 @@ export type CurrentProfile = {
   full_name: string;
   email: string | null;
   timezone: string;
+  avatar_url?: string | null;
+  student_class?: string | null;
+  phone?: string | null;
 };
 
 /**
@@ -27,7 +30,15 @@ export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> 
     .select("id, role, full_name, email, timezone")
     .eq("id", uid)
     .maybeSingle();
-  return profile ?? null;
+  if (!profile) return null;
+  const meta = (data?.claims?.user_metadata as Record<string, unknown>) ?? {};
+  return {
+    ...profile,
+    avatar_url: (meta.avatar_url as string) || null,
+    student_class: (meta.student_class as string) || null,
+    phone: (meta.phone as string) || null,
+    full_name: (meta.full_name as string) || profile.full_name,
+  };
 });
 
 export async function requireUser() {

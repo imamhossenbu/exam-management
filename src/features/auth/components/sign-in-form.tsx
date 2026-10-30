@@ -20,7 +20,7 @@ export function SignInForm({ next }: { next?: string }) {
   return (
     <form
       noValidate
-      className="grid gap-4"
+      className="grid gap-2.5 sm:gap-3"
       onSubmit={form.handleSubmit(async (values) => applyFieldErrors(form.setError, await run(values)))}
     >
       <Field id="email" label="Email" error={errors.email?.message}>
@@ -29,12 +29,12 @@ export function SignInForm({ next }: { next?: string }) {
       <Field id="password" label="Password" error={errors.password?.message}>
         {(a) => <PasswordInput autoComplete="current-password" placeholder="Enter your password" {...a} {...form.register("password")} />}
       </Field>
-      <div className="-mt-2 text-right">
+      <div className="-mt-1 text-right">
         <Link href="/forgot-password" className="text-xs text-primary hover:underline">
           Forgot your password?
         </Link>
       </div>
-      <Button type="submit" size="lg" className="mt-1 w-full" pending={pending}>
+      <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
         Sign in
       </Button>
     </form>

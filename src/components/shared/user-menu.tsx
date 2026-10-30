@@ -25,9 +25,18 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-2 rounded-full focus-ring" aria-label="Account menu">
-        <span className="grid size-9 place-items-center rounded-full bg-brand-gradient text-sm font-semibold text-white ring-2 ring-background shadow-card">
-          {initials(profile.full_name, profile.email)}
-        </span>
+        {profile.avatar_url ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={profile.avatar_url}
+            alt={profile.full_name || "Profile avatar"}
+            className="size-9 rounded-full object-cover ring-2 ring-background shadow-card"
+          />
+        ) : (
+          <span className="grid size-9 place-items-center rounded-full bg-brand-gradient text-sm font-semibold text-white ring-2 ring-background shadow-card">
+            {initials(profile.full_name, profile.email)}
+          </span>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-60">
         <DropdownMenuLabel>

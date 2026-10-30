@@ -23,23 +23,23 @@ export function PasswordStrength({ password }: { password: string }) {
   const level = LEVELS[score];
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4" aria-live="polite">
-      <div className="flex items-center justify-between text-xs">
+    <div className="grid gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] p-2 sm:p-2.5" aria-live="polite">
+      <div className="flex items-center justify-between text-[11px]">
         <span className="text-white/60">Password strength</span>
         <span className="font-medium text-white">{password ? level.label : "—"}</span>
       </div>
-      <div className="grid grid-cols-4 gap-1.5" aria-hidden>
+      <div className="grid grid-cols-4 gap-1" aria-hidden>
         {[1, 2, 3, 4].map((i) => (
-          <span key={i} className={cn("h-1.5 rounded-full bg-white/10 transition-colors", password && score >= i && level.bar)} />
+          <span key={i} className={cn("h-1 rounded-full bg-white/10 transition-colors", password && score >= i && level.bar)} />
         ))}
       </div>
-      <ul className="grid gap-1.5 text-xs sm:grid-cols-2">
+      <ul className="grid gap-1 text-[11px] sm:grid-cols-2">
         {RULES.map((rule, i) => (
-          <li key={rule.label} className={cn("flex items-center gap-2 transition-colors", passed[i] ? "text-white" : "text-white/50")}>
-            <span className={cn("grid size-4 place-items-center rounded-full", passed[i] ? "bg-success text-black" : "bg-white/10")}>
-              {passed[i] ? <Check className="size-3" strokeWidth={3} aria-hidden /> : null}
+          <li key={rule.label} className={cn("flex items-center gap-1.5 transition-colors", passed[i] ? "text-white" : "text-white/50")}>
+            <span className={cn("grid size-3.5 place-items-center rounded-full shrink-0", passed[i] ? "bg-success text-black" : "bg-white/10")}>
+              {passed[i] ? <Check className="size-2.5" strokeWidth={3} aria-hidden /> : null}
             </span>
-            {rule.label}
+            <span>{rule.label}</span>
             <span className="sr-only">{passed[i] ? "(met)" : "(not met)"}</span>
           </li>
         ))}

@@ -40,8 +40,8 @@ export function ResetPasswordForm() {
   if (done) {
     return (
       <AuthCard icon={CircleCheckBig} tone="success" title="Password updated" description="Your new password is saved and you're signed in. Use it the next time you sign in.">
-        <div role="status" className="grid gap-3">
-          <Button size="lg" className="w-full" onClick={() => router.replace(home)}>
+        <div role="status" className="grid gap-2.5">
+          <Button size="md" className="w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" onClick={() => router.replace(home)}>
             Continue to dashboard <ArrowRight aria-hidden />
           </Button>
           <p className="text-center text-xs text-white/55">Taking you there in {Math.max(remaining, 0)}s…</p>
@@ -52,7 +52,7 @@ export function ResetPasswordForm() {
 
   return (
     <AuthCard icon={ShieldCheck} title="Set a new password" description="You're signed in through your reset link. Choose a strong password you haven't used before.">
-      <form noValidate className="grid gap-4" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
+      <form noValidate className="grid gap-2.5 sm:gap-3" onSubmit={form.handleSubmit(async (v) => applyFieldErrors(form.setError, await run(v)))}>
         <Field id="password" label="New password" error={errors.password?.message}>
           {(a) => <PasswordInput autoComplete="new-password" autoFocus placeholder="Create a strong password" {...a} {...form.register("password")} />}
         </Field>
@@ -60,7 +60,7 @@ export function ResetPasswordForm() {
         <Field id="confirmPassword" label="Confirm new password" error={errors.confirmPassword?.message}>
           {(a) => <PasswordInput autoComplete="new-password" placeholder="Re-enter the new password" {...a} {...form.register("confirmPassword")} />}
         </Field>
-        <Button type="submit" size="lg" className="mt-1 w-full" pending={pending}>
+        <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
           Update password
         </Button>
       </form>

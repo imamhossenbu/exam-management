@@ -17,7 +17,15 @@ async function SettingsContent() {
           <CardDescription>Your name is visible to your teacher on rosters and results.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm fullName={profile.full_name} timezone={profile.timezone} email={profile.email} />
+          <ProfileForm
+            fullName={profile.full_name}
+            timezone={profile.timezone}
+            email={profile.email}
+            studentClass={profile.student_class}
+            phone={profile.phone}
+            avatarUrl={profile.avatar_url}
+            role={profile.role}
+          />
         </CardContent>
       </Card>
       <Card>
