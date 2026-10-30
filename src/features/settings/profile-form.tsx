@@ -127,7 +127,8 @@ export function ProfileForm({
         const result = await run(values);
         applyFieldErrors(form.setError, result);
         if (result?.ok) {
-          form.reset(values);
+          const newAvatar = result.data?.avatarUrl ?? values.avatarUrl;
+          form.reset({ ...values, avatarUrl: newAvatar });
           router.refresh();
         }
       })}

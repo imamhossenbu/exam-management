@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 import type { Enums } from "@/types/database";
 
 export type CurrentProfile = {
@@ -40,10 +41,26 @@ export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> 
   if (!profile) return null;
 
   const raw = profile as unknown as Record<string, unknown>;
-  const avatar = (userMeta.avatar_url as string) || (raw.avatar_url as string) || null;
+  let avatar = (userMeta.avatar_url as string) || (raw.avatar_url as string) || null;
   const studentClass = (userMeta.student_class as string) || (raw.student_class as string) || null;
   const phone = (userMeta.phone as string) || (raw.phone as string) || null;
   const fullName = (userMeta.full_name as string) || profile.full_name || "";
+
+  // Auto-heal: If user has a bloated base64 data URL in metadata, migrate it to disk and shrink cookies
+  if (avatar && isBase64DataUrl(avatar)) {
+    try {
+      const cleanAvatar = await saveAvatarFromBase64(profile.id, avatar);
+      avatar = cleanAvatar;
+      await supabase.auth.updateUser({
+        data: {
+          ...userMeta,
+          avatar_url: cleanAvatar,
+        },
+      });
+    } catch (err) {
+      console.error("[dal:cleanAvatar]", err);
+    }
+  }
 
   return {
     id: profile.id,

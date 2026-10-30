@@ -16,6 +16,7 @@ import {
   verifyOtpSchema,
 } from "@/lib/validations/auth";
 import { revalidatePath, refresh } from "next/cache";
+import { deleteAvatar, isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   switch (error.code) {
@@ -154,19 +155,33 @@ export async function verifyEmailOtpAction(input: unknown): Promise<ActionResult
   redirect(next);
 }
 
-export async function updateProfileAction(input: unknown): Promise<ActionResult> {
+export async function updateProfileAction(input: unknown): Promise<ActionResult<{ avatarUrl: string }>> {
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   if (!isValidTimeZone(parsed.data.timezone)) return fail("Choose a valid timezone.", { timezone: ["Choose a valid timezone."] });
   const { profile, supabase } = await requireUser();
 
-  // 1. Update user metadata so custom fields (avatar, class, phone) are always persisted
+  let finalAvatarUrl = parsed.data.avatarUrl || "";
+
+  // If avatar is base64, save to static file and use lightweight relative URL
+  if (finalAvatarUrl && isBase64DataUrl(finalAvatarUrl)) {
+    try {
+      finalAvatarUrl = await saveAvatarFromBase64(profile.id, finalAvatarUrl);
+    } catch (err) {
+      console.error("[action:saveAvatar]", err);
+      finalAvatarUrl = "";
+    }
+  } else if (!finalAvatarUrl) {
+    await deleteAvatar(profile.id);
+  }
+
+  // 1. Update user metadata so custom fields are persisted without cookie bloat
   await supabase.auth.updateUser({
     data: {
       full_name: parsed.data.fullName,
       student_class: parsed.data.studentClass || "",
       phone: parsed.data.phone || "",
-      avatar_url: parsed.data.avatarUrl || "",
+      avatar_url: finalAvatarUrl,
     },
   });
 
@@ -176,7 +191,7 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
     .update({
       full_name: parsed.data.fullName,
       timezone: parsed.data.timezone,
-      avatar_url: parsed.data.avatarUrl || null,
+      avatar_url: finalAvatarUrl || null,
       student_class: parsed.data.studentClass || null,
       phone: parsed.data.phone || null,
     } as never)
@@ -196,5 +211,5 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult>
 
   revalidatePath("/", "layout");
   refresh();
-  return ok(undefined, "Profile updated successfully");
+  return ok({ avatarUrl: finalAvatarUrl }, "Profile updated successfully");
 }

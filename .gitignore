@@ -45,3 +45,8 @@ next-env.d.ts
 # local database test cluster
 /.tmp/
 supabase/.temp/
+
+# user uploaded avatars
+/public/avatars/*
+!/public/avatars/.gitkeep
+
