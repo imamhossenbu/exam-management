@@ -7,7 +7,7 @@ import { requireStudent } from "@/lib/auth/dal";
 import { noteTaxonomy } from "@/features/notes/queries";
 import { NoteForm } from "@/features/notes/components/note-form";
 
-export const metadata: Metadata = { title: "New note" };
+export const metadata: Metadata = { title: "New Resource" };
 
 async function NewNote({ searchParams }: { searchParams: Promise<{ subject?: string; chapter?: string }> }) {
   const [{ subject, chapter }, { supabase }] = await Promise.all([searchParams, requireStudent()]);
@@ -22,7 +22,10 @@ async function NewNote({ searchParams }: { searchParams: Promise<{ subject?: str
             chapters: [...new Set(taxonomy.subjects.flatMap((s) => s.chapters.map((c) => c.name)).filter(Boolean))],
           }}
         />
-        <p className="mt-4 text-xs text-muted-foreground">You can add images and PDFs after creating the note.</p>
+        <div className="mt-5 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-primary">💡 Pro tip:</span>
+          Once created, you can immediately upload multi-page lecture photos to read sequentially as a notebook, or attach PDF documents to read directly in the study reader.
+        </div>
       </CardContent>
     </Card>
   );
@@ -31,7 +34,11 @@ async function NewNote({ searchParams }: { searchParams: Promise<{ subject?: str
 export default function NewNotePage({ searchParams }: PageProps<"/student/notes/new">) {
   return (
     <>
-      <PageHeader breadcrumbs={[{ label: "Notes", href: "/student/notes" }, { label: "New note" }]} title="New note" />
+      <PageHeader
+        breadcrumbs={[{ label: "Resources", href: "/student/notes" }, { label: "New resource" }]}
+        title="New Resource"
+        description="Create a revision note or folder for your lecture photos and PDF study materials."
+      />
       <Suspense fallback={<FormSkeleton fields={5} />}>
         <NewNote searchParams={searchParams as Promise<{ subject?: string; chapter?: string }>} />
       </Suspense>

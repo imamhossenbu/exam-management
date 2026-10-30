@@ -6,7 +6,6 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
-  NotebookPen,
   Settings,
   Ticket,
   Trophy,
@@ -47,7 +46,7 @@ export const NAV: Record<NavKind, NavGroup[]> = {
         { href: "/student/courses", label: "My courses", icon: GraduationCap },
         { href: "/student/exams", label: "Exams", icon: FileText },
         { href: "/student/results", label: "Results", icon: Trophy },
-        { href: "/student/notes", label: "Notes", icon: NotebookPen },
+        { href: "/student/notes", label: "Resources", icon: FileStack },
       ],
     },
     {
