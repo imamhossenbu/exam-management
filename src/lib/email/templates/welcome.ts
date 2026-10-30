@@ -9,8 +9,10 @@ export type WelcomeEmailOptions = {
 export function renderWelcomeEmail({
   fullName,
   role = "student",
-  dashboardUrl = "http://localhost:3000/student",
+  dashboardUrl,
 }: WelcomeEmailOptions): { subject: string; html: string; text: string } {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const targetUrl = dashboardUrl || (siteUrl ? `${siteUrl}/${role}` : `/${role}`);
   const subject = `Welcome to ExamDesk, ${fullName}! 🚀`;
 
   const contentHtml = `
@@ -49,7 +51,7 @@ export function renderWelcomeEmail({
     <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 0 0 24px;">
       <tr>
         <td align="center">
-          <a href="${escapeHtml(dashboardUrl)}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);">
+          <a href="${escapeHtml(targetUrl)}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);">
             Go to your dashboard &rarr;
           </a>
         </td>
@@ -71,7 +73,7 @@ export function renderWelcomeEmail({
     footerNote: "You are receiving this because you created an ExamDesk account.",
   });
 
-  const text = `Welcome to ExamDesk, ${fullName}!\n\nYour account has been verified and is ready.\n\nOpen your dashboard to get started:\n${dashboardUrl}\n\n- The ExamDesk Team`;
+  const text = `Welcome to ExamDesk, ${fullName}!\n\nYour account has been verified and is ready.\n\nOpen your dashboard to get started:\n${targetUrl}\n\n- The ExamDesk Team`;
 
   return { subject, html, text };
 }
