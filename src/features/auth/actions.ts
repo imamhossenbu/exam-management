@@ -18,7 +18,7 @@ import {
 import { revalidatePath, refresh } from "next/cache";
 import { deleteAvatar, isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { sendVerificationOtpEmail } from "@/lib/email/mailer";
+import { sendVerificationOtpEmail, sendPasswordResetEmail } from "@/lib/email/mailer";
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   switch (error.code) {
@@ -123,6 +123,37 @@ export async function requestPasswordResetAction(input: unknown): Promise<Action
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
   const site = await getSiteUrl();
+
+  // If SUPABASE_SECRET_KEY is configured, generate recovery link and send via Nodemailer
+  if (process.env.SUPABASE_SECRET_KEY) {
+    try {
+      const admin = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SECRET_KEY,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email: parsed.data.email,
+        options: {
+          redirectTo: `${site}/auth/confirm?next=/reset-password`,
+        },
+      });
+      if (!linkErr && linkData?.properties?.hashed_token) {
+        const resetUrl = `${site}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=recovery&next=/reset-password`;
+        const fullName = (linkData.user?.user_metadata?.full_name as string) || undefined;
+        await sendPasswordResetEmail({
+          to: parsed.data.email,
+          resetUrl,
+          fullName,
+        });
+        return ok(undefined, "If an account exists for that email, a reset link is on its way.");
+      }
+    } catch (err) {
+      console.error("[requestPasswordResetAction:nodemailer]", err);
+    }
+  }
+
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${site}/auth/confirm?next=/reset-password`,
   });
@@ -136,6 +167,35 @@ export async function resendConfirmationAction(input: unknown): Promise<ActionRe
   if (!parsed.success) return invalid(parsed.error);
   const supabase = await createClient();
   const site = await getSiteUrl();
+
+  // If SUPABASE_SECRET_KEY is configured, generate link and send OTP via Nodemailer
+  if (process.env.SUPABASE_SECRET_KEY) {
+    try {
+      const admin = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SECRET_KEY,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: parsed.data.email,
+        options: {
+          redirectTo: `${site}/auth/confirm?next=/student`,
+        },
+      });
+      const otp = linkData?.properties?.email_otp;
+      if (otp) {
+        await sendVerificationOtpEmail({
+          to: parsed.data.email,
+          code: otp,
+          fullName: (linkData?.user?.user_metadata?.full_name as string) || undefined,
+        });
+        return ok(undefined, "A new confirmation email is on its way.");
+      }
+    } catch (err) {
+      console.error("[resendConfirmationAction:nodemailer]", err);
+    }
+  }
 
   const { error } = await supabase.auth.resend({
     type: "signup",
