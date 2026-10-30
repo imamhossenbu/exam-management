@@ -217,7 +217,8 @@ If the Supabase variables are missing or still contain placeholders, every page 
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Browser + server. Dashboard → Project Settings → API. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Browser + server. Dashboard → Project Settings → API Keys → *Publishable key*. Safe to expose: every query is constrained by RLS. |
 | `NEXT_SITE_URL` | recommended | Absolute origin used in auth email links, canonical URLs, the sitemap and social share images, e.g. `https://exams.example.com` (no trailing slash). `NEXT_PUBLIC_SITE_URL` is also supported as fallback. On Vercel it falls back to the production domain if unset. |
-| `SUPABASE_SECRET_KEY` | **no** | Not used by the app. Leave empty. Never prefix with `NEXT_PUBLIC_`. |
+| `SUPABASE_SECRET_KEY` | required for Nodemailer OTP | Supabase `service_role` secret (Dashboard → Project Settings → API Keys). Enables generating 6-digit OTPs and sending branded emails via Nodemailer without relying on Supabase's built-in mailer. Never prefix with `NEXT_PUBLIC_`. |
+| `SMTP_USER` & `SMTP_PASS` | yes (if using Nodemailer) | Gmail or SMTP credentials for sending auth OTPs and exam emails. |
 | `DATABASE_URL` | no | Only for running migrations from your machine. Never used at runtime. |
 | `SUPABASE_JWKS_URL` | no | Not needed: `supabase.auth.getClaims()` verifies JWTs against the project's JWKS automatically. |
 
@@ -346,9 +347,11 @@ Files are served through short-lived signed URLs. No Dashboard steps are needed 
 2. Under *Settings → Environment Variables*, add for **Production** and **Preview**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `NEXT_SITE_URL` = your production URL, e.g. `https://exam-management.vercel.app` (or `NEXT_PUBLIC_SITE_URL`)
+   - `NEXT_SITE_URL` = your production URL, e.g. `https://exam-management-sable.vercel.app`
+   - `SUPABASE_SECRET_KEY` = your Supabase `service_role` secret (Project Settings → API Keys)
+   - `SMTP_USER` & `SMTP_PASS` = your Gmail and App Password for Nodemailer
 3. Deploy.
-4. In Supabase, set the *Site URL* to the production URL and add `https://<domain>/auth/confirm` to *Redirect URLs* (§9).
+4. In Supabase, set the *Site URL* to `https://exam-management-sable.vercel.app` and add `https://exam-management-sable.vercel.app/auth/confirm` to *Redirect URLs* (§9).
 5. Provision the teacher if you haven't already (§10).
 
 No secrets are needed at runtime; the app only uses the publishable key and the signed-in user's session. Every push to `main` redeploys automatically.
