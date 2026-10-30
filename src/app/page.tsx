@@ -37,9 +37,9 @@ const STEPS = [
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-dvh flex-col overflow-x-hidden">
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }} />
-      <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+      <header className="fixed top-0 inset-x-0 z-40 border-b border-border/40 bg-background/85 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 md:px-6">
           <Brand />
           <Suspense fallback={<PublicNavUserSkeleton />}>
@@ -48,7 +48,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-14">
         <section className="relative isolate overflow-hidden">
           <div className="bg-grid absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_70%)]" aria-hidden />
           <div className="absolute top-[-10rem] left-1/2 -z-10 h-[28rem] w-[46rem] -translate-x-1/2 rounded-full bg-brand-gradient opacity-20 blur-3xl" aria-hidden />

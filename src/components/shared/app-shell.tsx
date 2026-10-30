@@ -17,8 +17,8 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:shadow-elevated">
         Skip to content
       </a>
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
-        <div className="flex h-14 items-center px-5">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-sidebar lg:flex z-30">
+        <div className="flex h-14 items-center px-5 border-b border-border/40">
           <Link href={kind === "teacher" ? "/teacher" : "/student"} className="focus-ring rounded-lg">
             <Brand />
           </Link>
@@ -37,7 +37,7 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/70 bg-background/85 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-6 shadow-2xs">
           <MobileNav kind={kind} />
           <div className="lg:hidden">
             <Brand />

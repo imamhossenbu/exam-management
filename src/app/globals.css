@@ -110,7 +110,7 @@
   }
   html {
     color-scheme: light;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
   }
   body {
@@ -120,7 +120,7 @@
     font-size: 0.875rem;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
   }
   :focus-visible {
