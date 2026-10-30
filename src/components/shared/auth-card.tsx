@@ -36,13 +36,13 @@ export function AuthCard({
 }) {
   return (
     <div className="animate-fade-in">
-      <div className="mb-3.5 sm:mb-4 text-center">
+      <div className="mb-3 sm:mb-3.5 text-center">
         {icon ? <AuthIcon icon={icon} tone={tone} /> : null}
-        <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-white">{title}</h1>
-        {description ? <p className="mt-1 text-xs sm:text-[13px] leading-relaxed text-white/70">{description}</p> : null}
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight text-white">{title}</h1>
+        {description ? <p className="mt-1 text-xs text-white/70 leading-relaxed">{description}</p> : null}
       </div>
       {children}
-      {footer ? <div className="mt-4 border-t border-white/10 pt-3 text-center text-xs sm:text-[13px] text-white/60 sm:mt-5 sm:pt-4">{footer}</div> : null}
+      {footer ? <div className="mt-3.5 border-t border-white/10 pt-3 text-center text-xs text-white/60 sm:mt-4 sm:pt-3.5">{footer}</div> : null}
     </div>
   );
 }

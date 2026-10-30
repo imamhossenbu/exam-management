@@ -133,13 +133,13 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 aria-label={`Digit ${idx + 1}`}
-                className="size-9 sm:size-10 rounded-lg sm:rounded-xl border border-white/15 bg-white/5 text-center font-mono text-lg sm:text-xl font-bold text-white shadow-inner transition-all focus:border-primary focus:bg-primary/10 focus:ring-2 focus:ring-primary/40 focus:outline-none"
+                className="size-8.5 sm:size-9 rounded-lg border border-white/15 bg-white/5 text-center font-mono text-base sm:text-lg font-bold text-white shadow-inner transition-all focus:border-primary focus:bg-primary/10 focus:ring-2 focus:ring-primary/40 focus:outline-none"
               />
             ))}
           </div>
 
           {errorMsg ? (
-            <p role="alert" className="text-xs sm:text-sm text-destructive font-medium mt-1">
+            <p role="alert" className="text-xs text-destructive font-medium mt-1">
               {errorMsg}
             </p>
           ) : null}
@@ -148,7 +148,7 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
         <Button
           type="submit"
           size="md"
-          className="w-full mt-0.5 h-9.5 sm:h-10 text-sm font-semibold shadow-sm"
+          className="w-full mt-0.5 h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm"
           pending={verifyAction.pending}
           disabled={!isComplete}
         >

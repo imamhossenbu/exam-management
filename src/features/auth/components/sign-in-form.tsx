@@ -34,7 +34,7 @@ export function SignInForm({ next }: { next?: string }) {
           Forgot your password?
         </Link>
       </div>
-      <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
+      <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
         Sign in
       </Button>
     </form>

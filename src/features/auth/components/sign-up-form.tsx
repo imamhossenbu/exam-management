@@ -59,7 +59,7 @@ export function SignUpForm() {
         <Field id="confirmPassword" label="Confirm password" error={errors.confirmPassword?.message}>
           {(a) => <PasswordInput autoComplete="new-password" placeholder="Re-enter your password" {...a} {...form.register("confirmPassword")} />}
         </Field>
-        <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
+        <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
           Create student account
         </Button>
       </form>

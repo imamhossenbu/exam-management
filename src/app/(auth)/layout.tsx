@@ -14,16 +14,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="bg-grid absolute inset-0 opacity-[0.35] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
       </div>
 
-      <div className="w-full max-w-[23.5rem] sm:max-w-[24.5rem]">
-        <div className="relative rounded-[1.35rem] border border-white/15 bg-white/[0.07] p-4.5 sm:p-6 shadow-[0_20px_70px_-20px_rgb(0_0_0/0.65)] ring-1 ring-white/5 ring-inset backdrop-blur-2xl backdrop-saturate-150">
+      <div className="w-full max-w-[22.5rem] sm:max-w-[23.5rem]">
+        <div className="relative rounded-[1.25rem] border border-white/15 bg-white/[0.07] p-4 sm:p-5 shadow-[0_20px_70px_-20px_rgb(0_0_0/0.65)] ring-1 ring-white/5 ring-inset backdrop-blur-2xl backdrop-saturate-150">
           {/* Top edge highlight */}
           <div className="pointer-events-none absolute inset-x-8 -top-px h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" aria-hidden />
-          <Link href="/" className="mb-4 sm:mb-5 flex justify-center rounded-lg focus-ring">
+          <Link href="/" className="mb-3.5 sm:mb-4 flex justify-center rounded-lg focus-ring">
             <Brand />
           </Link>
           {children}
         </div>
-        <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[11px] sm:text-xs text-white/50">
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-white/50">
           <ShieldCheck className="size-3.5" aria-hidden /> Secured with encrypted sessions and row-level security
         </p>
       </div>

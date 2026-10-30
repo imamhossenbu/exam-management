@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
         <Field id="email" label="Email" error={form.formState.errors.email?.message}>
           {(a) => <IconInput icon={Mail} type="email" autoComplete="email" autoFocus placeholder="you@example.com" {...a} {...form.register("email")} />}
         </Field>
-        <Button type="submit" size="md" className="mt-0.5 w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" pending={pending}>
+        <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
           Send reset link
         </Button>
       </form>

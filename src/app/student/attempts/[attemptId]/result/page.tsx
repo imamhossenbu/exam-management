@@ -73,13 +73,13 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
       ) : (
         <>
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            <div className="surface p-5">
+            <div className="surface p-4">
               <p className="text-subtle">Your score</p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums">
+              <p className="mt-1 text-xl sm:text-2xl font-semibold tabular-nums">
                 {Number(result.total_score)}
-                <span className="text-lg text-muted-foreground"> / {Number(result.max_score)}</span>
+                <span className="text-sm text-muted-foreground"> / {Number(result.max_score)}</span>
               </p>
-              <p className="text-sm text-muted-foreground">{Number(result.percentage)}%</p>
+              <p className="text-xs text-muted-foreground">{Number(result.percentage)}%</p>
             </div>
             <div className="surface p-5">
               <p className="text-subtle">Breakdown</p>

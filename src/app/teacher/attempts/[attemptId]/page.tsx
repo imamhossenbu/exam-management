@@ -43,23 +43,23 @@ async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
           attempt.submitted_at ? ` · Submitted ${formatDateTime(attempt.submitted_at, tz)}${attempt.submitted_via === "timeout" ? " (time up)" : ""}` : ""
         }`}
       />
-      <div className="mb-6 grid gap-4 sm:grid-cols-4">
-        <div className="surface p-4">
+      <div className="mb-5 grid gap-3 sm:grid-cols-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">Total</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{result ? `${Number(result.total_score)}/${Number(result.max_score)}` : "—"}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{result ? `${Number(result.total_score)}/${Number(result.max_score)}` : "—"}</p>
           {result ? <p className="text-xs text-muted-foreground">{Number(result.percentage)}%{result.passed === null ? "" : result.passed ? " · Pass" : " · Below pass mark"}</p> : null}
         </div>
-        <div className="surface p-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">MCQ (auto)</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{result ? Number(result.mcq_score) : "—"}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{result ? Number(result.mcq_score) : "—"}</p>
         </div>
-        <div className="surface p-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">Written (final)</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{result ? Number(result.cq_score) : "—"}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{result ? Number(result.cq_score) : "—"}</p>
         </div>
-        <div className="surface p-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">Integrity signals</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{hidden}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{hidden}</p>
           <p className="text-xs text-muted-foreground">
             tab left · {offline} offline · best-effort only
           </p>

@@ -38,13 +38,13 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
           <p className="text-subtle">Active courses</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{memberships.filter((m) => m.status === "active").length}</p>
         </div>
-        <div className="surface p-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">Exam attempts</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{attempts.length}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{attempts.length}</p>
         </div>
-        <div className="surface p-4">
+        <div className="surface p-3.5">
           <p className="text-subtle">Average score</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{average === null ? "—" : `${average.toFixed(1)}%`}</p>
+          <p className="mt-1 text-xl font-semibold tabular-nums">{average === null ? "—" : `${average.toFixed(1)}%`}</p>
         </div>
       </div>
 

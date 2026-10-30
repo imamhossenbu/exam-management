@@ -25,32 +25,32 @@ export function StatCard({
   tone?: keyof typeof TONES;
 }) {
   return (
-    <div className="surface relative overflow-hidden p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="surface relative overflow-hidden p-3.5 sm:p-4">
+      <div className="flex items-start justify-between gap-2.5">
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1.5 sm:mt-2 text-2xl sm:text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1 text-xl sm:text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
         </div>
-        <span className={cn("grid size-9 sm:size-10 shrink-0 place-items-center rounded-xl", TONES[tone])}>
-          <Icon className="size-4.5 sm:size-5" aria-hidden />
+        <span className={cn("grid size-8 sm:size-8.5 shrink-0 place-items-center rounded-lg", TONES[tone])}>
+          <Icon className="size-4" aria-hidden />
         </span>
       </div>
-      {hint ? <p className="mt-1.5 sm:mt-2 text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-[11px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
 
 export function StatCardsSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="surface flex justify-between p-5">
+        <div key={i} className="surface flex justify-between p-3.5 sm:p-4">
           <div>
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="mt-3 h-8 w-16" />
-            <Skeleton className="mt-3 h-3 w-32" />
+            <Skeleton className="h-3.5 w-20" />
+            <Skeleton className="mt-2 h-6 w-14" />
+            <Skeleton className="mt-2 h-2.5 w-24" />
           </div>
-          <Skeleton className="size-10 rounded-xl" />
+          <Skeleton className="size-8.5 rounded-lg" />
         </div>
       ))}
     </div>
