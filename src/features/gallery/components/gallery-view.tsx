@@ -23,6 +23,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { ACCEPTED_IMAGE_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
@@ -57,9 +65,18 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
   const [selectedFiles, setSelectedFiles] = React.useState<{ id: string; file: File; previewUrl: string }[]>([]);
   const [isUploading, setIsUploading] = React.useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = React.useState<string>("");
+  const [uploadPercent, setUploadPercent] = React.useState<number>(0);
   const [isDragOver, setIsDragOver] = React.useState<boolean>(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Suggested subjects for quick selection pills
+  const suggestedSubjects = React.useMemo(() => {
+    const defaults = ["Physics", "Chemistry", "Mathematics", "Biology", "General"];
+    const existing = subjects.map((s) => s.name).filter(Boolean);
+    const combined = Array.from(new Set([...defaults, ...existing]));
+    return combined.slice(0, 6);
+  }, [subjects]);
 
   // Filtered photos
   const filteredPhotos = React.useMemo(() => {
@@ -130,24 +147,37 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
     });
   }
 
+  function handleCloseUpload() {
+    if (isUploading) return;
+    selectedFiles.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    setSelectedFiles([]);
+    setUploadTitle("");
+    setUploadPercent(0);
+    setUploadProgress("");
+    setIsUploadOpen(false);
+  }
+
   async function handleBatchUpload(e: React.FormEvent) {
     e.preventDefault();
-    if (!uploadTitle.trim()) {
-      toast.error("Please enter a collection or topic title.");
-      return;
-    }
     if (selectedFiles.length === 0) {
       toast.error("Please select at least one photo to upload.");
       return;
     }
 
+    const titleToUse =
+      uploadTitle.trim() ||
+      (selectedFiles[0]?.file.name
+        ? selectedFiles[0].file.name.replace(/\.[^/.]+$/, "")
+        : `Study Photos · ${formatDate(new Date().toISOString(), timezone)}`);
+
     setIsUploading(true);
+    setUploadPercent(5);
     setUploadProgress("Creating collection…");
 
     try {
       // 1. Create gallery collection note
       const albumRes = await createGalleryAlbumAction({
-        title: uploadTitle.trim(),
+        title: titleToUse,
         subject: uploadSubject.trim() || "General",
         chapter: "Gallery Photos",
       });
@@ -156,6 +186,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
         toast.error(albumRes.error || "Could not create gallery album.");
         setIsUploading(false);
         setUploadProgress("");
+        setUploadPercent(0);
         return;
       }
 
@@ -165,6 +196,8 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
 
       for (let i = 0; i < selectedFiles.length; i++) {
         const item = selectedFiles[i];
+        const stepPct = Math.round(10 + ((i + 0.5) / selectedFiles.length) * 85);
+        setUploadPercent(stepPct);
         setUploadProgress(`Uploading photo ${i + 1} of ${selectedFiles.length}: ${item.file.name}…`);
 
         const ext = extensionFor(item.file.type);
@@ -189,9 +222,14 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
         }).catch(() => null);
 
         if (reg?.ok) uploadedCount++;
+        const finishPct = Math.round(10 + ((i + 1) / selectedFiles.length) * 85);
+        setUploadPercent(finishPct);
       }
 
+      setUploadPercent(100);
+      setUploadProgress("Done!");
       toast.success(`Uploaded ${uploadedCount} photo(s) to gallery!`);
+      selectedFiles.forEach((item) => URL.revokeObjectURL(item.previewUrl));
       setSelectedFiles([]);
       setUploadTitle("");
       setIsUploadOpen(false);
@@ -202,6 +240,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
     } finally {
       setIsUploading(false);
       setUploadProgress("");
+      setUploadPercent(0);
     }
   }
 
@@ -519,58 +558,75 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
       )}
 
       {/* UPLOAD PHOTOS MODAL */}
-      {isUploadOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs"
-          onClick={() => !isUploading && setIsUploadOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-elevated space-y-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <Images className="size-4 text-primary" />
-                  Upload Study Photos
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Add photos of whiteboard notes, lecture slides, formulas, or diagrams.
-                </p>
+      <Dialog
+        open={isUploadOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseUpload();
+          else setIsUploadOpen(true);
+        }}
+      >
+        <DialogContent size="md" className="max-h-[85vh] overflow-y-auto p-5 sm:p-6 gap-4">
+          <DialogHeader className="pr-8">
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+              <Images className="size-5 text-primary" />
+              Upload Study Photos
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Add photos of whiteboard notes, lecture slides, formulas, or diagrams to your study gallery.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleBatchUpload} className="space-y-4">
+            {/* Subject Selector with Quick Pills */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Subject</label>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {suggestedSubjects.map((sub) => {
+                  const isSelected = uploadSubject.toLowerCase() === sub.toLowerCase();
+                  return (
+                    <button
+                      key={sub}
+                      type="button"
+                      disabled={isUploading}
+                      onClick={() => setUploadSubject(sub)}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-xs font-medium border transition-colors",
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground border-border/70",
+                      )}
+                    >
+                      {sub}
+                    </button>
+                  );
+                })}
               </div>
-              <button
-                type="button"
+              <Input
                 disabled={isUploading}
-                onClick={() => setIsUploadOpen(false)}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-5" />
-              </button>
+                value={uploadSubject}
+                onChange={(e) => setUploadSubject(e.target.value)}
+                placeholder="Or enter custom subject…"
+                className="text-xs h-8 mt-1"
+              />
             </div>
 
-            <form onSubmit={handleBatchUpload} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Collection / Topic Title *</label>
-                <Input
-                  required
-                  value={uploadTitle}
-                  onChange={(e) => setUploadTitle(e.target.value)}
-                  placeholder="e.g. Organic Chemistry Reactions Whiteboard"
-                  className="text-xs"
-                />
-              </div>
+            {/* Collection / Topic Title */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                <span>Collection / Topic Title</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Optional (auto-named from file if blank)</span>
+              </label>
+              <Input
+                disabled={isUploading}
+                value={uploadTitle}
+                onChange={(e) => setUploadTitle(e.target.value)}
+                placeholder="e.g. Thermodynamics Slides, Math Formulas"
+                className="text-xs h-8"
+              />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Subject</label>
-                <Input
-                  value={uploadSubject}
-                  onChange={(e) => setUploadSubject(e.target.value)}
-                  placeholder="e.g. Chemistry, Physics, Math"
-                  className="text-xs"
-                />
-              </div>
-
-              {/* Dropzone */}
+            {/* Dropzone */}
+            {selectedFiles.length === 0 ? (
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -610,69 +666,137 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                   PNG, JPG, or WebP up to 10MB each
                 </p>
               </div>
+            ) : (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  if (e.dataTransfer.files?.length) handleFilesSelected(e.dataTransfer.files);
+                }}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+                className={cn(
+                  "flex items-center justify-center gap-2 p-2.5 rounded-xl border-2 border-dashed transition-all cursor-pointer text-center",
+                  isDragOver
+                    ? "border-primary bg-primary/10 scale-[1.01]"
+                    : "border-border hover:border-primary/50 bg-muted/20",
+                  isUploading && "pointer-events-none opacity-60",
+                )}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  tabIndex={-1}
+                  onChange={(e) => e.target.files?.length && handleFilesSelected(e.target.files)}
+                />
+                <Plus className="size-4 text-primary" />
+                <span className="text-xs font-medium text-foreground">Add more photos</span>
+                <span className="text-[10px] text-muted-foreground">(click or drag & drop)</span>
+              </div>
+            )}
 
-              {/* Selected Thumbnails */}
-              {selectedFiles.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-muted-foreground text-[10px] uppercase">
-                      Selected ({selectedFiles.length} photos)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedFiles([])}
-                      className="text-xs text-muted-foreground hover:text-destructive"
+            {/* Selected Thumbnails */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">
+                    Selected Photos ({selectedFiles.length})
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isUploading}
+                    onClick={() => {
+                      selectedFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+                      setSelectedFiles([]);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-destructive disabled:opacity-50 transition-colors"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-44 overflow-y-auto p-2 rounded-xl border bg-muted/10">
+                  {selectedFiles.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className="group relative aspect-square rounded-lg overflow-hidden border border-border/80 bg-background shadow-2xs"
                     >
-                      Clear
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1 rounded-lg border bg-muted/10">
-                    {selectedFiles.map((item, idx) => (
-                      <div key={item.id} className="relative group aspect-square rounded-md overflow-hidden border">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.previewUrl} alt="" className="size-full object-cover" />
-                        <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1 text-[9px] font-bold text-white">
-                          #{idx + 1}
-                        </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={item.previewUrl} alt="" className="size-full object-cover" />
+                      <span className="absolute bottom-1 left-1 rounded bg-black/75 px-1 py-0.2 text-[9px] font-bold text-white backdrop-blur-xs">
+                        #{idx + 1}
+                      </span>
+                      {!isUploading && (
                         <button
                           type="button"
                           onClick={() => removeSelectedFile(item.id)}
-                          className="absolute top-1 right-1 p-0.5 rounded-full bg-black/70 text-white hover:bg-destructive"
+                          className="absolute top-1 right-1 size-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-80 hover:opacity-100 hover:bg-destructive transition-all"
+                          title="Remove photo"
                         >
                           <X className="size-3" />
                         </button>
-                      </div>
-                    ))}
-                  </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-3 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={isUploading}
-                  onClick={() => setIsUploadOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" disabled={isUploading || selectedFiles.length === 0} className="gap-2">
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin" />
-                      <span>{uploadProgress || "Uploading…"}</span>
-                    </>
-                  ) : (
-                    `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""} to Gallery`
-                  )}
-                </Button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+
+            {/* Upload Progress Bar */}
+            {isUploading && (
+              <div className="space-y-1.5 rounded-lg border bg-muted/40 p-3">
+                <div className="flex items-center justify-between text-xs font-medium">
+                  <span className="flex items-center gap-2 text-foreground truncate max-w-[280px]">
+                    <Loader2 className="size-3.5 animate-spin text-primary shrink-0" />
+                    <span className="truncate">{uploadProgress || "Uploading photos…"}</span>
+                  </span>
+                  <span className="font-mono text-xs text-primary font-bold shrink-0">{uploadPercent}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 rounded-full"
+                    style={{ width: `${uploadPercent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Dialog Footer Actions */}
+            <DialogFooter className="pt-2 border-t flex flex-row items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isUploading}
+                onClick={handleCloseUpload}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isUploading || selectedFiles.length === 0}
+                className="gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    <span>Uploading…</span>
+                  </>
+                ) : (
+                  `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""} to Gallery`
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
