@@ -12,6 +12,7 @@ const publicSchema = z.object({
     .refine((v) => !v.startsWith("PASTE_") && !v.startsWith("YOUR_"), {
       message: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY still contains the placeholder value",
     }),
+  NEXT_SITE_URL: z.url().optional(),
   NEXT_PUBLIC_SITE_URL: z.url().optional(),
 });
 
@@ -32,7 +33,8 @@ export function getPublicEnv(): PublicEnv {
   const parsed = publicSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || undefined,
+    NEXT_SITE_URL: process.env.NEXT_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || undefined,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || undefined,
   });
   if (!parsed.success) {
     throw new ConfigurationError(parsed.error.issues.map((i) => i.message));

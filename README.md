@@ -216,7 +216,7 @@ If the Supabase variables are missing or still contain placeholders, every page 
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Browser + server. Dashboard → Project Settings → API. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Browser + server. Dashboard → Project Settings → API Keys → *Publishable key*. Safe to expose: every query is constrained by RLS. |
-| `NEXT_PUBLIC_SITE_URL` | recommended | Absolute origin used in auth email links, canonical URLs, the sitemap and social share images, e.g. `https://exams.example.com` (no trailing slash). On Vercel it falls back to the production domain if unset. |
+| `NEXT_SITE_URL` | recommended | Absolute origin used in auth email links, canonical URLs, the sitemap and social share images, e.g. `https://exams.example.com` (no trailing slash). `NEXT_PUBLIC_SITE_URL` is also supported as fallback. On Vercel it falls back to the production domain if unset. |
 | `SUPABASE_SECRET_KEY` | **no** | Not used by the app. Leave empty. Never prefix with `NEXT_PUBLIC_`. |
 | `DATABASE_URL` | no | Only for running migrations from your machine. Never used at runtime. |
 | `SUPABASE_JWKS_URL` | no | Not needed: `supabase.auth.getClaims()` verifies JWTs against the project's JWKS automatically. |
@@ -346,7 +346,7 @@ Files are served through short-lived signed URLs. No Dashboard steps are needed 
 2. Under *Settings → Environment Variables*, add for **Production** and **Preview**:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `NEXT_PUBLIC_SITE_URL` = your production URL, e.g. `https://exam-management.vercel.app`
+   - `NEXT_SITE_URL` = your production URL, e.g. `https://exam-management.vercel.app` (or `NEXT_PUBLIC_SITE_URL`)
 3. Deploy.
 4. In Supabase, set the *Site URL* to the production URL and add `https://<domain>/auth/confirm` to *Redirect URLs* (§9).
 5. Provision the teacher if you haven't already (§10).
@@ -464,7 +464,7 @@ Before opening a pull request, run: `npm run typecheck && npm run lint && npm te
 - **Social share image:** `src/app/opengraph-image.tsx` generates a 1200×630 preview used when the link is shared on Facebook, WhatsApp, LinkedIn, X, etc.
 - **Indexing:** `/robots.txt` and `/sitemap.xml` expose only the public pages (home, sign in, sign up). The teacher and student areas, auth callbacks, API routes and password-reset pages are marked `noindex` and disallowed.
 - **Structured data:** the landing page includes JSON-LD (`WebApplication`) for richer search results.
-- **Canonical URLs** use `NEXT_PUBLIC_SITE_URL`, so set it to your real domain in production.
+- **Canonical URLs** use `NEXT_SITE_URL` (or `NEXT_PUBLIC_SITE_URL`), so set it to your real domain in production.
 - After deploying, submit `https://<domain>/sitemap.xml` in Google Search Console.
 
 ## 17. Design decisions and limitations

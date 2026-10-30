@@ -11,7 +11,7 @@ export function renderWelcomeEmail({
   role = "student",
   dashboardUrl,
 }: WelcomeEmailOptions): { subject: string; html: string; text: string } {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const siteUrl = (process.env.NEXT_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
   const targetUrl = dashboardUrl || (siteUrl ? `${siteUrl}/${role}` : `/${role}`);
   const subject = `Welcome to ExamDesk, ${fullName}! 🚀`;
 
