@@ -9,13 +9,14 @@ import { ACCEPTED_DOCUMENT_TYPES, LIMITS } from "@/lib/utils/files";
 import { uuid } from "@/lib/validations/courses";
 import { noteSchema } from "@/lib/validations/notes";
 
-export async function createNoteAction(input: unknown): Promise<ActionResult> {
+export async function createNoteAction(input: unknown): Promise<ActionResult<{ id: string }>> {
   const parsed = noteSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   const { profile, supabase } = await requireStudent();
   const { data, error } = await supabase.from("study_notes").insert({ ...parsed.data, owner_id: profile.id }).select("id").single();
   if (error) return dbFail(error, "createNote");
-  redirect(`/student/notes/${data.id}?created=1`);
+  refresh();
+  return ok({ id: data.id }, "Resource created");
 }
 
 export async function updateNoteAction(noteId: string, input: unknown): Promise<ActionResult> {

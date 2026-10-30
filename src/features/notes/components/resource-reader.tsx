@@ -697,6 +697,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
               <NoteForm
                 key={note.updated_at}
                 noteId={note.id}
+                ownerId={ownerId}
                 defaultValues={{
                   title: note.title,
                   subject: note.subject,

@@ -10,22 +10,19 @@ import { NoteForm } from "@/features/notes/components/note-form";
 export const metadata: Metadata = { title: "New Resource" };
 
 async function NewNote({ searchParams }: { searchParams: Promise<{ subject?: string; chapter?: string }> }) {
-  const [{ subject, chapter }, { supabase }] = await Promise.all([searchParams, requireStudent()]);
+  const [{ subject, chapter }, { profile, supabase }] = await Promise.all([searchParams, requireStudent()]);
   const taxonomy = await noteTaxonomy(supabase);
   return (
     <Card>
       <CardContent className="py-6">
         <NoteForm
+          ownerId={profile.id}
           defaultValues={{ title: "", subject: subject?.slice(0, 100) ?? "", chapter: chapter?.slice(0, 150) ?? "", body: "", tags: "" }}
           suggestions={{
             subjects: taxonomy.subjects.map((s) => s.name).filter(Boolean),
             chapters: [...new Set(taxonomy.subjects.flatMap((s) => s.chapters.map((c) => c.name)).filter(Boolean))],
           }}
         />
-        <div className="mt-5 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-semibold text-primary">💡 Pro tip:</span>
-          Once created, you can immediately upload multi-page lecture photos to read sequentially as a notebook, or attach PDF documents to read directly in the study reader.
-        </div>
       </CardContent>
     </Card>
   );
