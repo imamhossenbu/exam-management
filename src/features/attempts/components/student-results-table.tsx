@@ -6,9 +6,8 @@ import { DataTable, dataTableColumns } from "@/components/tables/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDateTime } from "@/lib/utils/datetime";
 import type { StudentResultRow } from "../result-queries";
-import { T } from "@/lib/i18n/client";
+import { DateTimeText, T } from "@/lib/i18n/client";
 
 type Row = StudentResultRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -34,7 +33,7 @@ const columns = [
     ),
   }),
   col.accessor("courseTitle", { header: "Course", filterFn: "equalsString", cell: () => null, enableSorting: false }),
-  col.accessor((r) => r.submittedAt ?? "", { id: "submitted", header: "Submitted", sortFn: "datetime", cell: (info) => formatDateTime(info.row.original.submittedAt, info.row.original.timezone) }),
+  col.accessor((r) => r.submittedAt ?? "", { id: "submitted", header: "Submitted", sortFn: "datetime", cell: (info) => <DateTimeText iso={info.row.original.submittedAt} timeZone={info.row.original.timezone} /> }),
   col.accessor((r) => r.percentage ?? -1, {
     id: "score",
     header: "Score",

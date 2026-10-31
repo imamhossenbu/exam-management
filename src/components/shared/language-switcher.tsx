@@ -18,6 +18,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     setClientLocale(next);
     startTransition(async () => {
       await setLocaleAction(next);
+      // Reload so every part of the app (and prefetched pages) renders in the new language.
+      window.location.reload();
     });
   }
 

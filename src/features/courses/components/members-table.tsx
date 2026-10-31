@@ -15,11 +15,10 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
-import { formatDate } from "@/lib/utils/datetime";
 import { enrollByEmailSchema, type EnrollByEmailInput } from "@/lib/validations/courses";
 import { enrollByEmailAction, setMemberStatusAction } from "../actions";
 import type { CourseMemberRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateText, T } from "@/lib/i18n/client";
 
 type Row = CourseMemberRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -100,7 +99,7 @@ const columns = [
     filterFn: "equalsString",
     cell: (info) => <Badge tone={STATUS[info.getValue()].tone}>{STATUS[info.getValue()].label}</Badge>,
   }),
-  col.accessor("joinedAt", { header: "Joined", sortFn: "datetime", cell: (info) => formatDate(info.getValue(), info.row.original.timezone) }),
+  col.accessor("joinedAt", { header: "Joined", sortFn: "datetime", cell: (info) => <DateText iso={info.getValue()} timeZone={info.row.original.timezone} /> }),
   col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <MemberActions member={info.row.original} /> }),
 ];
 

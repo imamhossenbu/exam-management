@@ -10,13 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
-import { formatDuration } from "@/lib/utils/datetime";
 import { AutosaveQueue, type AnswerValue, type QuestionSaveState } from "../autosave";
 import { submitAttemptAction } from "../actions";
 import type { TakingFile, TakingQuestion } from "../queries";
 import { AnswerUploads } from "./answer-uploads";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
-import { T, tNow, useT } from "@/lib/i18n/client";
+import { T, tNow, useFormatters, useT } from "@/lib/i18n/client";
 
 type ServerAnswer = { question_id: string; selected_option_id: string | null; text_answer: string | null; marked_for_review: boolean; revision: number };
 
@@ -77,6 +76,7 @@ function useOnline() {
 
 export function ExamRunner(props: Props) {
   const t = useT();
+  const fmt = useFormatters();
   const { attemptId, studentId, questions, mode } = props;
   const router = useRouter();
   const returned = mode === "returned";
@@ -400,12 +400,12 @@ export function ExamRunner(props: Props) {
             <div
               className={cn("flex items-center gap-2 rounded-md px-3 py-1.5 font-mono text-lg tabular-nums", lowTime ? "bg-danger-soft text-danger-soft-foreground" : "bg-muted")}
               role="timer"
-              aria-label={`${mcqPhase ? "MCQ time remaining" : "Time remaining"} ${formatDuration(shownRemaining)}`}
+              aria-label={`${t(mcqPhase ? "MCQ time remaining" : "Time remaining")} ${fmt.duration(shownRemaining)}`}
             >
               <Clock className="size-4" aria-hidden />
-              {formatDuration(shownRemaining)}
+              {fmt.duration(shownRemaining)}
             </div>
-            {mcqPhase ? <span className="mt-0.5 text-xs text-muted-foreground tabular-nums">Exam ends in {formatDuration(remaining)}</span> : null}
+            {mcqPhase ? <span className="mt-0.5 text-xs text-muted-foreground tabular-nums">{t("Exam ends in {time}", { time: fmt.duration(remaining) })}</span> : null}
           </div>
           {mcqPhase ? (
             <>
@@ -607,7 +607,7 @@ export function ExamRunner(props: Props) {
                 <p className="mb-2 flex items-center justify-between text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   <span>MCQ · {mcqAnswered}/{mcqIndexes.length}</span>
                   {mcqPhase ? (
-                    <span className="tabular-nums normal-case">{formatDuration(mcqRemaining)} left</span>
+                    <span className="tabular-nums normal-case">{t("{time} left", { time: fmt.duration(mcqRemaining) })}</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 normal-case">
                       <Lock className="size-3" aria-hidden /> <T>Locked</T>
@@ -690,7 +690,7 @@ export function ExamRunner(props: Props) {
             <DialogHeader>
               <DialogTitle><T>Finish the MCQ section?</T></DialogTitle>
               <DialogDescription>
-                Your MCQ answers will be locked and the written part opens. The {formatDuration(mcqRemaining)} you have left for MCQs carries over to the written part.
+                {t("Your MCQ answers will be locked and the written part opens. The {time} you have left for MCQs carries over to the written part.", { time: fmt.duration(mcqRemaining) })}
               </DialogDescription>
             </DialogHeader>
             <ul className="space-y-1 text-sm">

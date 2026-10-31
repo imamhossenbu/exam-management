@@ -49,3 +49,23 @@ describe("inLocalDayRange", () => {
     expect(inLocalDayRange(null, "2026-01-01", "", "UTC")).toBe(false);
   });
 });
+
+describe("localized formatters", () => {
+  it("formats dates, minutes and countdowns in Bangla with Latin digits", async () => {
+    const { formatters } = await import("./datetime");
+    const bn = formatters("bn");
+    expect(bn.dateTime("2026-10-31T03:04:00Z", "Asia/Dhaka")).toBe("31 অক্টো, 2026, 09:04");
+    expect(bn.date("2026-10-31T03:04:00Z", "Asia/Dhaka")).toBe("31 অক্টো, 2026");
+    expect(bn.minutes(30)).toBe("30 মিনিট");
+    expect(bn.minutes(150)).toBe("2 ঘণ্টা 30 মিনিট");
+    expect(bn.duration(65_000)).toBe("01মি 05সে");
+  });
+
+  it("keeps English output unchanged", async () => {
+    const { formatters } = await import("./datetime");
+    const en = formatters("en");
+    expect(en.dateTime("2026-10-31T03:04:00Z", "Asia/Dhaka")).toBe("31 Oct 2026, 09:04");
+    expect(en.minutes(150)).toBe("2 h 30 min");
+    expect(en.duration(3_725_000)).toBe("1h 02m 05s");
+  });
+});

@@ -3,10 +3,9 @@ import { CalendarClock, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { EXAM_TYPE_LABEL, PHASE_META, examPhase } from "@/features/exams/status";
 import type { StudentExamRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateTimeText, MinutesText, T } from "@/lib/i18n/client";
 
 export function StudentExamList({ exams, timezone, now, emptyAction }: { exams: StudentExamRow[]; timezone: string; now: number; emptyAction?: React.ReactNode }) {
   if (exams.length === 0) {
@@ -31,10 +30,10 @@ export function StudentExamList({ exams, timezone, now, emptyAction }: { exams: 
             </div>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarClock className="size-3.5" aria-hidden />
-              {formatDateTime(e.startsAt, timezone)} – {formatDateTime(e.endsAt, timezone)}
+              <DateTimeText iso={e.startsAt} timeZone={timezone} /> – <DateTimeText iso={e.endsAt} timeZone={timezone} />
             </p>
             <p className="text-xs text-muted-foreground">
-              <T>{EXAM_TYPE_LABEL[e.examType]}</T> · <T vars={{ n: e.totalMarks }}>{"{n} marks"}</T> · {formatMinutes(e.durationMinutes)} ·{" "}
+              <T>{EXAM_TYPE_LABEL[e.examType]}</T> · <T vars={{ n: e.totalMarks }}>{"{n} marks"}</T> · <MinutesText minutes={e.durationMinutes} /> ·{" "}
               <T vars={{ used: e.attemptsUsed, max: e.maxAttempts }}>{"Attempts {used}/{max}"}</T>
             </p>
             <div className="mt-auto flex gap-2">

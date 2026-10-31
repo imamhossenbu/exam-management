@@ -3,37 +3,25 @@
 import * as React from "react";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale } from "./config";
 import { translate, type Translate, type TranslateVars } from "./translate";
+import { formatters, type Formatters } from "@/lib/utils/datetime";
 
-const EVENT = "examdesk:locale";
+/**
+ * The interface language comes from the route (`app/[lang]`), so the server and the browser
+ * always render the same language: no flash and no hydration mismatch.
+ */
+const LocaleContext = React.createContext<Locale>(DEFAULT_LOCALE);
 
-function readCookie(): Locale {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]*)`));
-  const value = match ? decodeURIComponent(match[1]) : null;
-  return isLocale(value) ? value : DEFAULT_LOCALE;
+export function LocaleProvider({ locale, children }: { locale: Locale; children: React.ReactNode }) {
+  return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>;
 }
 
-function subscribe(callback: () => void) {
-  window.addEventListener(EVENT, callback);
-  window.addEventListener("focus", callback);
-  return () => {
-    window.removeEventListener(EVENT, callback);
-    window.removeEventListener("focus", callback);
-  };
-}
-
-/** Current interface language. Prerendered HTML uses the default; the browser switches on hydration. */
 export function useLocale(): Locale {
-  return React.useSyncExternalStore(subscribe, readCookie, () => DEFAULT_LOCALE);
+  return React.useContext(LocaleContext);
 }
 
 export function useT(): Translate {
   const locale = useLocale();
   return React.useCallback((text: string, vars?: TranslateVars) => translate(locale, text, vars), [locale]);
-}
-
-/** Translation for event handlers and toasts (reads the current choice at call time). */
-export function tNow(text: string, vars?: TranslateVars): string {
-  return translate(typeof document === "undefined" ? DEFAULT_LOCALE : readCookie(), text, vars);
 }
 
 /** Translated text for places that can't call a hook (static server markup). */
@@ -42,18 +30,33 @@ export function T({ children, vars }: { children: string; vars?: TranslateVars }
   return <>{t(children, vars)}</>;
 }
 
-/** Stores the choice on this device and updates every mounted translation at once. */
-export function setClientLocale(locale: Locale) {
-  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
-  document.documentElement.lang = locale;
-  window.dispatchEvent(new Event(EVENT));
+/** Translation for event handlers and toasts. Reads the page's language (<html lang>). */
+export function tNow(text: string, vars?: TranslateVars): string {
+  const lang = typeof document === "undefined" ? null : document.documentElement.lang;
+  return translate(isLocale(lang) ? lang : DEFAULT_LOCALE, text, vars);
 }
 
-/** Keeps <html lang> in step with the chosen language (screen readers, fonts, spell-check). */
-export function HtmlLang() {
+/**
+ * Saves the choice on this device. The page is then reloaded so every part (including
+ * prefetched pages) comes back in the new language.
+ */
+export function setClientLocale(locale: Locale) {
+  document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
+}
+
+/** Date/time/duration formatters in the page's language. */
+export function useFormatters(): Formatters {
   const locale = useLocale();
-  React.useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
-  return null;
+  return React.useMemo(() => formatters(locale), [locale]);
+}
+
+/** For places that can't call a hook (e.g. table cell renderers). */
+export function DateTimeText({ iso, timeZone, withZone }: { iso: string | null | undefined; timeZone: string; withZone?: boolean }) {
+  return <>{useFormatters().dateTime(iso, timeZone, { withZone })}</>;
+}
+export function DateText({ iso, timeZone }: { iso: string | null | undefined; timeZone: string }) {
+  return <>{useFormatters().date(iso, timeZone)}</>;
+}
+export function MinutesText({ minutes }: { minutes: number }) {
+  return <>{useFormatters().minutes(minutes)}</>;
 }

@@ -34,12 +34,11 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClient } from "@/lib/supabase/client";
 import { ACCEPTED_IMAGE_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
-import { formatDate } from "@/lib/utils/datetime";
 import { cn } from "@/lib/utils/cn";
 import { createGalleryAlbumAction, deleteGalleryPhotoAction } from "../actions";
 import { registerStudyFileAction } from "@/features/notes/actions";
 import type { GalleryImage } from "../queries";
-import { T, tNow } from "@/lib/i18n/client";
+import { DateText, T, tNow } from "@/lib/i18n/client";
 
 type Props = {
   photos: GalleryImage[];
@@ -169,7 +168,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
       uploadTitle.trim() ||
       (selectedFiles[0]?.file.name
         ? selectedFiles[0].file.name.replace(/\.[^/.]+$/, "")
-        : `Study Photos · ${formatDate(new Date().toISOString(), timezone)}`);
+        : `Study Photos · $<DateText iso={new Date().toISOString()} timeZone={timezone} />`);
 
     setIsUploading(true);
     setUploadPercent(5);
@@ -391,7 +390,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                 </p>
                 <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
                   <span className="truncate max-w-[90px]">{photo.fileName}</span>
-                  <span>{formatDate(photo.createdAt, timezone)}</span>
+                  <span><DateText iso={photo.createdAt} timeZone={timezone} /></span>
                 </div>
               </div>
             </div>

@@ -10,11 +10,10 @@ import { Field, FormError } from "@/components/ui/field";
 import { Checkbox, Input, Label, NativeSelect, Textarea } from "@/components/ui/input";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
 import { examSettingsSchema, type ExamSettingsInput, type ExamSettingsOutput } from "@/lib/validations/exams";
-import { formatMinutes } from "@/lib/utils/datetime";
 import { RELEASE_LABEL } from "../status";
 import { createExamAction, updateExamAction } from "../actions";
 import type { CourseOption } from "@/features/courses/queries";
-import { T, useT } from "@/lib/i18n/client";
+import { T, useFormatters, useT } from "@/lib/i18n/client";
 import { trChildren } from "@/lib/i18n/tr";
 
 type Props = {
@@ -46,6 +45,7 @@ const zod = zodResolver(examSettingsSchema);
 
 export function ExamSettingsForm({ courses, defaultValues, examId, locked = false, timezone }: Props) {
   const t = useT();
+  const fmt = useFormatters();
   // react-hook-form reports disabled fields (locked settings, the course when editing, the
   // subject before a course is chosen) as undefined. Validate them with their original values.
   const resolver = React.useCallback<Resolver<ExamSettingsInput, unknown, ExamSettingsOutput>>(
@@ -220,7 +220,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
                 {sectioned && durationMinutes > mcqMinutes ? (
                   <>
                     <p className="font-medium">
-                      {t("MCQ {mcq}, then written part {written}", { mcq: formatMinutes(mcqMinutes), written: formatMinutes(durationMinutes - mcqMinutes) })}
+                      {t("MCQ {mcq}, then written part {written}", { mcq: fmt.minutes(mcqMinutes), written: fmt.minutes(durationMinutes - mcqMinutes) })}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       <T>Students answer all MCQs first. When the MCQ time is up — or they hand the section in early — their MCQ answers lock and the written

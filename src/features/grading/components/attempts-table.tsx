@@ -6,9 +6,8 @@ import { DataTable, dataTableColumns } from "@/components/tables/data-table";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDateTime } from "@/lib/utils/datetime";
 import type { AttemptRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateTimeText, T } from "@/lib/i18n/client";
 
 type Row = AttemptRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -60,7 +59,7 @@ function buildColumns(showExam: boolean) {
       sortFn: "datetime",
       cell: (info) => (
         <span className="text-xs whitespace-nowrap">
-          {info.row.original.submittedAt ? formatDateTime(info.row.original.submittedAt, info.row.original.timezone) : "—"}
+          {info.row.original.submittedAt ? <DateTimeText iso={info.row.original.submittedAt} timeZone={info.row.original.timezone} /> : "—"}
           {info.row.original.submittedVia === "timeout" ? <span className="block text-muted-foreground"><T>Auto (time up)</T></span> : null}
           {info.row.original.submittedVia === "teacher" ? <span className="block text-muted-foreground"><T>Exam closed</T></span> : null}
         </span>

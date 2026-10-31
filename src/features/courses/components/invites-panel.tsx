@@ -13,11 +13,10 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/shared/empty-state";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
-import { formatDateTime } from "@/lib/utils/datetime";
 import { inviteSchema, type InviteInput } from "@/lib/validations/courses";
 import { createInviteAction, revokeInviteAction } from "../actions";
 import type { CourseInviteRow } from "../queries";
-import { T, tNow } from "@/lib/i18n/client";
+import { DateTimeText, T, tNow, useFormatters, useT } from "@/lib/i18n/client";
 
 function inviteState(invite: CourseInviteRow, now: number) {
   if (invite.revoked_at) return { label: "Revoked", tone: "neutral" as const };
@@ -143,6 +142,8 @@ export function InvitesPanel({
   archived: boolean;
   now: number;
 }) {
+  const t = useT();
+  const f = useFormatters();
   const { run } = useServerAction(revokeInviteAction);
   return (
     <div className="space-y-4">
@@ -166,9 +167,9 @@ export function InvitesPanel({
                     {invite.label ? <span className="ml-2 text-muted-foreground">{invite.label}</span> : null}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Used {invite.use_count}
-                    {invite.max_uses ? ` / ${invite.max_uses}` : ""} · {invite.expires_at ? `Expires ${formatDateTime(invite.expires_at, timezone)}` : "No expiry"} · Created{" "}
-                    {formatDateTime(invite.created_at, timezone)}
+                    {t("Used {n}", { n: invite.use_count })}
+                    {invite.max_uses ? ` / ${invite.max_uses}` : ""} · {invite.expires_at ? t("Expires {when}", { when: f.dateTime(invite.expires_at, timezone) }) : t("No expiry")} · {t("Created")}{" "}
+                    <DateTimeText iso={invite.created_at} timeZone={timezone} />
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

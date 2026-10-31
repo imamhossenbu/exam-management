@@ -9,11 +9,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useServerAction } from "@/components/forms/use-server-action";
-import { formatDate } from "@/lib/utils/datetime";
 import { setCourseArchivedAction } from "../actions";
 import type { TeacherCourseRow } from "../queries";
 import { CourseFormDialog } from "./course-form-dialog";
-import { T } from "@/lib/i18n/client";
+import { DateText, T } from "@/lib/i18n/client";
 
 const col = dataTableColumns<TeacherCourseRow & { timezone: string }>();
 
@@ -86,7 +85,7 @@ const columns = [
   col.accessor("createdAt", {
     header: "Created",
     sortFn: "datetime",
-    cell: (info) => formatDate(info.getValue(), info.row.original.timezone),
+    cell: (info) => <DateText iso={info.getValue()} timeZone={info.row.original.timezone} />,
   }),
   col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <RowActions course={info.row.original} /> }),
 ];

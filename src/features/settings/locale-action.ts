@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { refresh } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n/config";
@@ -17,6 +16,5 @@ export async function setLocaleAction(locale: string): Promise<ActionResult> {
     const { error } = await supabase.from("profiles").update({ locale }).eq("id", uid);
     if (error) console.error("[action:setLocale]", error.code, error.message);
   }
-  refresh();
   return ok(undefined);
 }

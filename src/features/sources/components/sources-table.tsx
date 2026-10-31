@@ -9,10 +9,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useServerAction } from "@/components/forms/use-server-action";
 import { formatBytes } from "@/lib/utils/files";
-import { formatDateTime } from "@/lib/utils/datetime";
 import { deleteSourceAction } from "../actions";
 import type { SourceRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateTimeText, T } from "@/lib/i18n/client";
 
 type Row = SourceRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -70,7 +69,7 @@ const columns = [
   }),
   col.accessor((r) => r.courseTitle ?? "—", { id: "course", header: "Course", filterFn: "equalsString" }),
   col.accessor("status", { header: "Text", filterFn: "equalsString", cell: (info) => <Badge>{STATUS[info.getValue()]}</Badge> }),
-  col.accessor("createdAt", { header: "Uploaded", sortFn: "datetime", cell: (info) => formatDateTime(info.getValue(), info.row.original.timezone) }),
+  col.accessor("createdAt", { header: "Uploaded", sortFn: "datetime", cell: (info) => <DateTimeText iso={info.getValue()} timeZone={info.row.original.timezone} /> }),
   col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <Actions source={info.row.original} /> }),
 ];
 

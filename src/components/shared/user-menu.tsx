@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { NavKind } from "./nav-config";
 import { trChildren } from "@/lib/i18n/tr";
 import { LanguageSwitcher } from "./language-switcher";
-import { getT } from "@/lib/i18n/server";
+import { getRouteT } from "@/lib/i18n/route";
 
 function initials(name: string, email: string | null) {
   const source = name.trim() || email || "?";
@@ -25,7 +25,7 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
   if (!profile) redirect("/login");
   if (profile.role !== kind) redirect(homeFor(profile.role));
 
-  const t = await getT();
+  const t = await getRouteT();
   const roleLabel = profile.role === "teacher" ? t("Teacher") : profile.student_class ? t("Class {name}", { name: profile.student_class }) : t("Student");
 
   return (

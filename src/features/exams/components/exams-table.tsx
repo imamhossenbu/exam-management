@@ -6,10 +6,9 @@ import { DataTable, dataTableColumns } from "@/components/tables/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { EXAM_TYPE_LABEL, PHASE_META, type ExamPhase } from "../status";
 import type { TeacherExamRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateTimeText, MinutesText, T } from "@/lib/i18n/client";
 
 type Row = TeacherExamRow & { phase: ExamPhase; timezone: string };
 const col = dataTableColumns<Row>();
@@ -25,7 +24,7 @@ const columns = [
         </Link>
         <p className="text-xs text-muted-foreground">
           <T>{EXAM_TYPE_LABEL[info.row.original.examType]}</T> · <T vars={{ n: info.row.original.totalMarks }}>{"{n} marks"}</T> ·{" "}
-          {formatMinutes(info.row.original.durationMinutes)}
+          <MinutesText minutes={info.row.original.durationMinutes} />
         </p>
       </div>
     ),
@@ -41,9 +40,9 @@ const columns = [
     sortFn: "datetime",
     cell: (info) => (
       <span className="text-xs whitespace-nowrap">
-        {formatDateTime(info.getValue(), info.row.original.timezone)}
+        <DateTimeText iso={info.getValue()} timeZone={info.row.original.timezone} />
         <br />
-        <span className="text-muted-foreground">to {formatDateTime(info.row.original.endsAt, info.row.original.timezone)}</span>
+        <span className="text-muted-foreground">to <DateTimeText iso={info.row.original.endsAt} timeZone={info.row.original.timezone} /></span>
       </span>
     ),
   }),

@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useServerAction } from "@/components/forms/use-server-action";
-import { formatMinutes } from "@/lib/utils/datetime";
 import { startAttemptAction } from "../actions";
-import { T } from "@/lib/i18n/client";
+import { MinutesText, T } from "@/lib/i18n/client";
 
 export function StartExamButton({
   examId,
@@ -38,14 +37,14 @@ export function StartExamButton({
           <DialogTitle><T>Ready to start?</T></DialogTitle>
           <DialogDescription>
             The timer starts on the server as soon as you begin and keeps running even if you close this page. You&apos;ll have{" "}
-            <strong>{formatMinutes(effective)}</strong>
+            <strong><MinutesText minutes={effective} /></strong>
             {effective < durationMinutes ? " because the exam window closes soon" : ""}.
           </DialogDescription>
         </DialogHeader>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           {mcqEffective ? (
             <li>
-              <strong className="text-foreground">MCQs come first, with {formatMinutes(mcqEffective)}.</strong> <T>When that time is up (or you finish early) your MCQ
+              <strong className="text-foreground">MCQs come first, with <MinutesText minutes={mcqEffective} />.</strong> <T>When that time is up (or you finish early) your MCQ
               answers lock and the written questions open.</T>
             </li>
           ) : null}

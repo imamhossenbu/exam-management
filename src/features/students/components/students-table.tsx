@@ -6,9 +6,8 @@ import { DataTable, dataTableColumns } from "@/components/tables/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDate } from "@/lib/utils/datetime";
 import type { StudentRow } from "../queries";
-import { T } from "@/lib/i18n/client";
+import { DateText, T } from "@/lib/i18n/client";
 
 type Row = StudentRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -43,7 +42,7 @@ const columns = [
     filterFn: "equalsString",
     cell: (info) => <Badge tone={ENROLLMENT[info.getValue() as keyof typeof ENROLLMENT].tone}>{ENROLLMENT[info.getValue() as keyof typeof ENROLLMENT].label}</Badge>,
   }),
-  col.accessor("joinedAt", { header: "Signed up", sortFn: "datetime", cell: (info) => formatDate(info.getValue(), info.row.original.timezone) }),
+  col.accessor("joinedAt", { header: "Signed up", sortFn: "datetime", cell: (info) => <DateText iso={info.getValue()} timeZone={info.row.original.timezone} /> }),
   col.display({
     id: "actions",
     header: () => <span className="sr-only"><T>Actions</T></span>,
