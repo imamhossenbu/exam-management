@@ -9,6 +9,7 @@ import { uuid } from "@/lib/validations/courses";
 import { getAttemptForGrading } from "@/features/grading/queries";
 import { GradingWorkspace } from "@/features/grading/components/grading-workspace";
 import { GRADING_META } from "@/features/exams/status";
+import { T } from "@/lib/i18n/client";
 
 async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = await params;
@@ -35,7 +36,7 @@ async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
         title={
           <span className="flex flex-wrap items-center gap-2">
             {attempt.student?.full_name || "Student"}
-            {attempt.status === "in_progress" ? <Badge tone="info">In progress</Badge> : attempt.status === "returned" ? <Badge tone="warning">Returned for correction</Badge> : null}
+            {attempt.status === "in_progress" ? <Badge tone="info"><T>In progress</T></Badge> : attempt.status === "returned" ? <Badge tone="warning"><T>Returned for correction</T></Badge> : null}
             {result ? <Badge tone={GRADING_META[result.grading_status].tone}>{GRADING_META[result.grading_status].label}</Badge> : null}
           </span>
         }
@@ -45,20 +46,20 @@ async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
       />
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         <div className="surface p-3.5">
-          <p className="text-subtle">Total</p>
+          <p className="text-subtle"><T>Total</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{result ? `${Number(result.total_score)}/${Number(result.max_score)}` : "—"}</p>
           {result ? <p className="text-xs text-muted-foreground">{Number(result.percentage)}%{result.passed === null ? "" : result.passed ? " · Pass" : " · Below pass mark"}</p> : null}
         </div>
         <div className="surface p-3.5">
-          <p className="text-subtle">MCQ (auto)</p>
+          <p className="text-subtle"><T>MCQ (auto)</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{result ? Number(result.mcq_score) : "—"}</p>
         </div>
         <div className="surface p-3.5">
-          <p className="text-subtle">Written (final)</p>
+          <p className="text-subtle"><T>Written (final)</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{result ? Number(result.cq_score) : "—"}</p>
         </div>
         <div className="surface p-3.5">
-          <p className="text-subtle">Integrity signals</p>
+          <p className="text-subtle"><T>Integrity signals</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{hidden}</p>
           <p className="text-xs text-muted-foreground">
             tab left · {offline} offline · best-effort only

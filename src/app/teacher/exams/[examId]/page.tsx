@@ -17,6 +17,7 @@ import { EXAM_TYPE_LABEL, PHASE_META, RELEASE_LABEL, examPhase } from "@/feature
 import { ExamLifecycleBar } from "@/features/exams/components/exam-lifecycle-bar";
 import { ExamSettingsForm } from "@/features/exams/components/exam-settings-form";
 import { QuestionBuilder } from "@/features/exams/components/question-builder";
+import { T } from "@/lib/i18n/client";
 
 async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
@@ -79,7 +80,7 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
       <Tabs defaultValue="questions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="settings"><T>Settings</T></TabsTrigger>
         </TabsList>
         <TabsContent value="questions">
           <QuestionBuilder

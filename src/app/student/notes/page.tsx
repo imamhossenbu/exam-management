@@ -12,6 +12,7 @@ import { requireStudent } from "@/lib/auth/dal";
 import { formatDate } from "@/lib/utils/datetime";
 import { cn } from "@/lib/utils/cn";
 import { listNotes, noteTaxonomy, type NoteFilters } from "@/features/notes/queries";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Study Resources" };
 
@@ -42,7 +43,7 @@ async function Notes({ searchParams }: { searchParams: Promise<NoteFilters> }) {
         action={
           <Button asChild>
             <Link href="/student/notes/new">
-              <Plus aria-hidden /> New resource
+              <Plus aria-hidden /> <T>New resource</T>
             </Link>
           </Button>
         }
@@ -54,11 +55,11 @@ async function Notes({ searchParams }: { searchParams: Promise<NoteFilters> }) {
     <div className="grid gap-6 lg:grid-cols-[15rem_1fr]">
       <aside className="space-y-5" aria-label="Organise resources">
         <nav aria-label="Subjects and chapters">
-          <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">Subjects</p>
+          <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"><T>Subjects</T></p>
           <ul className="space-y-0.5 text-sm">
             <li>
               <Link href={href({ q: filters.q })} className={cn("flex justify-between rounded-md px-2 py-1 hover:bg-muted", !filters.subject && "bg-muted font-medium")}>
-                All resources
+                <T>All resources</T>
               </Link>
             </li>
             {taxonomy.subjects.map((s) => (
@@ -91,7 +92,7 @@ async function Notes({ searchParams }: { searchParams: Promise<NoteFilters> }) {
         </nav>
         {taxonomy.tags.length ? (
           <div>
-            <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">Tags</p>
+            <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"><T>Tags</T></p>
             <div className="flex flex-wrap gap-1.5">
               {taxonomy.tags.slice(0, 30).map((t) => (
                 <Link key={t.name} href={href({ ...filters, tag: filters.tag === t.name ? undefined : t.name })}>
@@ -113,14 +114,14 @@ async function Notes({ searchParams }: { searchParams: Promise<NoteFilters> }) {
             <Input name="q" defaultValue={filters.q} placeholder="Search your resources & notes…" aria-label="Search resources" className="pl-8" />
           </div>
           <Button type="submit" variant="outline">
-            Search
+            <T>Search</T>
           </Button>
         </form>
         {filtered ? (
           <p className="text-sm text-muted-foreground">
             {notes.length} resource{notes.length === 1 ? "" : "s"} found ·{" "}
             <Link href="/student/notes" className="text-primary hover:underline">
-              Clear filters
+              <T>Clear filters</T>
             </Link>
           </p>
         ) : null}
@@ -183,7 +184,7 @@ export default function NotesPage({ searchParams }: PageProps<"/student/notes">)
         actions={
           <Button asChild>
             <Link href="/student/notes/new">
-              <Plus aria-hidden /> New resource
+              <Plus aria-hidden /> <T>New resource</T>
             </Link>
           </Button>
         }

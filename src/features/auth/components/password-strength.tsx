@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { T } from "@/lib/i18n/client";
 
 const RULES = [
   { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -25,7 +26,7 @@ export function PasswordStrength({ password }: { password: string }) {
   return (
     <div className="grid gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] p-2 sm:p-2.5" aria-live="polite">
       <div className="flex items-center justify-between text-[11px]">
-        <span className="text-white/60">Password strength</span>
+        <span className="text-white/60"><T>Password strength</T></span>
         <span className="font-medium text-white">{password ? level.label : "—"}</span>
       </div>
       <div className="grid grid-cols-4 gap-1" aria-hidden>

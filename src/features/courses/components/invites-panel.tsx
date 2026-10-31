@@ -17,6 +17,7 @@ import { formatDateTime } from "@/lib/utils/datetime";
 import { inviteSchema, type InviteInput } from "@/lib/validations/courses";
 import { createInviteAction, revokeInviteAction } from "../actions";
 import type { CourseInviteRow } from "../queries";
+import { T, tNow } from "@/lib/i18n/client";
 
 function inviteState(invite: CourseInviteRow, now: number) {
   if (invite.revoked_at) return { label: "Revoked", tone: "neutral" as const };
@@ -35,10 +36,10 @@ function CopyButton({ value }: { value: string }) {
         try {
           await navigator.clipboard.writeText(value);
           setCopied(true);
-          toast.success("Code copied");
+          toast.success(tNow("Code copied"));
           setTimeout(() => setCopied(false), 2000);
         } catch {
-          toast.error("Couldn't copy automatically. Select the code and copy it manually.");
+          toast.error(tNow("Couldn't copy automatically. Select the code and copy it manually."));
         }
       }}
     >
@@ -69,32 +70,32 @@ function CreateInviteDialog({ courseId, disabled }: { courseId: string; disabled
     >
       <DialogTrigger asChild>
         <Button disabled={disabled}>
-          <Plus aria-hidden /> New invitation
+          <Plus aria-hidden /> <T>New invitation</T>
         </Button>
       </DialogTrigger>
       <DialogContent size="sm">
         {code ? (
           <>
             <DialogHeader>
-              <DialogTitle>Share this code</DialogTitle>
+              <DialogTitle><T>Share this code</T></DialogTitle>
               <DialogDescription>
-                For security only a fingerprint of the code is stored, so this is the only time it&apos;s shown. Copy it now.
+                <T>For security only a fingerprint of the code is stored, so this is the only time it&apos;s shown. Copy it now.</T>
               </DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-center font-mono text-lg tracking-widest select-all">{code}</code>
               <CopyButton value={code} />
             </div>
-            <p className="text-subtle">Students enter it under “Join a course”. You can revoke it at any time.</p>
+            <p className="text-subtle"><T>Students enter it under “Join a course”. You can revoke it at any time.</T></p>
             <DialogFooter>
-              <Button onClick={() => setOpen(false)}>Done</Button>
+              <Button onClick={() => setOpen(false)}><T>Done</T></Button>
             </DialogFooter>
           </>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>New invitation code</DialogTitle>
-              <DialogDescription>Set an expiry and an optional limit on how many students can use it.</DialogDescription>
+              <DialogTitle><T>New invitation code</T></DialogTitle>
+              <DialogDescription><T>Set an expiry and an optional limit on how many students can use it.</T></DialogDescription>
             </DialogHeader>
             <form
               noValidate
@@ -118,7 +119,7 @@ function CreateInviteDialog({ courseId, disabled }: { courseId: string; disabled
               </div>
               <DialogFooter>
                 <Button type="submit" pending={pending}>
-                  <KeyRound aria-hidden /> Generate code
+                  <KeyRound aria-hidden /> <T>Generate code</T>
                 </Button>
               </DialogFooter>
             </form>
@@ -181,7 +182,7 @@ export function InvitesPanel({
                       onConfirm={async () => (await run(invite.id))?.ok ?? false}
                       trigger={
                         <Button variant="ghost" size="sm">
-                          <Ban aria-hidden /> Revoke
+                          <Ban aria-hidden /> <T>Revoke</T>
                         </Button>
                       }
                     />

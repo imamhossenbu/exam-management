@@ -19,6 +19,8 @@ import { revalidatePath, refresh } from "next/cache";
 import { deleteAvatar, isBase64DataUrl, isLegacyDiskAvatar, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { sendVerificationOtpEmail, sendPasswordResetEmail } from "@/lib/email/mailer";
+import { isLocale, LOCALE_COOKIE } from "@/lib/i18n/config";
+import { cookies } from "next/headers";
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   switch (error.code) {
@@ -55,6 +57,7 @@ export async function signInAction(input: unknown): Promise<ActionResult> {
   const next = safeNextPath(parsed.data.next);
   // Go straight to the role's home: redirecting to the /dashboard route handler from an
   // action would render the right page but leave /dashboard in the address bar.
+  await syncLocaleCookie(supabase, data.user.id);
   redirect(next === "/dashboard" ? await roleHome(supabase, data.user.id) : next);
 }
 
@@ -269,6 +272,7 @@ export async function verifyEmailOtpAction(input: unknown): Promise<ActionResult
     });
   }
 
+  await syncLocaleCookie(supabase, data.user.id);
   const next = await roleHome(supabase, data.user.id);
   redirect(next);
 }
@@ -333,4 +337,12 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult<
   revalidatePath("/", "layout");
   refresh();
   return ok({ avatarUrl: finalAvatarUrl }, "Profile updated successfully");
+}
+
+/** Uses the language saved on the profile on this device too (so a new device opens in the user's language). */
+async function syncLocaleCookie(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data } = await supabase.from("profiles").select("locale").eq("id", userId).maybeSingle();
+  if (data && isLocale(data.locale)) {
+    (await cookies()).set(LOCALE_COOKIE, data.locale, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  }
 }

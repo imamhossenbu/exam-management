@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { ProfileForm } from "./profile-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { T } from "@/lib/i18n/client";
 
 async function SettingsContent() {
   const { profile } = await requireUser();
@@ -13,8 +14,8 @@ async function SettingsContent() {
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Your name is visible to your teacher on rosters and results.</CardDescription>
+          <CardTitle><T>Profile</T></CardTitle>
+          <CardDescription><T>Your name is visible to your teacher on rosters and results.</T></CardDescription>
         </CardHeader>
         <CardContent>
           <ProfileForm
@@ -30,12 +31,12 @@ async function SettingsContent() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>We&apos;ll email you a secure link to choose a new password.</CardDescription>
+          <CardTitle><T>Password</T></CardTitle>
+          <CardDescription><T>We&apos;ll email you a secure link to choose a new password.</T></CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <Link href="/forgot-password">Change password</Link>
+            <Link href="/forgot-password"><T>Change password</T></Link>
           </Button>
         </CardContent>
       </Card>

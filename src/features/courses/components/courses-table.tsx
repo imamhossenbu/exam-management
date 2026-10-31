@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/utils/datetime";
 import { setCourseArchivedAction } from "../actions";
 import type { TeacherCourseRow } from "../queries";
 import { CourseFormDialog } from "./course-form-dialog";
+import { T } from "@/lib/i18n/client";
 
 const col = dataTableColumns<TeacherCourseRow & { timezone: string }>();
 
@@ -37,12 +38,12 @@ function RowActions({ course }: { course: TeacherCourseRow }) {
         <DropdownMenuContent>
           <DropdownMenuItem asChild>
             <Link href={`/teacher/courses/${course.id}`}>
-              <BookOpen aria-hidden /> Open course
+              <BookOpen aria-hidden /> <T>Open course</T>
             </Link>
           </DropdownMenuItem>
           {course.archived ? (
             <DropdownMenuItem onSelect={() => run(course.id, false)}>
-              <ArchiveRestore aria-hidden /> Restore
+              <ArchiveRestore aria-hidden /> <T>Restore</T>
             </DropdownMenuItem>
           ) : (
             <ConfirmDialog
@@ -52,7 +53,7 @@ function RowActions({ course }: { course: TeacherCourseRow }) {
               onConfirm={async () => (await run(course.id, true))?.ok ?? false}
               trigger={
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <Archive aria-hidden /> Archive
+                  <Archive aria-hidden /> <T>Archive</T>
                 </DropdownMenuItem>
               }
             />
@@ -87,7 +88,7 @@ const columns = [
     sortFn: "datetime",
     cell: (info) => formatDate(info.getValue(), info.row.original.timezone),
   }),
-  col.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, cell: (info) => <RowActions course={info.row.original} /> }),
+  col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <RowActions course={info.row.original} /> }),
 ];
 
 export function CoursesTable({ courses, timezone }: { courses: TeacherCourseRow[]; timezone: string }) {
@@ -108,7 +109,7 @@ export function CoursesTable({ courses, timezone }: { courses: TeacherCourseRow[
             <CourseFormDialog
               trigger={
                 <Button>
-                  <Plus aria-hidden /> New course
+                  <Plus aria-hidden /> <T>New course</T>
                 </Button>
               }
             />

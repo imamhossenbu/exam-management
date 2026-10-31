@@ -2,6 +2,7 @@ import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
 
 const TONES = {
   primary: "bg-primary-soft text-primary-soft-foreground",
@@ -28,14 +29,14 @@ export function StatCard({
     <div className="surface relative overflow-hidden p-3.5 sm:p-4">
       <div className="flex items-start justify-between gap-2.5">
         <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium text-muted-foreground">{trChildren(label)}</p>
           <p className="mt-1 text-xl sm:text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
         </div>
         <span className={cn("grid size-8 sm:size-8.5 shrink-0 place-items-center rounded-lg", TONES[tone])}>
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
-      {hint ? <p className="mt-1.5 text-[11px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-[11px] text-muted-foreground">{trChildren(hint)}</p> : null}
     </div>
   );
 }

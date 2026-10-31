@@ -18,6 +18,7 @@ import { InvitesPanel } from "@/features/courses/components/invites-panel";
 import { TaxonomyPanel } from "@/features/courses/components/taxonomy-panel";
 import { EXAM_TYPE_LABEL, PHASE_META, examPhase } from "@/features/exams/status";
 import { uuid } from "@/lib/validations/courses";
+import { T } from "@/lib/i18n/client";
 
 async function CourseDetail({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -37,7 +38,7 @@ async function CourseDetail({ params }: { params: Promise<{ courseId: string }> 
           <span className="flex flex-wrap items-center gap-2">
             {course.title}
             {course.code ? <Badge>{course.code}</Badge> : null}
-            {archived ? <Badge tone="warning">Archived</Badge> : null}
+            {archived ? <Badge tone="warning"><T>Archived</T></Badge> : null}
           </span>
         }
         description={course.description || undefined}
@@ -56,7 +57,7 @@ async function CourseDetail({ params }: { params: Promise<{ courseId: string }> 
               action={
                 <Button asChild>
                   <Link href={`/teacher/exams/new?course=${course.id}`}>
-                    <Plus aria-hidden /> Create exam
+                    <Plus aria-hidden /> <T>Create exam</T>
                   </Link>
                 </Button>
               }

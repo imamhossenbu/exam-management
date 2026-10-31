@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useServerAction } from "@/components/forms/use-server-action";
 import { createChapterAction, createSubjectAction, deleteTaxonomyAction, renameTaxonomyAction } from "../actions";
 import type { CourseSubject } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 function InlineAdd({ placeholder, onAdd, label }: { placeholder: string; label: string; onAdd: (name: string) => Promise<boolean> }) {
   const [value, setValue] = React.useState("");
@@ -107,7 +108,7 @@ export function TaxonomyPanel({ courseId, subjects }: { courseId: string; subjec
                     <EditableName kind="chapters" id={c.id} name={c.name} />
                   </li>
                 ))}
-                {s.chapters.length === 0 ? <li className="text-xs text-muted-foreground">No chapters yet</li> : null}
+                {s.chapters.length === 0 ? <li className="text-xs text-muted-foreground"><T>No chapters yet</T></li> : null}
               </ul>
               <div className="mt-3">
                 <InlineAdd label={`New chapter in ${s.name}`} placeholder="Add chapter" onAdd={async (name) => (await addChapter.run({ subjectId: s.id, name }))?.ok ?? false} />

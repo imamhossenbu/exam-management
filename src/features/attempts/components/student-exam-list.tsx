@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { EXAM_TYPE_LABEL, PHASE_META, examPhase } from "@/features/exams/status";
 import type { StudentExamRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 export function StudentExamList({ exams, timezone, now, emptyAction }: { exams: StudentExamRow[]; timezone: string; now: number; emptyAction?: React.ReactNode }) {
   if (exams.length === 0) {
@@ -43,7 +44,7 @@ export function StudentExamList({ exams, timezone, now, emptyAction }: { exams: 
               </Button>
               {e.lastAttemptId && !e.openAttemptId ? (
                 <Button asChild size="sm" variant="ghost">
-                  <Link href={`/student/attempts/${e.lastAttemptId}/result`}>My result</Link>
+                  <Link href={`/student/attempts/${e.lastAttemptId}/result`}><T>My result</T></Link>
                 </Button>
               ) : null}
             </div>

@@ -13,6 +13,7 @@ import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
 import { EXAM_TYPE_LABEL, PHASE_META, STUDENT_RELEASE_LABEL, examPhase } from "@/features/exams/status";
 import { StartExamButton } from "@/features/attempts/components/start-exam-button";
+import { T } from "@/lib/i18n/client";
 
 async function ExamOverview({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
@@ -50,7 +51,7 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Instructions</CardTitle>
+            <CardTitle><T>Instructions</T></CardTitle>
           </CardHeader>
           <CardContent>
             {exam.description ? <p className="prose-text mb-4">{exam.description}</p> : null}
@@ -87,7 +88,7 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
             <div className="pt-2">
               {info?.open_attempt_id ? (
                 <Button asChild size="lg" className="w-full">
-                  <Link href={`/student/attempts/${info.open_attempt_id}`}>Resume exam</Link>
+                  <Link href={`/student/attempts/${info.open_attempt_id}`}><T>Resume exam</T></Link>
                 </Button>
               ) : canStart ? (
                 <StartExamButton
@@ -111,7 +112,7 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
       {attempts?.length ? (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Your attempts</CardTitle>
+            <CardTitle><T>Your attempts</T></CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="divide-y">

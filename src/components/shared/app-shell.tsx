@@ -6,6 +6,7 @@ import { Brand } from "./brand";
 import { MobileNav } from "./mobile-nav";
 import { NavList, SidebarNav } from "./sidebar-nav";
 import type { NavKind } from "./nav-config";
+import { T } from "@/lib/i18n/client";
 
 /**
  * Static dashboard chrome. The user menu (which reads the session) is passed
@@ -15,7 +16,7 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
   return (
     <div className="flex min-h-dvh">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:shadow-elevated">
-        Skip to content
+        <T>Skip to content</T>
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-sidebar lg:flex z-30">
         <div className="flex h-14 items-center px-5 border-b border-border/40">
@@ -33,7 +34,7 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
             <ShieldCheck className="size-3.5 text-success" aria-hidden />
             {kind === "teacher" ? "Teacher workspace" : "Student workspace"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">Your data is private and protected by row-level security.</p>
+          <p className="mt-1 text-xs text-muted-foreground"><T>Your data is private and protected by row-level security.</T></p>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">

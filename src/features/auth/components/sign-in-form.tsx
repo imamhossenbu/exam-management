@@ -11,6 +11,7 @@ import { Field } from "@/components/ui/field";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
 import { signInAction } from "@/features/auth/actions";
 import { signInSchema, type SignInInput } from "@/lib/validations/auth";
+import { T } from "@/lib/i18n/client";
 
 export function SignInForm({ next }: { next?: string }) {
   const form = useForm<SignInInput>({ resolver: zodResolver(signInSchema), defaultValues: { email: "", password: "", next } });
@@ -31,11 +32,11 @@ export function SignInForm({ next }: { next?: string }) {
       </Field>
       <div className="-mt-1 text-right">
         <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-          Forgot your password?
+          <T>Forgot your password?</T>
         </Link>
       </div>
       <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
-        Sign in
+        <T>Sign in</T>
       </Button>
     </form>
   );

@@ -6,6 +6,7 @@ import { AuthCard } from "@/components/shared/auth-card";
 import { FormSkeleton } from "@/components/shared/skeletons";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 import { safeNextPath } from "@/lib/validations/auth";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -19,7 +20,7 @@ async function LoginForm({ searchParams }: { searchParams: Promise<{ next?: stri
     <>
       {error === "session_expired" ? (
         <p role="alert" className="mb-4 rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
-          Your session expired. Please sign in again.
+          <T>Your session expired. Please sign in again.</T>
         </p>
       ) : null}
       <SignInForm next={safeNextPath(next)} />
@@ -37,7 +38,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         <>
           New student?{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
-            Create an account
+            <T>Create an account</T>
           </Link>
         </>
       }

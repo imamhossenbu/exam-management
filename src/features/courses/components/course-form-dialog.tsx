@@ -11,6 +11,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
 import { courseSchema, type CourseInput } from "@/lib/validations/courses";
 import { createCourseAction, updateCourseAction } from "../actions";
+import { T } from "@/lib/i18n/client";
 
 type Props = {
   trigger: React.ReactNode;
@@ -42,7 +43,7 @@ export function CourseFormDialog({ trigger, course }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{course ? "Edit course" : "New course"}</DialogTitle>
-          <DialogDescription>Courses group students, exams and subjects.</DialogDescription>
+          <DialogDescription><T>Courses group students, exams and subjects.</T></DialogDescription>
         </DialogHeader>
         <form
           noValidate
@@ -67,7 +68,7 @@ export function CourseFormDialog({ trigger, course }: Props) {
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
-              Cancel
+              <T>Cancel</T>
             </Button>
             <Button type="submit" pending={pending}>
               {course ? "Save changes" : "Create course"}

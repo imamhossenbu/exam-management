@@ -14,6 +14,7 @@ import { formatMinutes } from "@/lib/utils/datetime";
 import { RELEASE_LABEL } from "../status";
 import { createExamAction, updateExamAction } from "../actions";
 import type { CourseOption } from "@/features/courses/queries";
+import { T } from "@/lib/i18n/client";
 
 type Props = {
   courses: CourseOption[];
@@ -90,15 +91,15 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
       {locked ? (
         <div role="note" className="flex gap-2 rounded-md border bg-info-soft px-3 py-2 text-sm text-info-soft-foreground">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-          This exam is published. Scoring settings (type, marks, duration, MCQ section time, shuffling) are frozen to protect attempts. You can still edit the text, extend the end
-          time, and change result settings. Duplicate the exam to make a revised version.
+          <T>This exam is published. Scoring settings (type, marks, duration, MCQ section time, shuffling) are frozen to protect attempts. You can still edit the text, extend the end
+          time, and change result settings. Duplicate the exam to make a revised version.</T>
         </div>
       ) : null}
       <FormError message={errors.root?.message} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Basics</CardTitle>
+          <CardTitle><T>Basics</T></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <Field id="title" label="Title" required error={errors.title?.message} className="md:col-span-2">
@@ -139,7 +140,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
           </Field>
           {chapters.length > 0 ? (
             <fieldset className="md:col-span-2">
-              <legend className="mb-2 text-sm font-medium">Chapters covered</legend>
+              <legend className="mb-2 text-sm font-medium"><T>Chapters covered</T></legend>
               <div className="flex flex-wrap gap-x-5 gap-y-2">
                 {chapters.map((ch) => (
                   <label key={ch.id} className="flex items-center gap-2 text-sm">
@@ -161,8 +162,8 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
 
       <Card>
         <CardHeader>
-          <CardTitle>Format and scoring</CardTitle>
-          <CardDescription>Question marks must add up to the total before you can publish.</CardDescription>
+          <CardTitle><T>Format and scoring</T></CardTitle>
+          <CardDescription><T>Question marks must add up to the total before you can publish.</T></CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field id="examType" label="Exam type" required error={errors.examType?.message}>
@@ -188,7 +189,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
 
       <Card>
         <CardHeader>
-          <CardTitle>Timing</CardTitle>
+          <CardTitle><T>Timing</T></CardTitle>
           <CardDescription>
             Times are in your timezone ({timezone}). Each attempt ends at whichever comes first: start + duration, or the window end.
           </CardDescription>
@@ -220,8 +221,8 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
                       MCQ {formatMinutes(mcqMinutes)}, then written part {formatMinutes(durationMinutes - mcqMinutes)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Students answer all MCQs first. When the MCQ time is up — or they hand the section in early — their MCQ answers lock and the written
-                      questions open. Time saved on MCQs carries over to the written part.
+                      <T>Students answer all MCQs first. When the MCQ time is up — or they hand the section in early — their MCQ answers lock and the written
+                      questions open. Time saved on MCQs carries over to the written part.</T>
                     </p>
                   </>
                 ) : (
@@ -238,7 +239,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
 
       <Card>
         <CardHeader>
-          <CardTitle>Delivery and results</CardTitle>
+          <CardTitle><T>Delivery and results</T></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-2">

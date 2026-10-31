@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { addAnnotationAction, deleteAnnotationAction } from "../actions";
+import { T, tNow } from "@/lib/i18n/client";
 
 export type AnnotationShape = {
   id: string;
@@ -120,7 +121,7 @@ export function AnnotatedFile({ attemptId, file, annotations: initial, editable 
         toast.error(result.error);
       }
     } catch {
-      toast.error("We couldn't reach the server. Try again.");
+      toast.error(tNow("We couldn't reach the server. Try again."));
     } finally {
       setBusy(false);
     }
@@ -143,7 +144,7 @@ export function AnnotatedFile({ attemptId, file, annotations: initial, editable 
       (e.target as Element).setPointerCapture?.(e.pointerId);
       setDraft({ x: p.x, y: p.y, x2: p.x, y2: p.y });
     } else if (tool === "comment") {
-      if (!comment.trim()) return toast.error("Type the comment in the box first, then click where it belongs.");
+      if (!comment.trim()) return toast.error(tNow("Type the comment in the box first, then click where it belongs."));
       void add({ kind: "comment", page: 1, x: p.x, y: p.y, x2: null, y2: null, body: comment.trim() });
     } else {
       void add({ kind: tool, page: 1, x: p.x, y: p.y, x2: null, y2: null, body: null });
@@ -198,20 +199,20 @@ export function AnnotatedFile({ attemptId, file, annotations: initial, editable 
             <>
               <Input type="number" min={1} value={pdfPage} onChange={(e) => setPdfPage(Math.max(1, Number(e.target.value) || 1))} aria-label="Page number" className="h-8 w-20" />
               <Button type="button" size="sm" pending={busy} disabled={!comment.trim()} onClick={() => add({ kind: "comment", page: pdfPage, x: 0, y: 0, x2: null, y2: null, body: comment.trim() })}>
-                Add page comment
+                <T>Add page comment</T>
               </Button>
             </>
           ) : null}
           {selected && !isPdf ? (
             <Button type="button" size="sm" variant="ghost" className="text-danger" onClick={() => remove(selected)}>
-              <Trash2 aria-hidden /> Delete selected
+              <Trash2 aria-hidden /> <T>Delete selected</T>
             </Button>
           ) : null}
         </div>
       ) : null}
 
       {!file.url ? (
-        <p className="rounded-md bg-muted p-4 text-sm text-muted-foreground">This file couldn&apos;t be loaded.</p>
+        <p className="rounded-md bg-muted p-4 text-sm text-muted-foreground"><T>This file couldn&apos;t be loaded.</T></p>
       ) : isPdf ? (
         <iframe src={file.url} title={file.fileName} className="h-[36rem] w-full rounded-md border bg-muted" />
       ) : (

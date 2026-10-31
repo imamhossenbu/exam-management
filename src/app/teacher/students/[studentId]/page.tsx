@@ -12,6 +12,7 @@ import { formatDate, formatDateTime } from "@/lib/utils/datetime";
 import { getStudentDetail } from "@/features/students/queries";
 import { GRADING_META } from "@/features/exams/status";
 import { uuid } from "@/lib/validations/courses";
+import { T } from "@/lib/i18n/client";
 
 const MEMBER_TONE = { active: "success", suspended: "warning", removed: "neutral" } as const;
 
@@ -36,15 +37,15 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
       />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="surface p-4">
-          <p className="text-subtle">Active courses</p>
+          <p className="text-subtle"><T>Active courses</T></p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{memberships.filter((m) => m.status === "active").length}</p>
         </div>
         <div className="surface p-3.5">
-          <p className="text-subtle">Exam attempts</p>
+          <p className="text-subtle"><T>Exam attempts</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{attempts.length}</p>
         </div>
         <div className="surface p-3.5">
-          <p className="text-subtle">Average score</p>
+          <p className="text-subtle"><T>Average score</T></p>
           <p className="mt-1 text-xl font-semibold tabular-nums">{average === null ? "—" : `${average.toFixed(1)}%`}</p>
         </div>
       </div>
@@ -52,7 +53,7 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle>Enrollments</CardTitle>
+            <CardTitle><T>Enrollments</T></CardTitle>
           </CardHeader>
           <CardContent>
             {memberships.length === 0 ? (
@@ -74,12 +75,12 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
                 ))}
               </ul>
             )}
-            <p className="mt-4 text-xs text-muted-foreground">Change enrollment status from the course&apos;s Students tab.</p>
+            <p className="mt-4 text-xs text-muted-foreground"><T>Change enrollment status from the course&apos;s Students tab.</T></p>
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Result history</CardTitle>
+            <CardTitle><T>Result history</T></CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {attempts.length === 0 ? (
@@ -91,10 +92,10 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
                 <table className="w-full text-sm">
                   <thead className="border-b bg-muted/50 text-left text-xs text-muted-foreground uppercase">
                     <tr>
-                      <th scope="col" className="px-4 py-2 font-medium">Exam</th>
-                      <th scope="col" className="px-4 py-2 font-medium">Submitted</th>
-                      <th scope="col" className="px-4 py-2 font-medium">Score</th>
-                      <th scope="col" className="px-4 py-2 font-medium">Status</th>
+                      <th scope="col" className="px-4 py-2 font-medium"><T>Exam</T></th>
+                      <th scope="col" className="px-4 py-2 font-medium"><T>Submitted</T></th>
+                      <th scope="col" className="px-4 py-2 font-medium"><T>Score</T></th>
+                      <th scope="col" className="px-4 py-2 font-medium"><T>Status</T></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -109,7 +110,7 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
                             <p className="text-xs text-muted-foreground">
                               {a.exam?.course?.title} · Attempt {a.attempt_number}
                               {countedIds.has(a.id) && attempts.filter((x) => x.exam?.id === a.exam?.id).length > 1 ? (
-                                <Badge tone="info" className="ml-2">Counts for result</Badge>
+                                <Badge tone="info" className="ml-2"><T>Counts for result</T></Badge>
                               ) : null}
                             </p>
                           </td>
@@ -117,7 +118,7 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
                           <td className="px-4 py-3 tabular-nums">
                             {a.result ? `${Number(a.result.total_score)} / ${Number(a.result.max_score)} (${Number(a.result.percentage)}%)` : "—"}
                           </td>
-                          <td className="px-4 py-3">{meta ? <Badge tone={meta.tone}>{meta.label}</Badge> : <Badge>In progress</Badge>}</td>
+                          <td className="px-4 py-3">{meta ? <Badge tone={meta.tone}>{meta.label}</Badge> : <Badge><T>In progress</T></Badge>}</td>
                         </tr>
                       );
                     })}

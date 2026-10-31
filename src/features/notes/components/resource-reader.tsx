@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils/cn";
 import { NoteForm } from "./note-form";
 import { NoteAttachments } from "./note-attachments";
 import type { NoteDetail } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Props = {
   note: NoteDetail;
@@ -229,12 +230,12 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
               <div className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary mb-4">
                 <Paperclip className="size-7" />
               </div>
-              <h3 className="text-base font-semibold">No materials attached yet</h3>
+              <h3 className="text-base font-semibold"><T>No materials attached yet</T></h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-md">
-                Upload your PDF documents, slide images, or handwritten notebook photos to read and study them right here.
+                <T>Upload your PDF documents, slide images, or handwritten notebook photos to read and study them right here.</T>
               </p>
               <Button onClick={() => setActiveTab("edit")} className="mt-4 gap-2">
-                <Paperclip className="size-4" /> Upload PDFs or Images
+                <Paperclip className="size-4" /> <T>Upload PDFs or Images</T>
               </Button>
             </div>
           )}
@@ -282,12 +283,12 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                     <>
                       <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
                         <a href={activePdf.url} target="_blank" rel="noreferrer" download={activePdf.fileName}>
-                          <Download className="size-3.5" /> Download
+                          <Download className="size-3.5" /> <T>Download</T>
                         </a>
                       </Button>
                       <Button asChild variant="secondary" size="sm" className="gap-1.5 text-xs">
                         <a href={activePdf.url} target="_blank" rel="noreferrer">
-                          <ExternalLink className="size-3.5" /> Open Tab
+                          <ExternalLink className="size-3.5" /> <T>Open Tab</T>
                         </a>
                       </Button>
                     </>
@@ -305,7 +306,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                 </div>
               ) : (
                 <div className="p-6 text-center text-sm text-muted-foreground rounded-xl border">
-                  PDF preview link is generating or expired. Please refresh the page.
+                  <T>PDF preview link is generating or expired. Please refresh the page.</T>
                 </div>
               )}
             </div>
@@ -324,7 +325,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                       Lecture & Study Notebook ({images.length} {images.length === 1 ? "page" : "pages"})
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Sequential multi-page notes · Read in continuous scroll or slide focus
+                      <T>Sequential multi-page notes · Read in continuous scroll or slide focus</T>
                     </p>
                   </div>
                 </div>
@@ -351,7 +352,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                         viewMode === "continuous" ? "bg-background text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <List className="size-3.5" /> Continuous
+                      <List className="size-3.5" /> <T>Continuous</T>
                     </button>
                     <button
                       type="button"
@@ -361,7 +362,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                         viewMode === "slide" ? "bg-background text-foreground shadow-sm font-semibold" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <Grid className="size-3.5" /> Page by Page
+                      <Grid className="size-3.5" /> <T>Page by Page</T>
                     </button>
                   </div>
 
@@ -408,14 +409,14 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-xs font-semibold text-primary uppercase tracking-wider">
-                        Reorder Pages
+                        <T>Reorder Pages</T>
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        Use the arrows to adjust page sequence so your notes read in chronological order.
+                        <T>Use the arrows to adjust page sequence so your notes read in chronological order.</T>
                       </p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => setIsArrangeOpen(false)} className="text-xs">
-                      Done
+                      <T>Done</T>
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
@@ -469,7 +470,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                   {images.length > 1 && (
                     <div className="sticky top-16 z-20 flex items-center justify-center py-2">
                       <div className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border/80 bg-background/90 shadow-card backdrop-blur-md overflow-x-auto max-w-full">
-                        <span className="text-xs font-semibold text-muted-foreground mr-1.5">Pages:</span>
+                        <span className="text-xs font-semibold text-muted-foreground mr-1.5"><T>Pages:</T></span>
                         {images.map((_, idx) => (
                           <a
                             key={idx}
@@ -529,7 +530,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                             />
                           ) : (
                             <div className="p-12 text-center text-sm text-muted-foreground">
-                              Image unavailable
+                              <T>Image unavailable</T>
                             </div>
                           )}
                         </div>
@@ -569,7 +570,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                           onClick={() => setFullscreenImage(images[currentPage]?.url ?? null)}
                           className="gap-1 text-xs h-7"
                         >
-                          <Maximize2 className="size-3" /> Fullscreen
+                          <Maximize2 className="size-3" /> <T>Fullscreen</T>
                         </Button>
                       </div>
                     </div>
@@ -619,11 +620,11 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                         onClick={() => setCurrentPage((p) => p - 1)}
                         className="gap-1 text-xs"
                       >
-                        <ChevronLeft className="size-3.5" /> Previous Page
+                        <ChevronLeft className="size-3.5" /> <T>Previous Page</T>
                       </Button>
 
                       <span className="text-xs font-semibold text-muted-foreground">
-                        Use Left / Right arrow keys to navigate
+                        <T>Use Left / Right arrow keys to navigate</T>
                       </span>
 
                       <Button
@@ -675,7 +676,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
               <CardHeader className="border-b py-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <FileSpreadsheet className="size-4 text-primary" />
-                  Written Study Notes & Summary
+                  <T>Written Study Notes & Summary</T>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-5 pb-8">
@@ -691,7 +692,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
         <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
           <Card>
             <CardHeader>
-              <CardTitle>Edit Resource Information</CardTitle>
+              <CardTitle><T>Edit Resource Information</T></CardTitle>
             </CardHeader>
             <CardContent className="py-4">
               <NoteForm
@@ -722,7 +723,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
           <Card className="h-fit">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Attached Files</span>
+                <span><T>Attached Files</T></span>
                 <Badge tone="neutral">{note.files.length} total</Badge>
               </CardTitle>
             </CardHeader>

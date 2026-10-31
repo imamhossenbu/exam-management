@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { Brand } from "@/components/shared/brand";
+import { T } from "@/lib/i18n/client";
 
 /** Auth screens: a single glass card on a fixed mesh-gradient backdrop. */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +25,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           {children}
         </div>
         <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-white/50">
-          <ShieldCheck className="size-3.5" aria-hidden /> Secured with encrypted sessions and row-level security
+          <ShieldCheck className="size-3.5" aria-hidden /> <T>Secured with encrypted sessions and row-level security</T>
         </p>
       </div>
     </div>

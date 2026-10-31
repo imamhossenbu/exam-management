@@ -12,6 +12,7 @@ import { updateProfileAction } from "@/features/auth/actions";
 import { profileSchema, type ProfileInput } from "@/lib/validations/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { T, tNow } from "@/lib/i18n/client";
 
 function timezoneOptions(current: string) {
   const zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : ["UTC"];
@@ -76,12 +77,12 @@ export function ProfileForm({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (PNG, JPG, or WebP).");
+      toast.error(tNow("Please upload an image file (PNG, JPG, or WebP)."));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file is too large. Choose an image under 5MB.");
+      toast.error(tNow("Image file is too large. Choose an image under 5MB."));
       return;
     }
 
@@ -106,9 +107,9 @@ export function ProfileForm({
         const dataUrl = canvas.toDataURL("image/webp", 0.88);
 
         form.setValue("avatarUrl", dataUrl, { shouldDirty: true });
-        toast.success("Profile photo updated. Click 'Save changes' to save.");
+        toast.success(tNow("Profile photo updated. Click 'Save changes' to save."));
       };
-      img.onerror = () => toast.error("This image couldn't be opened. Choose a JPG, PNG or WebP photo.");
+      img.onerror = () => toast.error(tNow("This image couldn't be opened. Choose a JPG, PNG or WebP photo."));
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
@@ -117,7 +118,7 @@ export function ProfileForm({
 
   function handleRemoveAvatar() {
     form.setValue("avatarUrl", "", { shouldDirty: true });
-    toast.info("Profile photo removed. Click 'Save changes' to save.");
+    toast.info(tNow("Profile photo removed. Click 'Save changes' to save."));
   }
 
   return (
@@ -162,9 +163,9 @@ export function ProfileForm({
         </div>
 
         <div className="flex-1 text-center sm:text-left space-y-1.5">
-          <h4 className="font-medium text-foreground text-sm">Profile photo</h4>
+          <h4 className="font-medium text-foreground text-sm"><T>Profile photo</T></h4>
           <p className="text-xs text-muted-foreground">
-            Upload a clear square picture (JPEG, PNG, or WebP up to 5MB).
+            <T>Upload a clear square picture (JPEG, PNG, or WebP up to 5MB).</T>
           </p>
 
           <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
@@ -182,7 +183,7 @@ export function ProfileForm({
               onClick={() => fileInputRef.current?.click()}
               className="gap-1.5"
             >
-              <Upload className="size-3.5" aria-hidden /> Change photo
+              <Upload className="size-3.5" aria-hidden /> <T>Change photo</T>
             </Button>
 
             {currentAvatar ? (
@@ -193,7 +194,7 @@ export function ProfileForm({
                 onClick={handleRemoveAvatar}
                 className="gap-1.5 text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" aria-hidden /> Remove
+                <Trash2 className="size-3.5" aria-hidden /> <T>Remove</T>
               </Button>
             ) : null}
           </div>
@@ -259,7 +260,7 @@ export function ProfileForm({
           <>
             All dates and exam times are shown in this timezone.{" "}
             <button type="button" className="text-primary hover:underline font-medium" onClick={useBrowserZone}>
-              Use my device&apos;s timezone
+              <T>Use my device&apos;s timezone</T>
             </button>
           </>
         }
@@ -278,7 +279,7 @@ export function ProfileForm({
 
       <div>
         <Button type="submit" pending={pending} disabled={!isDirty}>
-          Save changes
+          <T>Save changes</T>
         </Button>
       </div>
     </form>

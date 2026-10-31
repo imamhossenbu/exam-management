@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { requireStudent } from "@/lib/auth/dal";
 import { formatDate } from "@/lib/utils/datetime";
 import { listStudentCourses } from "@/features/attempts/queries";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "My courses" };
 
@@ -25,7 +26,7 @@ async function Courses() {
         action={
           <Button asChild>
             <Link href="/student/join">
-              <Ticket aria-hidden /> Join a course
+              <Ticket aria-hidden /> <T>Join a course</T>
             </Link>
           </Button>
         }
@@ -60,7 +61,7 @@ export default function StudentCoursesPage() {
         actions={
           <Button asChild variant="outline">
             <Link href="/student/join">
-              <Ticket aria-hidden /> Join a course
+              <Ticket aria-hidden /> <T>Join a course</T>
             </Link>
           </Button>
         }

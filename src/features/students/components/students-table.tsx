@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate } from "@/lib/utils/datetime";
 import type { StudentRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = StudentRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -45,10 +46,10 @@ const columns = [
   col.accessor("joinedAt", { header: "Signed up", sortFn: "datetime", cell: (info) => formatDate(info.getValue(), info.row.original.timezone) }),
   col.display({
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only"><T>Actions</T></span>,
     cell: (info) => (
       <Button asChild variant="ghost" size="sm">
-        <Link href={`/teacher/students/${info.row.original.id}`}>View</Link>
+        <Link href={`/teacher/students/${info.row.original.id}`}><T>View</T></Link>
       </Button>
     ),
   }),
@@ -71,7 +72,7 @@ export function StudentsTable({ students, timezone }: { students: StudentRow[]; 
           description="Students appear here after they create an account. Share an invitation code from a course so they can join."
           action={
             <Button asChild>
-              <Link href="/teacher/courses">Go to courses</Link>
+              <Link href="/teacher/courses"><T>Go to courses</T></Link>
             </Button>
           }
         />

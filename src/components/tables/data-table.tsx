@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useT } from "@/lib/i18n/client";
 import {
   columnFilteringFeature,
   createColumnHelper,
@@ -79,6 +80,7 @@ export function DataTable<TData extends RowData>({
   initialSort = [],
   caption,
 }: DataTableProps<TData>) {
+  const t = useT();
   const table = useTable(
     {
       features: dataTableFeatures,
@@ -112,8 +114,8 @@ export function DataTable<TData extends RowData>({
             <Input
               value={String(table.state.globalFilter ?? "")}
               onChange={(e) => table.setGlobalFilter(e.target.value)}
-              placeholder={searchPlaceholder}
-              aria-label={searchPlaceholder}
+              placeholder={t(searchPlaceholder)}
+              aria-label={t(searchPlaceholder)}
               className="pl-8"
             />
           </div>
@@ -123,12 +125,12 @@ export function DataTable<TData extends RowData>({
             return (
               <NativeSelect
                 key={filter.columnId}
-                aria-label={`Filter by ${filter.label}`}
+                aria-label={t("Filter by {name}", { name: t(filter.label) })}
                 className="sm:w-44"
                 value={String(column.getFilterValue() ?? "")}
                 onChange={(e) => column.setFilterValue(e.target.value || undefined)}
               >
-                <option value="">All {filter.label.toLowerCase()}</option>
+                <option value="">{t("All {name}", { name: t(filter.label).toLowerCase() })}</option>
                 {filter.options.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -167,7 +169,7 @@ export function DataTable<TData extends RowData>({
                               onClick={header.column.getToggleSortingHandler()}
                               className="-mx-1 inline-flex items-center gap-1 rounded px-1 uppercase hover:text-foreground focus-ring"
                             >
-                              <table.FlexRender header={header} />
+                              {typeof header.column.columnDef.header === "string" ? t(header.column.columnDef.header) : <table.FlexRender header={header} />}
                               {sorted === "asc" ? (
                                 <ArrowUp className="size-3" aria-hidden />
                               ) : sorted === "desc" ? (
@@ -176,6 +178,8 @@ export function DataTable<TData extends RowData>({
                                 <ArrowUpDown className="size-3 opacity-50" aria-hidden />
                               )}
                             </button>
+                          ) : typeof header.column.columnDef.header === "string" ? (
+                            t(header.column.columnDef.header)
                           ) : (
                             <table.FlexRender header={header} />
                           )}
@@ -215,12 +219,16 @@ export function DataTable<TData extends RowData>({
         <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p aria-live="polite">
             {filteredCount === 0
-              ? "0 results"
-              : `Showing ${pageIndex * currentSize + 1}–${Math.min((pageIndex + 1) * currentSize, filteredCount)} of ${filteredCount}`}
+              ? t("0 results")
+              : t("Showing {from}–{to} of {total}", {
+                  from: pageIndex * currentSize + 1,
+                  to: Math.min((pageIndex + 1) * currentSize, filteredCount),
+                  total: filteredCount,
+                })}
           </p>
           <div className="flex items-center gap-2">
             <NativeSelect
-              aria-label="Rows per page"
+              aria-label={t("Rows per page")}
               className="h-8 w-20 text-xs"
               value={currentSize}
               onChange={(e) => table.setPageSize(Number(e.target.value))}
@@ -231,13 +239,13 @@ export function DataTable<TData extends RowData>({
                 </option>
               ))}
             </NativeSelect>
-            <Button variant="outline" size="icon-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page">
+            <Button variant="outline" size="icon-sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label={t("Previous page")}>
               <ChevronLeft />
             </Button>
             <span className="tabular-nums">
               {pageIndex + 1} / {Math.max(1, table.getPageCount())}
             </span>
-            <Button variant="outline" size="icon-sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page">
+            <Button variant="outline" size="icon-sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label={t("Next page")}>
               <ChevronRight />
             </Button>
           </div>

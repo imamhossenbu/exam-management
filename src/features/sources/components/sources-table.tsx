@@ -12,6 +12,7 @@ import { formatBytes } from "@/lib/utils/files";
 import { formatDateTime } from "@/lib/utils/datetime";
 import { deleteSourceAction } from "../actions";
 import type { SourceRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = SourceRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -70,7 +71,7 @@ const columns = [
   col.accessor((r) => r.courseTitle ?? "—", { id: "course", header: "Course", filterFn: "equalsString" }),
   col.accessor("status", { header: "Text", filterFn: "equalsString", cell: (info) => <Badge>{STATUS[info.getValue()]}</Badge> }),
   col.accessor("createdAt", { header: "Uploaded", sortFn: "datetime", cell: (info) => formatDateTime(info.getValue(), info.row.original.timezone) }),
-  col.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, cell: (info) => <Actions source={info.row.original} /> }),
+  col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <Actions source={info.row.original} /> }),
 ];
 
 export function SourcesTable({ sources, timezone }: { sources: SourceRow[]; timezone: string }) {
@@ -93,7 +94,7 @@ export function SourcesTable({ sources, timezone }: { sources: SourceRow[]; time
           description="Upload question papers from an exam's “Import from PDF/image” page. Files stay private to you."
           action={
             <Button asChild>
-              <Link href="/teacher/exams">Go to exams</Link>
+              <Link href="/teacher/exams"><T>Go to exams</T></Link>
             </Button>
           }
         />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { NAV, type NavKind } from "./nav-config";
+import { trChildren } from "@/lib/i18n/tr";
 
 export function SidebarNav({ kind, onNavigate }: { kind: NavKind; onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -16,7 +17,7 @@ export function NavList({ kind, activePath, onNavigate }: { kind: NavKind; activ
     <nav aria-label="Main" className="flex flex-col gap-5 px-3">
       {NAV[kind].map((group) => (
         <div key={group.label}>
-          <p className="mb-1.5 px-3 text-[0.7rem] font-semibold tracking-wider text-muted-foreground/70 uppercase">{group.label}</p>
+          <p className="mb-1.5 px-3 text-[0.7rem] font-semibold tracking-wider text-muted-foreground/70 uppercase">{trChildren(group.label)}</p>
           <ul className="flex flex-col gap-0.5">
             {group.items.map((item) => {
               const active = activePath
@@ -37,7 +38,7 @@ export function NavList({ kind, activePath, onNavigate }: { kind: NavKind; activ
                   >
                     {active ? <span className="absolute top-1/2 -left-3 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-gradient" aria-hidden /> : null}
                     <item.icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} aria-hidden />
-                    {item.label}
+                    {trChildren(item.label)}
                   </Link>
                 </li>
               );

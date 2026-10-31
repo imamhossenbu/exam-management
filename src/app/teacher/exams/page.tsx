@@ -10,6 +10,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { listTeacherExams } from "@/features/exams/queries";
 import { ExamsTable } from "@/features/exams/components/exams-table";
 import { examPhase } from "@/features/exams/status";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Exams" };
 
@@ -30,7 +31,7 @@ export default function ExamsPage() {
         actions={
           <Button asChild>
             <Link href="/teacher/exams/new">
-              <Plus aria-hidden /> New exam
+              <Plus aria-hidden /> <T>New exam</T>
             </Link>
           </Button>
         }

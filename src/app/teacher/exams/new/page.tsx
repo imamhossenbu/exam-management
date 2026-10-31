@@ -11,6 +11,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { listCourseOptions } from "@/features/courses/queries";
 import { ExamSettingsForm } from "@/features/exams/components/exam-settings-form";
 import { utcToZonedInput } from "@/lib/utils/datetime";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "New exam" };
 
@@ -25,7 +26,7 @@ async function NewExam({ searchParams }: { searchParams: Promise<{ course?: stri
         description="Exams belong to a course so the right students can take them."
         action={
           <Button asChild>
-            <Link href="/teacher/courses">Go to courses</Link>
+            <Link href="/teacher/courses"><T>Go to courses</T></Link>
           </Button>
         }
       />

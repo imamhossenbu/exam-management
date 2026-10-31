@@ -15,6 +15,7 @@ import { getStudentResult } from "@/features/attempts/result-queries";
 import { STUDENT_RELEASE_LABEL } from "@/features/exams/status";
 import { AnnotatedFile } from "@/features/grading/components/annotated-file";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
+import { T } from "@/lib/i18n/client";
 
 async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = await params;
@@ -31,7 +32,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
       <>
         <PageHeader breadcrumbs={crumbs} title={exam.title} />
         <Button asChild>
-          <Link href={`/student/attempts/${attempt.id}`}>Return to your exam</Link>
+          <Link href={`/student/attempts/${attempt.id}`}><T>Return to your exam</T></Link>
         </Button>
       </>
     );
@@ -47,14 +48,14 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
 
       {attempt.status === "returned" ? (
         <div role="note" className="mb-6 rounded-md border bg-warning-soft p-4 text-sm text-warning-soft-foreground">
-          <p className="font-medium">Your teacher returned this attempt for correction.</p>
+          <p className="font-medium"><T>Your teacher returned this attempt for correction.</T></p>
           {attempt.return_note ? <p className="mt-1 whitespace-pre-wrap">{attempt.return_note}</p> : null}
           {attempt.resubmit_deadline_at && new Date(attempt.resubmit_deadline_at).getTime() > requestTime() ? (
             <Button asChild size="sm" className="mt-3">
               <Link href={`/student/attempts/${attempt.id}`}>Upload corrections (due {formatDateTime(attempt.resubmit_deadline_at, tz)})</Link>
             </Button>
           ) : (
-            <p className="mt-1">The resubmission deadline has passed.</p>
+            <p className="mt-1"><T>The resubmission deadline has passed.</T></p>
           )}
         </div>
       ) : null}
@@ -62,20 +63,20 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
       {!result ? (
         <div className="surface flex flex-col items-center gap-2 p-8 text-center">
           <CheckCircle2 className="size-8 text-success" aria-hidden />
-          <h2 className="section-title">Your answers were submitted</h2>
+          <h2 className="section-title"><T>Your answers were submitted</T></h2>
           <p className="text-subtle max-w-md">
             {exam.exam_type !== "mcq" ? "Written answers need to be graded by your teacher. " : ""}
             Results will be released {STUDENT_RELEASE_LABEL[exam.results_release]}.
           </p>
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Hourglass className="size-3.5" aria-hidden /> Check back later.
+            <Hourglass className="size-3.5" aria-hidden /> <T>Check back later.</T>
           </p>
         </div>
       ) : (
         <>
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
             <div className="surface p-4">
-              <p className="text-subtle">Your score</p>
+              <p className="text-subtle"><T>Your score</T></p>
               <p className="mt-1 text-xl sm:text-2xl font-semibold tabular-nums">
                 {Number(result.total_score)}
                 <span className="text-sm text-muted-foreground"> / {Number(result.max_score)}</span>
@@ -83,18 +84,18 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
               <p className="text-xs text-muted-foreground">{Number(result.percentage)}%</p>
             </div>
             <div className="surface p-5">
-              <p className="text-subtle">Breakdown</p>
+              <p className="text-subtle"><T>Breakdown</T></p>
               <p className="mt-2 text-sm">
-                MCQ: <span className="font-semibold tabular-nums">{Number(result.mcq_score)}</span>
+                <T>MCQ:</T> <span className="font-semibold tabular-nums">{Number(result.mcq_score)}</span>
               </p>
               <p className="text-sm">
-                Written: <span className="font-semibold tabular-nums">{Number(result.cq_score)}</span>
+                <T>Written:</T> <span className="font-semibold tabular-nums">{Number(result.cq_score)}</span>
               </p>
             </div>
             <div className="surface p-5">
-              <p className="text-subtle">Outcome</p>
+              <p className="text-subtle"><T>Outcome</T></p>
               {result.passed === null ? (
-                <p className="mt-2 text-sm text-muted-foreground">No pass mark set.</p>
+                <p className="mt-2 text-sm text-muted-foreground"><T>No pass mark set.</T></p>
               ) : (
                 <p className={cn("mt-2 flex items-center gap-2 text-lg font-semibold", result.passed ? "text-success" : "text-danger")}>
                   {result.passed ? <CheckCircle2 className="size-5" aria-hidden /> : <XCircle className="size-5" aria-hidden />}
@@ -142,12 +143,12 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
                         <div key={o.id} className={cn("flex items-center gap-2 rounded-md border px-3 py-2 text-sm", correct && "border-success bg-success-soft", chosen && keysReleased && !correct && "border-danger bg-danger-soft", chosen && !keysReleased && "border-primary bg-primary-soft/60")}>
                           <span className="font-medium">{optionLabel(oi, hasBengali(q.body, ...q.options.map((x) => x.body)))}.</span>
                           <span className="flex-1">{o.body}</span>
-                          {chosen ? <Badge>Your answer</Badge> : null}
-                          {correct ? <Badge tone="success">Correct</Badge> : null}
+                          {chosen ? <Badge><T>Your answer</T></Badge> : null}
+                          {correct ? <Badge tone="success"><T>Correct</T></Badge> : null}
                         </div>
                       );
                     })}
-                    {!q.answer?.selected_option_id ? <p className="text-sm text-muted-foreground">Not answered.</p> : null}
+                    {!q.answer?.selected_option_id ? <p className="text-sm text-muted-foreground"><T>Not answered.</T></p> : null}
                   </div>
                 ) : (
                   <div className="mt-3 space-y-3">
@@ -171,7 +172,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
                 ) : null}
                 {q.key?.explanation || q.key?.model_answer ? (
                   <details className="mt-3 text-sm">
-                    <summary className="cursor-pointer font-medium">Explanation</summary>
+                    <summary className="cursor-pointer font-medium"><T>Explanation</T></summary>
                     {q.key.explanation ? <p className="prose-text mt-2">{q.key.explanation}</p> : null}
                     {q.key.model_answer ? <p className="prose-text mt-2 text-muted-foreground">{q.key.model_answer}</p> : null}
                   </details>

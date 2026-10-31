@@ -4,6 +4,8 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
+import { T } from "@/lib/i18n/client";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
@@ -29,7 +31,7 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-ring">
           <X className="size-4" aria-hidden />
-          <span className="sr-only">Close</span>
+          <span className="sr-only"><T>Close</T></span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
@@ -40,12 +42,20 @@ export function DialogHeader({ className, ...props }: React.ComponentProps<"div"
   return <div className={cn("grid gap-1 pr-6", className)} {...props} />;
 }
 
-export function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn("text-lg font-semibold tracking-tight", className)} {...props} />;
+export function DialogTitle({ className, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title className={cn("text-lg font-semibold tracking-tight", className)} {...props}>
+      {trChildren(children)}
+    </DialogPrimitive.Title>
+  );
 }
 
-export function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description className={cn("text-subtle", className)} {...props} />;
+export function DialogDescription({ className, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description className={cn("text-subtle", className)} {...props}>
+      {trChildren(children)}
+    </DialogPrimitive.Description>
+  );
 }
 
 export function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {

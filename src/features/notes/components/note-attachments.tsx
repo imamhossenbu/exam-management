@@ -11,6 +11,7 @@ import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFil
 import { deleteStudyFileAction, registerStudyFileAction } from "../actions";
 import type { NoteDetail } from "../queries";
 import { cn } from "@/lib/utils/cn";
+import { T } from "@/lib/i18n/client";
 
 export function NoteAttachments({
   noteId,
@@ -126,10 +127,10 @@ export function NoteAttachments({
               <UploadCloud className="size-5" />
             </div>
             <p className="text-xs font-semibold text-foreground">
-              Click or drag & drop PDFs or Images
+              <T>Click or drag & drop PDFs or Images</T>
             </p>
             <p className="text-[11px] text-muted-foreground">
-              Upload multi-page note images or PDF study guides (up to 10MB each)
+              <T>Upload multi-page note images or PDF study guides (up to 10MB each)</T>
             </p>
           </div>
         )}
@@ -199,7 +200,7 @@ export function NoteAttachments({
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground text-center py-2">No attachments yet.</p>
+        <p className="text-xs text-muted-foreground text-center py-2"><T>No attachments yet.</T></p>
       )}
     </div>
   );

@@ -1,8 +1,12 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "radix-ui";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
+import { useT } from "@/lib/i18n/client";
 
 export const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[background-color,box-shadow,transform,color] duration-150 focus-ring active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55 [&_svg]:size-4 [&_svg]:shrink-0",
@@ -36,11 +40,17 @@ export type ButtonProps = React.ComponentProps<"button"> &
     pending?: boolean;
   };
 
-export function Button({ className, variant, size, asChild, pending, disabled, children, ...props }: ButtonProps) {
+export function Button({ className, variant, size, asChild, pending, disabled, children, ...rest }: ButtonProps) {
+  const t = useT();
+  const props = { ...rest };
+  if (typeof props["aria-label"] === "string") props["aria-label"] = t(props["aria-label"]);
+  if (typeof props.title === "string") props.title = t(props.title);
   if (asChild) {
     return (
       <Slot.Root className={cn(buttonVariants({ variant, size }), className)} {...props}>
-        {children}
+        {React.isValidElement<{ children?: React.ReactNode }>(children)
+          ? React.cloneElement(children, undefined, trChildren(children.props.children))
+          : children}
       </Slot.Root>
     );
   }
@@ -52,7 +62,7 @@ export function Button({ className, variant, size, asChild, pending, disabled, c
       {...props}
     >
       {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
-      {children}
+      {trChildren(children)}
     </button>
   );
 }

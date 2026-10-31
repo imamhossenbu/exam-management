@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 import { Label } from "./input";
+import { trChildren } from "@/lib/i18n/tr";
 
 type FieldProps = {
   id: string;
@@ -29,12 +30,12 @@ export function Field({ id, label, error, description, required, className, chil
       {children({ id, "aria-invalid": Boolean(error), "aria-describedby": describedBy || undefined })}
       {description ? (
         <p id={`${id}-description`} className="text-xs text-muted-foreground">
-          {description}
+          {trChildren(description)}
         </p>
       ) : null}
       {error ? (
         <p id={`${id}-error`} role="alert" className="text-xs font-medium text-danger">
-          {error}
+          {trChildren(error)}
         </p>
       ) : null}
     </div>
@@ -45,7 +46,7 @@ export function FormError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <div role="alert" className="rounded-md border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger-soft-foreground">
-      {message}
+      {trChildren(message)}
     </div>
   );
 }

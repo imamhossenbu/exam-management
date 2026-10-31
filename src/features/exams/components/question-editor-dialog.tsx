@@ -15,6 +15,7 @@ import { saveQuestionAction } from "../actions";
 import type { BuilderQuestion } from "../queries";
 import { QuestionImageUpload } from "./question-image-upload";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
+import { T } from "@/lib/i18n/client";
 
 const EMPTY_MCQ: QuestionInput = {
   type: "mcq",
@@ -109,7 +110,7 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>{question ? "Edit question" : "Add question"}</DialogTitle>
-          <DialogDescription>Answer keys, explanations and rubrics are private and never sent to students before release.</DialogDescription>
+          <DialogDescription><T>Answer keys, explanations and rubrics are private and never sent to students before release.</T></DialogDescription>
         </DialogHeader>
         <form
           noValidate
@@ -156,7 +157,7 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
           {type === "mcq" ? (
             <fieldset className="grid gap-2">
               <legend className="mb-1 text-sm font-medium">
-                Options <span className="font-normal text-muted-foreground">— select the correct one</span>
+                <T>Options</T> <span className="font-normal text-muted-foreground">— select the correct one</span>
               </legend>
               {options.fields.map((field, i) => (
                 <div key={field.id} className="flex items-start gap-2">
@@ -201,32 +202,32 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
               ) : null}
               <div>
                 <Button type="button" variant="outline" size="sm" disabled={options.fields.length >= 10} onClick={() => options.append({ body: "" })}>
-                  <Plus aria-hidden /> Add option
+                  <Plus aria-hidden /> <T>Add option</T>
                 </Button>
               </div>
             </fieldset>
           ) : (
             <fieldset className="grid gap-3">
               <legend className="mb-1 text-sm font-medium">
-                Sub-questions <span className="font-normal text-muted-foreground">— optional; their marks must add up to the question&apos;s marks</span>
+                <T>Sub-questions</T> <span className="font-normal text-muted-foreground">— optional; their marks must add up to the question&apos;s marks</span>
               </legend>
               {parts.fields.map((field, i) => (
                 <div key={field.id} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[5rem_1fr_6rem_auto]">
                   <div>
                     <Label htmlFor={`part-label-${i}`} className="text-xs">
-                      Label
+                      <T>Label</T>
                     </Label>
                     <Input id={`part-label-${i}`} placeholder="a" {...form.register(`parts.${i}.label`)} />
                   </div>
                   <div>
                     <Label htmlFor={`part-body-${i}`} className="text-xs">
-                      Sub-question
+                      <T>Sub-question</T>
                     </Label>
                     <Input id={`part-body-${i}`} aria-invalid={Boolean(errors.parts?.[i]?.body)} placeholder="Sub-question text" {...form.register(`parts.${i}.body`)} />
                   </div>
                   <div>
                     <Label htmlFor={`part-marks-${i}`} className="text-xs">
-                      Marks
+                      <T>Marks</T>
                     </Label>
                     <Input id={`part-marks-${i}`} type="number" step="0.25" min="0.25" placeholder="Marks" {...form.register(`parts.${i}.marks`)} />
                   </div>
@@ -248,14 +249,14 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
                   disabled={parts.fields.length >= 20}
                   onClick={() => parts.append({ label: String.fromCharCode(97 + parts.fields.length), body: "", marks: "1" })}
                 >
-                  <Plus aria-hidden /> Add sub-question
+                  <Plus aria-hidden /> <T>Add sub-question</T>
                 </Button>
               </div>
             </fieldset>
           )}
 
           <div className="grid gap-4 rounded-md border border-dashed p-4">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Private — teacher only</p>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase"><T>Private — teacher only</T></p>
             <Field id="q-explanation" label="Explanation" description="Shown to students only if you reveal answers after the exam closes.">
               {(a) => <Textarea rows={2} placeholder="Why the correct answer is correct" {...a} {...form.register("explanation")} />}
             </Field>
@@ -273,7 +274,7 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
 
           <DialogFooter>
             <Button type="button" variant="outline" disabled={pending} onClick={() => setOpen(false)}>
-              Cancel
+              <T>Cancel</T>
             </Button>
             <Button type="submit" pending={pending}>
               {question ? "Save question" : "Add question"}

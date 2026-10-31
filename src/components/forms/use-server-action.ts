@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
 import type { ActionResult } from "@/lib/action-result";
+import { useT } from "@/lib/i18n/client";
 
 type Options<TData> = {
   /** Toast shown on success when the action doesn't provide its own message. */
@@ -23,6 +24,7 @@ export function useServerAction<TArgs extends unknown[], TData>(
   options: Options<TData> = {},
 ) {
   const [pending, startTransition] = React.useTransition();
+  const t = useT();
   const optionsRef = React.useRef(options);
   React.useEffect(() => {
     optionsRef.current = options;
@@ -39,22 +41,22 @@ export function useServerAction<TArgs extends unknown[], TData>(
             if (!result) return resolve(undefined);
             if (result.ok) {
               const message = result.message ?? successMessage;
-              if (message && successToast) toast.success(message);
+              if (message && successToast) toast.success(t(message));
               onSuccess?.(result.data);
             } else {
-              toast.error(result.error);
+              toast.error(t(result.error));
               onError?.(result);
             }
             resolve(result);
           } catch (error) {
             if (isNavigationError(error)) throw error;
             console.error(error);
-            toast.error("We couldn't reach the server. Check your connection and try again.");
+            toast.error(t("We couldn't reach the server. Check your connection and try again."));
             resolve(undefined);
           }
         });
       }),
-    [action],
+    [action, t],
   );
 
   return { run, pending };

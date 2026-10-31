@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentProfile, homeFor } from "@/lib/auth/dal";
 import { Button } from "@/components/ui/button";
+import { T } from "@/lib/i18n/client";
 
 function initials(name: string, email: string | null) {
   const source = name.trim() || email || "?";
@@ -18,10 +19,10 @@ export async function PublicNavUser() {
     return (
       <div className="flex items-center gap-1.5">
         <Button asChild variant="ghost" size="sm" className="h-8.5 px-3 text-xs">
-          <Link href="/login">Sign in</Link>
+          <Link href="/login"><T>Sign in</T></Link>
         </Button>
         <Button asChild size="sm" className="hidden sm:inline-flex h-8.5 px-3.5 text-xs">
-          <Link href="/signup">Get started</Link>
+          <Link href="/signup"><T>Get started</T></Link>
         </Button>
       </div>
     );
@@ -33,7 +34,7 @@ export async function PublicNavUser() {
   return (
     <div className="flex items-center gap-2">
       <Button asChild size="sm" variant="default" className="h-8.5 px-3 text-xs font-semibold shadow-sm">
-        <Link href={home}>Dashboard</Link>
+        <Link href={home}><T>Dashboard</T></Link>
       </Button>
       <Link
         href={`/${profile.role}/settings`}

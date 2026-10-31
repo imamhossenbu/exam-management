@@ -15,6 +15,7 @@ import { listStudentResults } from "@/features/attempts/result-queries";
 import { listNotes } from "@/features/notes/queries";
 import { StudentExamList } from "@/features/attempts/components/student-exam-list";
 import { examPhase } from "@/features/exams/status";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -38,7 +39,7 @@ async function Dashboard() {
         description="Join your course with the invitation code from your teacher to see exams and results."
         action={
           <Button asChild>
-            <Link href="/student/join">Join a course</Link>
+            <Link href="/student/join"><T>Join a course</T></Link>
           </Button>
         }
       />
@@ -65,7 +66,7 @@ async function Dashboard() {
 
       {/* Live and upcoming exams */}
       <section>
-        <h2 className="section-title mb-3">Live and upcoming exams</h2>
+        <h2 className="section-title mb-3"><T>Live and upcoming exams</T></h2>
         <StudentExamList exams={active.slice(0, 6)} timezone={tz} now={now} />
       </section>
 
@@ -73,17 +74,17 @@ async function Dashboard() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="section-title">Study Resources & Materials</h2>
-            <p className="text-xs text-muted-foreground">Your PDF guides, lecture slides, and multi-page notebooks.</p>
+            <h2 className="section-title"><T>Study Resources & Materials</T></h2>
+            <p className="text-xs text-muted-foreground"><T>Your PDF guides, lecture slides, and multi-page notebooks.</T></p>
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
               <Link href="/student/notes/new">
-                <Plus className="size-3.5" /> Add Resource
+                <Plus className="size-3.5" /> <T>Add Resource</T>
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm" className="text-xs">
-              <Link href="/student/notes">View all</Link>
+              <Link href="/student/notes"><T>View all</T></Link>
             </Button>
           </div>
         </div>
@@ -96,15 +97,15 @@ async function Dashboard() {
                   <FileStack className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Upload your study materials</h3>
+                  <h3 className="text-sm font-semibold text-foreground"><T>Upload your study materials</T></h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Save PDFs or multi-page photos of your lecture notes to read sequentially like a notebook.
+                    <T>Save PDFs or multi-page photos of your lecture notes to read sequentially like a notebook.</T>
                   </p>
                 </div>
               </div>
               <Button asChild size="sm" className="gap-1.5 shrink-0">
                 <Link href="/student/notes/new">
-                  <Plus className="size-3.5" /> Upload Now
+                  <Plus className="size-3.5" /> <T>Upload Now</T>
                 </Link>
               </Button>
             </CardContent>
@@ -154,7 +155,7 @@ async function Dashboard() {
                       </span>
                     )}
                     {item.pdfCount === 0 && item.imageCount === 0 && (
-                      <Badge tone="neutral" className="text-[10px]">Note</Badge>
+                      <Badge tone="neutral" className="text-[10px]"><T>Note</T></Badge>
                     )}
                   </div>
                   <span className="text-xs font-semibold text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
@@ -170,14 +171,14 @@ async function Dashboard() {
       {/* Recent results */}
       <Card>
         <CardHeader className="flex-row items-center justify-between">
-          <CardTitle>Recent results</CardTitle>
+          <CardTitle><T>Recent results</T></CardTitle>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/student/results">All results</Link>
+            <Link href="/student/results"><T>All results</T></Link>
           </Button>
         </CardHeader>
         <CardContent>
           {results.length === 0 ? (
-            <p className="text-subtle">No submissions yet.</p>
+            <p className="text-subtle"><T>No submissions yet.</T></p>
           ) : (
             <ul className="divide-y">
               {results.slice(0, 5).map((r) => (
@@ -190,7 +191,7 @@ async function Dashboard() {
                       {r.courseTitle} · {formatDateTime(r.submittedAt, tz)}
                     </p>
                   </div>
-                  <span className="text-sm tabular-nums">{r.released ? `${r.score}/${r.maxScore}` : <span className="text-muted-foreground">Pending</span>}</span>
+                  <span className="text-sm tabular-nums">{r.released ? `${r.score}/${r.maxScore}` : <span className="text-muted-foreground"><T>Pending</T></span>}</span>
                 </li>
               ))}
             </ul>

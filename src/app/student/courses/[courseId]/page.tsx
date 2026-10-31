@@ -7,6 +7,7 @@ import { requireStudent } from "@/lib/auth/dal";
 import { uuid } from "@/lib/validations/courses";
 import { listStudentExams } from "@/features/attempts/queries";
 import { StudentExamList } from "@/features/attempts/components/student-exam-list";
+import { T } from "@/lib/i18n/client";
 
 async function CourseContent({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -19,7 +20,7 @@ async function CourseContent({ params }: { params: Promise<{ courseId: string }>
   return (
     <>
       <PageHeader breadcrumbs={[{ label: "My courses", href: "/student/courses" }, { label: course.title }]} title={course.title} description={course.description || undefined} />
-      <h2 className="section-title mb-3">Exams</h2>
+      <h2 className="section-title mb-3"><T>Exams</T></h2>
       <StudentExamList exams={exams} timezone={profile.timezone} now={requestTime()} />
     </>
   );

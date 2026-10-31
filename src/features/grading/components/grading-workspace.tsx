@@ -14,6 +14,7 @@ import { attemptGradingAction, returnAttemptAction, saveGradeAction } from "../a
 import type { Annotation, GradingData, GradingQuestion } from "../queries";
 import { AnnotatedFile } from "./annotated-file";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
+import { T } from "@/lib/i18n/client";
 
 type Grade = GradingData["grades"][number];
 
@@ -62,9 +63,9 @@ function GradeItem({
         {(a) => <Input value={feedback} placeholder="e.g. Good diagram; explain the second step" disabled={disabled} maxLength={5000} onChange={(e) => setFeedback(e.target.value)} {...a} />}
       </Field>
       <div className="flex items-center gap-2">
-        {grade ? <Badge tone={grade.status === "final" ? "success" : "info"}>{grade.status === "final" ? "Final" : "Draft"}</Badge> : <Badge tone="warning">Ungraded</Badge>}
+        {grade ? <Badge tone={grade.status === "final" ? "success" : "info"}>{grade.status === "final" ? "Final" : "Draft"}</Badge> : <Badge tone="warning"><T>Ungraded</T></Badge>}
         <Button type="submit" size="sm" pending={pending} disabled={disabled || !dirty}>
-          Save
+          <T>Save</T>
         </Button>
       </div>
     </form>
@@ -80,12 +81,12 @@ function ReturnDialog({ attemptId }: { attemptId: string }) {
     <Dialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
       <DialogTrigger asChild>
         <Button variant="outline">
-          <Undo2 aria-hidden /> Return for correction
+          <Undo2 aria-hidden /> <T>Return for correction</T>
         </Button>
       </DialogTrigger>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle>Return written work</DialogTitle>
+          <DialogTitle><T>Return written work</T></DialogTitle>
           <DialogDescription>The student can upload corrected answer sheets until the deadline, then resubmit. Written marks become drafts again; MCQ answers stay locked.</DialogDescription>
         </DialogHeader>
         <Field id="return-note" label="Note to the student">
@@ -127,12 +128,12 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
         <div className="text-sm">
           {cqItems.length ? (
             <p>
-              Written items graded: <span className="font-semibold tabular-nums">{graded}</span>/{cqItems.length}
+              <T>Written items graded:</T> <span className="font-semibold tabular-nums">{graded}</span>/{cqItems.length}
             </p>
           ) : (
-            <p>MCQ-only exam — graded automatically.</p>
+            <p><T>MCQ-only exam — graded automatically.</T></p>
           )}
-          {!submitted ? <p className="text-muted-foreground">Grading opens once the attempt is submitted.</p> : null}
+          {!submitted ? <p className="text-muted-foreground"><T>Grading opens once the attempt is submitted.</T></p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
           {submitted && data.attempt.exam?.allow_resubmission && cqItems.length ? <ReturnDialog attemptId={attempt.id} /> : null}
@@ -145,7 +146,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                 onConfirm={async () => (await action.run(attempt.id, "reopen"))?.ok ?? false}
                 trigger={
                   <Button variant="outline">
-                    <LockOpen aria-hidden /> Reopen grading
+                    <LockOpen aria-hidden /> <T>Reopen grading</T>
                   </Button>
                 }
               />
@@ -158,7 +159,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
               onConfirm={async () => (await action.run(attempt.id, "finalize"))?.ok ?? false}
               trigger={
                 <Button disabled={!submitted || graded < cqItems.length}>
-                  <Lock aria-hidden /> Finalize grading
+                  <Lock aria-hidden /> <T>Finalize grading</T>
                 </Button>
               }
             />
@@ -178,7 +179,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                 <Badge tone={q.type === "mcq" ? "primary" : "info"}>{q.type === "mcq" ? "MCQ" : "Written"}</Badge>
                 <Badge>{q.marks} marks</Badge>
                 {q.studentPosition !== null && q.studentPosition !== i ? <span className="text-xs text-muted-foreground">Shown to student as Q{q.studentPosition + 1}</span> : null}
-                {answer?.marked_for_review ? <Badge tone="warning">Student marked for review</Badge> : null}
+                {answer?.marked_for_review ? <Badge tone="warning"><T>Student marked for review</T></Badge> : null}
               </div>
               <p className="prose-text">{q.body}</p>
               {q.imageUrl ? (
@@ -198,7 +199,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                       >
                         <span className="font-medium">{optionLabel(oi, hasBengali(q.body, ...q.options.map((x) => x.body)))}.</span>
                         <span className="flex-1">{o.body}</span>
-                        {chosen ? <Badge tone={correct ? "success" : "danger"}>Student&apos;s answer</Badge> : null}
+                        {chosen ? <Badge tone={correct ? "success" : "danger"}><T>Student&apos;s answer</T></Badge> : null}
                         {correct ? <CheckCircle2 className="size-4 text-success" aria-label="Correct answer" /> : null}
                       </div>
                     );
@@ -206,7 +207,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                   <p className="pt-1 text-sm">
                     {answer?.selected_option_id ? null : (
                       <span className="mr-2 inline-flex items-center gap-1 text-muted-foreground">
-                        <CircleSlash className="size-4" aria-hidden /> Not answered.
+                        <CircleSlash className="size-4" aria-hidden /> <T>Not answered.</T>
                       </span>
                     )}
                     Auto-graded:{" "}
@@ -229,14 +230,14 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                   ) : null}
                   {q.rubric || q.modelAnswer ? (
                     <details className="rounded-md border border-dashed p-3 text-sm">
-                      <summary className="cursor-pointer font-medium">Model answer and rubric (private)</summary>
+                      <summary className="cursor-pointer font-medium"><T>Model answer and rubric (private)</T></summary>
                       {q.modelAnswer ? <p className="prose-text mt-2">{q.modelAnswer}</p> : null}
                       {q.rubric ? <p className="prose-text mt-2 text-muted-foreground">{q.rubric}</p> : null}
                     </details>
                   ) : null}
                   {answer?.text_answer ? (
                     <div>
-                      <p className="mb-1 text-sm font-medium">Typed answer</p>
+                      <p className="mb-1 text-sm font-medium"><T>Typed answer</T></p>
                       <p className="prose-text rounded-md bg-muted p-3 text-sm">{answer.text_answer}</p>
                     </div>
                   ) : null}
@@ -251,7 +252,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                     </div>
                   ) : !answer?.text_answer ? (
                     <p className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-                      <XCircle className="size-4" aria-hidden /> No answer submitted.
+                      <XCircle className="size-4" aria-hidden /> <T>No answer submitted.</T>
                     </p>
                   ) : null}
                   <div className="space-y-2">

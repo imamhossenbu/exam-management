@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime } from "@/lib/utils/datetime";
 import type { AttemptRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = AttemptRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -60,8 +61,8 @@ function buildColumns(showExam: boolean) {
       cell: (info) => (
         <span className="text-xs whitespace-nowrap">
           {info.row.original.submittedAt ? formatDateTime(info.row.original.submittedAt, info.row.original.timezone) : "—"}
-          {info.row.original.submittedVia === "timeout" ? <span className="block text-muted-foreground">Auto (time up)</span> : null}
-          {info.row.original.submittedVia === "teacher" ? <span className="block text-muted-foreground">Exam closed</span> : null}
+          {info.row.original.submittedVia === "timeout" ? <span className="block text-muted-foreground"><T>Auto (time up)</T></span> : null}
+          {info.row.original.submittedVia === "teacher" ? <span className="block text-muted-foreground"><T>Exam closed</T></span> : null}
         </span>
       ),
     }),
@@ -96,7 +97,7 @@ function buildColumns(showExam: boolean) {
     }),
     col.display({
       id: "actions",
-      header: () => <span className="sr-only">Actions</span>,
+      header: () => <span className="sr-only"><T>Actions</T></span>,
       cell: (info) => (
         <Button asChild variant="ghost" size="sm">
           <Link href={`/teacher/attempts/${info.row.original.id}`}>

@@ -1,4 +1,5 @@
 import type { ExamSummary } from "../analytics";
+import { T } from "@/lib/i18n/client";
 
 /**
  * Single-series horizontal bars: average % per exam. One hue (magnitude), values in
@@ -6,10 +7,10 @@ import type { ExamSummary } from "../analytics";
  */
 export function ExamAverageChart({ summaries }: { summaries: ExamSummary[] }) {
   const data = summaries.filter((s) => s.average !== null).slice(0, 12);
-  if (!data.length) return <p className="text-subtle">No fully graded attempts in this selection yet.</p>;
+  if (!data.length) return <p className="text-subtle"><T>No fully graded attempts in this selection yet.</T></p>;
   return (
     <figure>
-      <figcaption className="sr-only">Average score per exam, as a percentage</figcaption>
+      <figcaption className="sr-only"><T>Average score per exam, as a percentage</T></figcaption>
       <ul className="space-y-2.5">
         {data.map((s) => (
           <li key={s.examId} className="grid grid-cols-[minmax(0,10rem)_1fr_3.5rem] items-center gap-3 text-sm" title={`${s.examTitle}: average ${s.average}% across ${s.graded} graded attempt(s)`}>

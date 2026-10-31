@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
 
 const badgeVariants = cva("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset", {
   variants: {
@@ -18,6 +19,10 @@ const badgeVariants = cva("inline-flex items-center gap-1.5 rounded-full px-2 py
 
 export type BadgeTone = NonNullable<VariantProps<typeof badgeVariants>["tone"]>;
 
-export function Badge({ className, tone, ...props }: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ tone }), className)} {...props} />;
+export function Badge({ className, tone, children, ...props }: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+  return (
+    <span className={cn(badgeVariants({ tone }), className)} {...props}>
+      {trChildren(children)}
+    </span>
+  );
 }

@@ -15,6 +15,7 @@ import { correctAnswerKeyAction, deleteQuestionAction, duplicateQuestionAction, 
 import type { BuilderQuestion } from "../queries";
 import { QuestionEditorDialog } from "./question-editor-dialog";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
+import { T } from "@/lib/i18n/client";
 
 function CorrectKeyDialog({ question }: { question: BuilderQuestion }) {
   const [open, setOpen] = React.useState(false);
@@ -24,16 +25,16 @@ function CorrectKeyDialog({ question }: { question: BuilderQuestion }) {
     <Dialog open={open} onOpenChange={(o) => !pending && (setOpen(o), setChoice(question.correctIndex))}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          <KeyRound aria-hidden /> Correct key
+          <KeyRound aria-hidden /> <T>Correct key</T>
         </Button>
       </DialogTrigger>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle>Correct the answer key</DialogTitle>
-          <DialogDescription>Every submitted attempt is regraded for this question. The change is recorded in the audit log.</DialogDescription>
+          <DialogTitle><T>Correct the answer key</T></DialogTitle>
+          <DialogDescription><T>Every submitted attempt is regraded for this question. The change is recorded in the audit log.</T></DialogDescription>
         </DialogHeader>
         <fieldset className="grid gap-2">
-          <legend className="sr-only">Correct option</legend>
+          <legend className="sr-only"><T>Correct option</T></legend>
           {question.options.map((o, i) => (
             <label key={o.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
               <input type="radio" name={`key-${question.id}`} className="accent-primary" checked={choice === i} onChange={() => setChoice(i)} />
@@ -92,7 +93,7 @@ function QuestionCard({
               {q.marks} mark{q.marks === 1 ? "" : "s"}
             </Badge>
             {q.negativeMarks > 0 ? <Badge tone="danger">−{q.negativeMarks} if wrong</Badge> : null}
-            {q.type === "mcq" && q.correctIndex < 0 ? <Badge tone="warning">No correct option</Badge> : null}
+            {q.type === "mcq" && q.correctIndex < 0 ? <Badge tone="warning"><T>No correct option</T></Badge> : null}
           </div>
           <p className="prose-text">{q.body}</p>
           {q.imageUrl ? (
@@ -206,7 +207,7 @@ export function QuestionBuilder({
       examType={examType}
       trigger={
         <Button>
-          <Plus aria-hidden /> Add question
+          <Plus aria-hidden /> <T>Add question</T>
         </Button>
       }
     />
@@ -233,7 +234,7 @@ export function QuestionBuilder({
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link href={`/teacher/exams/${examId}/import`}>
-                <FileUp aria-hidden /> Import from PDF/image
+                <FileUp aria-hidden /> <T>Import from PDF/image</T>
               </Link>
             </Button>
             {addButton}

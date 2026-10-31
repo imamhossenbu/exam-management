@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
 import { cn } from "@/lib/utils/cn";
 import { registerSourceAction } from "../actions";
+import { tNow } from "@/lib/i18n/client";
 
 /** Uploads PDFs/images to the private question-sources bucket under {teacherId}/. */
 export function SourceUploader({ teacherId, examId, onUploaded }: { teacherId: string; examId?: string; onUploaded?: (id: string) => void }) {
@@ -41,7 +42,7 @@ export function SourceUploader({ teacherId, examId, onUploaded }: { teacherId: s
           await supabase.storage.from("question-sources").remove([path]);
         }
       } catch {
-        toast.error("We couldn't reach the server. Check your connection and try again.");
+        toast.error(tNow("We couldn't reach the server. Check your connection and try again."));
       }
     }
     setBusy(false);

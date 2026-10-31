@@ -16,6 +16,7 @@ import { listAttemptsPage } from "@/features/grading/queries";
 import { parseOverview } from "@/features/grading/analytics";
 import { AttemptsTable } from "@/features/grading/components/attempts-table";
 import { ExamAverageChart } from "@/features/grading/components/exam-average-chart";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Results" };
 
@@ -59,7 +60,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
     <div className="space-y-6">
       <form method="get" className="surface flex flex-col gap-3 p-4 md:flex-row md:items-end" aria-label="Filter results">
         <div className="grid flex-1 gap-1.5">
-          <Label htmlFor="course">Course</Label>
+          <Label htmlFor="course"><T>Course</T></Label>
           <NativeSelect id="course" name="course" defaultValue={f.course}>
             <option value="">All courses</option>
             {courses?.map((c) => (
@@ -70,7 +71,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
           </NativeSelect>
         </div>
         <div className="grid flex-1 gap-1.5">
-          <Label htmlFor="exam">Exam</Label>
+          <Label htmlFor="exam"><T>Exam</T></Label>
           <NativeSelect id="exam" name="exam" defaultValue={f.exam}>
             <option value="">All exams</option>
             {examOptions.map((e) => (
@@ -81,17 +82,17 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
           </NativeSelect>
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="from">Submitted from</Label>
+          <Label htmlFor="from"><T>Submitted from</T></Label>
           <Input id="from" name="from" type="date" defaultValue={f.from} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="to">to</Label>
+          <Label htmlFor="to"><T>to</T></Label>
           <Input id="to" name="to" type="date" defaultValue={f.to} />
         </div>
         <div className="flex gap-2">
-          <Button type="submit">Apply</Button>
+          <Button type="submit"><T>Apply</T></Button>
           <Button asChild variant="ghost">
-            <Link href="/teacher/results">Reset</Link>
+            <Link href="/teacher/results"><T>Reset</T></Link>
           </Button>
         </div>
       </form>
@@ -110,7 +111,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Average score by exam</CardTitle>
+                <CardTitle><T>Average score by exam</T></CardTitle>
               </CardHeader>
               <CardContent>
                 <ExamAverageChart summaries={summaries} />
@@ -118,17 +119,17 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Student performance trends</CardTitle>
+                <CardTitle><T>Student performance trends</T></CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-80 overflow-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 border-b bg-surface text-left text-xs text-muted-foreground uppercase">
                       <tr>
-                        <th scope="col" className="px-4 py-2 font-medium">Student</th>
-                        <th scope="col" className="px-4 py-2 font-medium">Average</th>
-                        <th scope="col" className="px-4 py-2 font-medium">Recent (oldest → newest)</th>
-                        <th scope="col" className="px-4 py-2 font-medium">Trend</th>
+                        <th scope="col" className="px-4 py-2 font-medium"><T>Student</T></th>
+                        <th scope="col" className="px-4 py-2 font-medium"><T>Average</T></th>
+                        <th scope="col" className="px-4 py-2 font-medium"><T>Recent (oldest → newest)</T></th>
+                        <th scope="col" className="px-4 py-2 font-medium"><T>Trend</T></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -163,7 +164,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Exam summaries</CardTitle>
+              <CardTitle><T>Exam summaries</T></CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
               <table className="w-full text-sm">
@@ -199,7 +200,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
           </Card>
 
           <div>
-            <h2 className="section-title mb-3">All attempts</h2>
+            <h2 className="section-title mb-3"><T>All attempts</T></h2>
             <p className="mb-3 text-sm text-muted-foreground">
               Showing {attemptsPage.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, attemptsPage.total)} of {attemptsPage.total}. Search and
               filters in the table apply to this page; use the filters above for the whole list.
@@ -211,7 +212,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
               toolbar={
                 <Button asChild variant="outline">
                   <a href={`/api/results?${csvParams.toString()}`} download>
-                    <Download aria-hidden /> Export CSV
+                    <Download aria-hidden /> <T>Export CSV</T>
                   </a>
                 </Button>
               }
@@ -220,7 +221,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
               <nav aria-label="Attempt pages" className="mt-3 flex items-center justify-between gap-2 text-sm">
                 {page > 1 ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={pageHref(page - 1)}>Previous page</Link>
+                    <Link href={pageHref(page - 1)}><T>Previous page</T></Link>
                   </Button>
                 ) : (
                   <span />
@@ -230,7 +231,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
                 </span>
                 {page < lastPage ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={pageHref(page + 1)}>Next page</Link>
+                    <Link href={pageHref(page + 1)}><T>Next page</T></Link>
                   </Button>
                 ) : (
                   <span />

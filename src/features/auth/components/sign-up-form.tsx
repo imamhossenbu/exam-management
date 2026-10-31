@@ -15,6 +15,7 @@ import { signUpAction } from "@/features/auth/actions";
 import { signUpSchema, type SignUpInput } from "@/lib/validations/auth";
 import { PasswordStrength } from "./password-strength";
 import { OtpVerifyCard } from "./otp-verify-card";
+import { T } from "@/lib/i18n/client";
 
 /** The whole sign-up card: the form, then a 6-digit OTP verification screen once the email is sent. */
 export function SignUpForm() {
@@ -40,7 +41,7 @@ export function SignUpForm() {
         <>
           Already have an account?{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
-            Sign in
+            <T>Sign in</T>
           </Link>
         </>
       }
@@ -60,7 +61,7 @@ export function SignUpForm() {
           {(a) => <PasswordInput autoComplete="new-password" placeholder="Re-enter your password" {...a} {...form.register("confirmPassword")} />}
         </Field>
         <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
-          Create student account
+          <T>Create student account</T>
         </Button>
       </form>
     </AuthCard>

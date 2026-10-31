@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toUserMessage } from "@/lib/errors";
 import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
 import type { TakingFile } from "../queries";
+import { T, tNow } from "@/lib/i18n/client";
 
 type Props = {
   attemptId: string;
@@ -76,7 +77,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
     } else {
       await supabase.storage.from("answer-sheets").remove([path]);
       onChange(files.filter((f) => f.id !== file.id));
-      toast.success("File removed");
+      toast.success(tNow("File removed"));
     }
     setRemoving(null);
   }
@@ -94,7 +95,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
                   <img src={f.url} alt="" className="h-28 w-full object-cover" />
                 ) : (
                   <span className="flex h-28 flex-col items-center justify-center gap-1 text-xs text-muted-foreground">
-                    <FileText className="size-6" aria-hidden /> PDF
+                    <FileText className="size-6" aria-hidden /> <T>PDF</T>
                   </span>
                 )}
                 <span className="block truncate px-2 py-1 text-xs">
@@ -118,7 +119,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-muted-foreground">No pages uploaded yet.</p>
+        <p className="text-xs text-muted-foreground"><T>No pages uploaded yet.</T></p>
       )}
       {!disabled ? (
         <>

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useServerAction } from "@/components/forms/use-server-action";
 import type { ExamPhase } from "../status";
 import { deleteExamAction, duplicateExamAction, examLifecycleAction, publishExamAction } from "../actions";
+import { T } from "@/lib/i18n/client";
 
 export function ExamLifecycleBar({
   examId,
@@ -41,7 +42,7 @@ export function ExamLifecycleBar({
             onConfirm={async () => (await remove.run(examId))?.ok ?? false}
             trigger={
               <Button variant="ghost">
-                <Trash2 aria-hidden /> Delete
+                <Trash2 aria-hidden /> <T>Delete</T>
               </Button>
             }
           />
@@ -55,7 +56,7 @@ export function ExamLifecycleBar({
             }}
             trigger={
               <Button>
-                <Rocket aria-hidden /> Publish
+                <Rocket aria-hidden /> <T>Publish</T>
               </Button>
             }
           />
@@ -70,7 +71,7 @@ export function ExamLifecycleBar({
           onConfirm={() => run("unpublish")}
           trigger={
             <Button variant="outline">
-              <Undo2 aria-hidden /> Unpublish
+              <Undo2 aria-hidden /> <T>Unpublish</T>
             </Button>
           }
         />
@@ -89,7 +90,7 @@ export function ExamLifecycleBar({
           onConfirm={() => run("close")}
           trigger={
             <Button variant="outline">
-              <Lock aria-hidden /> Close
+              <Lock aria-hidden /> <T>Close</T>
             </Button>
           }
         />
@@ -98,7 +99,7 @@ export function ExamLifecycleBar({
       {phase !== "draft" ? (
         resultsPublished ? (
           <Button variant="outline" pending={lifecycle.pending} onClick={() => run("unpublishResults")}>
-            <EyeOff aria-hidden /> Hide results
+            <EyeOff aria-hidden /> <T>Hide results</T>
           </Button>
         ) : (
           <ConfirmDialog
@@ -108,7 +109,7 @@ export function ExamLifecycleBar({
             onConfirm={() => run("publishResults")}
             trigger={
               <Button variant="outline">
-                <Eye aria-hidden /> Publish results
+                <Eye aria-hidden /> <T>Publish results</T>
               </Button>
             }
           />
@@ -123,26 +124,26 @@ export function ExamLifecycleBar({
           onConfirm={() => run("archive")}
           trigger={
             <Button variant="ghost">
-              <Archive aria-hidden /> Archive
+              <Archive aria-hidden /> <T>Archive</T>
             </Button>
           }
         />
       ) : null}
       {phase === "archived" ? (
         <Button variant="outline" pending={lifecycle.pending} onClick={() => run("restore")}>
-          <ArchiveRestore aria-hidden /> Restore
+          <ArchiveRestore aria-hidden /> <T>Restore</T>
         </Button>
       ) : null}
 
       <Button variant="outline" pending={duplicate.pending} onClick={() => duplicate.run(examId)}>
-        <Copy aria-hidden /> Duplicate
+        <Copy aria-hidden /> <T>Duplicate</T>
       </Button>
 
       <Dialog open={problems !== null} onOpenChange={(o) => !o && setProblems(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Not ready to publish</DialogTitle>
-            <DialogDescription>Fix these issues, then publish again.</DialogDescription>
+            <DialogTitle><T>Not ready to publish</T></DialogTitle>
+            <DialogDescription><T>Fix these issues, then publish again.</T></DialogDescription>
           </DialogHeader>
           <ul className="list-disc space-y-1 pl-5 text-sm">
             {problems?.map((p) => (
@@ -150,7 +151,7 @@ export function ExamLifecycleBar({
             ))}
           </ul>
           <DialogFooter>
-            <Button onClick={() => setProblems(null)}>OK</Button>
+            <Button onClick={() => setProblems(null)}><T>OK</T></Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

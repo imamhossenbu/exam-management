@@ -725,6 +725,7 @@ export type Database = {
           avatar_url: string | null;
           student_class: string | null;
           phone: string | null;
+          locale: string;
         };
         Insert: {
           id: string;
@@ -737,6 +738,7 @@ export type Database = {
           avatar_url?: string | null;
           student_class?: string | null;
           phone?: string | null;
+          locale?: string;
         };
         Update: {
           id?: string;
@@ -749,6 +751,7 @@ export type Database = {
           avatar_url?: string | null;
           student_class?: string | null;
           phone?: string | null;
+          locale?: string;
         };
         Relationships: [
 

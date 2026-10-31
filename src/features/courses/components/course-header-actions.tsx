@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useServerAction } from "@/components/forms/use-server-action";
 import { setCourseArchivedAction } from "../actions";
 import { CourseFormDialog } from "./course-form-dialog";
+import { T } from "@/lib/i18n/client";
 
 export function CourseHeaderActions({ course }: { course: { id: string; title: string; code: string | null; description: string; archived: boolean } }) {
   const { run, pending } = useServerAction(setCourseArchivedAction);
@@ -15,13 +16,13 @@ export function CourseHeaderActions({ course }: { course: { id: string; title: s
         course={course}
         trigger={
           <Button variant="outline">
-            <Pencil aria-hidden /> Edit
+            <Pencil aria-hidden /> <T>Edit</T>
           </Button>
         }
       />
       {course.archived ? (
         <Button variant="outline" pending={pending} onClick={() => run(course.id, false)}>
-          <ArchiveRestore aria-hidden /> Restore
+          <ArchiveRestore aria-hidden /> <T>Restore</T>
         </Button>
       ) : (
         <ConfirmDialog
@@ -31,7 +32,7 @@ export function CourseHeaderActions({ course }: { course: { id: string; title: s
           onConfirm={async () => (await run(course.id, true))?.ok ?? false}
           trigger={
             <Button variant="outline">
-              <Archive aria-hidden /> Archive
+              <Archive aria-hidden /> <T>Archive</T>
             </Button>
           }
         />

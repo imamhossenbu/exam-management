@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
 
 export function EmptyState({
   icon: Icon,
@@ -23,8 +24,8 @@ export function EmptyState({
           <Icon className="size-5" aria-hidden />
         </div>
       </div>
-      <h3 className="section-title">{title}</h3>
-      {description ? <p className="text-subtle mt-1.5 max-w-md">{description}</p> : null}
+      <h3 className="section-title">{trChildren(title)}</h3>
+      {description ? <p className="text-subtle mt-1.5 max-w-md">{trChildren(description)}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );

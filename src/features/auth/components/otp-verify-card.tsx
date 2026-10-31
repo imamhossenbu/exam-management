@@ -8,6 +8,7 @@ import { useServerAction } from "@/components/forms/use-server-action";
 import { resendConfirmationAction, verifyEmailOtpAction } from "@/features/auth/actions";
 import { cn } from "@/lib/utils/cn";
 import { ResendButton } from "./resend-button";
+import { T } from "@/lib/i18n/client";
 
 type OtpVerifyCardProps = {
   email: string;
@@ -101,7 +102,7 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
           onClick={onBack}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white transition-colors"
         >
-          <ArrowLeft className="size-3.5" aria-hidden /> Use a different email
+          <ArrowLeft className="size-3.5" aria-hidden /> <T>Use a different email</T>
         </button>
       }
     >
@@ -112,7 +113,7 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
       <form onSubmit={handleVerify} className="grid gap-4">
         <div className="grid gap-2 text-center">
           <label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-white/70">
-            Security verification code
+            <T>Security verification code</T>
           </label>
           
           <div
@@ -201,7 +202,7 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
 
         <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs w-full gap-2">
-            <span className="text-white/60 whitespace-nowrap">Didn&apos;t get the code?</span>
+            <span className="text-white/60 whitespace-nowrap"><T>Didn&apos;t get the code?</T></span>
             <ResendButton
               variant="outline"
               size="sm"
@@ -212,7 +213,7 @@ export function OtpVerifyCard({ email, onBack }: OtpVerifyCardProps) {
             />
           </div>
           <p className="text-center text-[11px] leading-relaxed text-white/45">
-            You can also click the confirmation link in the email to verify instantly. The code expires in 1 hour.
+            <T>You can also click the confirmation link in the email to verify instantly. The code expires in 1 hour.</T>
           </p>
         </div>
       </form>

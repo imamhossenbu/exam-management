@@ -13,6 +13,7 @@ import { applyFieldErrors, useServerAction } from "@/components/forms/use-server
 import { resetPasswordAction } from "@/features/auth/actions";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validations/auth";
 import { PasswordStrength } from "./password-strength";
+import { T } from "@/lib/i18n/client";
 
 const REDIRECT_SECONDS = 4;
 
@@ -42,7 +43,7 @@ export function ResetPasswordForm() {
       <AuthCard icon={CircleCheckBig} tone="success" title="Password updated" description="Your new password is saved and you're signed in. Use it the next time you sign in.">
         <div role="status" className="grid gap-2.5">
           <Button size="md" className="w-full h-9.5 sm:h-10 text-sm font-semibold shadow-sm" onClick={() => router.replace(home)}>
-            Continue to dashboard <ArrowRight aria-hidden />
+            <T>Continue to dashboard</T> <ArrowRight aria-hidden />
           </Button>
           <p className="text-center text-xs text-white/55">Taking you there in {Math.max(remaining, 0)}s…</p>
         </div>
@@ -61,7 +62,7 @@ export function ResetPasswordForm() {
           {(a) => <PasswordInput autoComplete="new-password" placeholder="Re-enter the new password" {...a} {...form.register("confirmPassword")} />}
         </Field>
         <Button type="submit" size="md" className="mt-0.5 w-full h-9 sm:h-9.5 text-xs sm:text-sm font-semibold shadow-sm" pending={pending}>
-          Update password
+          <T>Update password</T>
         </Button>
       </form>
     </AuthCard>

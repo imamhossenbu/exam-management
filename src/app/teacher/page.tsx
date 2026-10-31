@@ -16,6 +16,7 @@ import { listTeacherExams } from "@/features/exams/queries";
 import { listAttempts, listAttemptsPage } from "@/features/grading/queries";
 import { PHASE_META, examPhase } from "@/features/exams/status";
 import { notifyReleasedResults } from "@/features/notifications/send";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -49,9 +50,9 @@ async function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Live and upcoming exams</CardTitle>
+            <CardTitle><T>Live and upcoming exams</T></CardTitle>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/teacher/exams">All exams</Link>
+              <Link href="/teacher/exams"><T>All exams</T></Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -63,7 +64,7 @@ async function Dashboard() {
                 action={
                   <Button asChild size="sm">
                     <Link href="/teacher/exams/new">
-                      <Plus aria-hidden /> New exam
+                      <Plus aria-hidden /> <T>New exam</T>
                     </Link>
                   </Button>
                 }
@@ -89,9 +90,9 @@ async function Dashboard() {
         </Card>
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Recent submissions</CardTitle>
+            <CardTitle><T>Recent submissions</T></CardTitle>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/teacher/grading">Grading queue</Link>
+              <Link href="/teacher/grading"><T>Grading queue</T></Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -112,7 +113,7 @@ async function Dashboard() {
                     {a.gradingStatus === "graded" ? (
                       <span className="text-sm tabular-nums">{a.percentage}%</span>
                     ) : (
-                      <Badge tone="warning">Needs grading</Badge>
+                      <Badge tone="warning"><T>Needs grading</T></Badge>
                     )}
                   </li>
                 ))}
@@ -134,7 +135,7 @@ export default function TeacherDashboardPage() {
         actions={
           <Button asChild>
             <Link href="/teacher/exams/new">
-              <Plus aria-hidden /> New exam
+              <Plus aria-hidden /> <T>New exam</T>
             </Link>
           </Button>
         }

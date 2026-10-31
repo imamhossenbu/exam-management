@@ -10,6 +10,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { uuid } from "@/lib/validations/courses";
 import { listSources } from "@/features/sources/queries";
 import { ImportWorkspace } from "@/features/sources/components/import-workspace";
+import { T } from "@/lib/i18n/client";
 
 async function ImportContent({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
@@ -32,7 +33,7 @@ async function ImportContent({ params }: { params: Promise<{ examId: string }> }
           description="Questions can only be added to draft exams. Duplicate the exam to create an editable copy."
           action={
             <Button asChild variant="outline">
-              <Link href={`/teacher/exams/${exam.id}`}>Back to exam</Link>
+              <Link href={`/teacher/exams/${exam.id}`}><T>Back to exam</T></Link>
             </Button>
           }
         />
@@ -48,7 +49,7 @@ async function ImportContent({ params }: { params: Promise<{ examId: string }> }
         description="Upload a PDF or image, review the extracted text and detected questions, then add the ones you've checked. Nothing is published automatically."
         actions={
           <Button asChild variant="outline">
-            <Link href={`/teacher/exams/${exam.id}`}>Done</Link>
+            <Link href={`/teacher/exams/${exam.id}`}><T>Done</T></Link>
           </Button>
         }
       />

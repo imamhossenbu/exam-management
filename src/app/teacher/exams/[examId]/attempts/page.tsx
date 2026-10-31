@@ -8,6 +8,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { uuid } from "@/lib/validations/courses";
 import { listAttempts } from "@/features/grading/queries";
 import { AttemptsTable } from "@/features/grading/components/attempts-table";
+import { T } from "@/lib/i18n/client";
 
 async function Attempts({ params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
@@ -25,7 +26,7 @@ async function Attempts({ params }: { params: Promise<{ examId: string }> }) {
         actions={
           <Button asChild variant="outline">
             <a href={`/api/results?examId=${exam.id}`} download>
-              <Download aria-hidden /> Export CSV
+              <Download aria-hidden /> <T>Export CSV</T>
             </a>
           </Button>
         }

@@ -8,6 +8,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { SidebarNav } from "./sidebar-nav";
 import { Brand } from "./brand";
 import type { NavKind } from "./nav-config";
+import { T } from "@/lib/i18n/client";
 
 export function MobileNav({ kind }: { kind: NavKind }) {
   const [open, setOpen] = React.useState(false);
@@ -19,7 +20,7 @@ export function MobileNav({ kind }: { kind: NavKind }) {
         </Button>
       </DialogTrigger>
       <SheetContent aria-describedby={undefined}>
-        <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="sr-only"><T>Navigation</T></DialogPrimitive.Title>
         <div className="flex h-16 items-center px-6">
           <Brand />
         </div>

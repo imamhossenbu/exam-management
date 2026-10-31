@@ -24,6 +24,7 @@ import { createNoteAction, deleteNoteAction, registerStudyFileAction, updateNote
 import { createClient } from "@/lib/supabase/client";
 import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
 import { cn } from "@/lib/utils/cn";
+import { T, tNow } from "@/lib/i18n/client";
 
 type SelectedFileItem = {
   id: string;
@@ -146,7 +147,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
         }
 
         if (!currentOwnerId) {
-          toast.error("Session expired. Please sign in again.");
+          toast.error(tNow("Session expired. Please sign in again."));
           setIsSubmitting(false);
           setProgressMsg("");
           return;
@@ -194,7 +195,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
       router.refresh();
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong while saving.");
+      toast.error(tNow("Something went wrong while saving."));
     } finally {
       setIsSubmitting(false);
       setProgressMsg("");
@@ -205,7 +206,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
     if (!noteId) return false;
     const res = await deleteNoteAction(noteId);
     if (res?.ok) {
-      toast.success("Resource deleted");
+      toast.success(tNow("Resource deleted"));
       router.push("/student/notes");
       return true;
     }
@@ -249,7 +250,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
           <div className="flex items-center gap-2">
             <Paperclip className="size-4 text-primary" />
             <h4 className="text-sm font-semibold text-foreground">
-              Attach PDFs or Note Images
+              <T>Attach PDFs or Note Images</T>
             </h4>
           </div>
           <span className="text-[11px] text-muted-foreground font-medium">
@@ -291,10 +292,10 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
             <UploadCloud className="size-5" />
           </div>
           <p className="text-xs font-semibold text-foreground">
-            Click or drag & drop PDFs or Multi-page Images here
+            <T>Click or drag & drop PDFs or Multi-page Images here</T>
           </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Photos of handwritten notes will be arranged sequentially into a readable notebook.
+            <T>Photos of handwritten notes will be arranged sequentially into a readable notebook.</T>
           </p>
         </div>
 
@@ -328,7 +329,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
                     <img src={item.previewUrl} alt="" className="size-10 rounded object-cover ring-1 ring-border shrink-0" />
                   ) : (
                     <div className="grid size-10 place-items-center rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 font-bold text-[10px]">
-                      PDF
+                      <T>PDF</T>
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
@@ -392,7 +393,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
             onConfirm={handleDelete}
             trigger={
               <Button type="button" variant="ghost" className="text-danger hover:bg-destructive/10">
-                <Trash2 aria-hidden className="size-4" /> Delete resource
+                <Trash2 aria-hidden className="size-4" /> <T>Delete resource</T>
               </Button>
             }
           />

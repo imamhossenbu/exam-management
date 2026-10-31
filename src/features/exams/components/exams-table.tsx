@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { EXAM_TYPE_LABEL, PHASE_META, type ExamPhase } from "../status";
 import type { TeacherExamRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = TeacherExamRow & { phase: ExamPhase; timezone: string };
 const col = dataTableColumns<Row>();
@@ -49,16 +50,16 @@ const columns = [
   col.accessor("attemptCount", { header: "Attempts", cell: (info) => <span className="tabular-nums">{info.getValue()}</span> }),
   col.display({
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only"><T>Actions</T></span>,
     cell: (info) => (
       <div className="flex justify-end gap-1">
         {info.row.original.attemptCount > 0 ? (
           <Button asChild variant="ghost" size="sm">
-            <Link href={`/teacher/exams/${info.row.original.id}/attempts`}>Attempts</Link>
+            <Link href={`/teacher/exams/${info.row.original.id}/attempts`}><T>Attempts</T></Link>
           </Button>
         ) : null}
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/teacher/exams/${info.row.original.id}`}>Open</Link>
+          <Link href={`/teacher/exams/${info.row.original.id}`}><T>Open</T></Link>
         </Button>
       </div>
     ),
@@ -86,7 +87,7 @@ export function ExamsTable({ exams, timezone }: { exams: (TeacherExamRow & { pha
           action={
             <Button asChild>
               <Link href="/teacher/exams/new">
-                <Plus aria-hidden /> New exam
+                <Plus aria-hidden /> <T>New exam</T>
               </Link>
             </Button>
           }

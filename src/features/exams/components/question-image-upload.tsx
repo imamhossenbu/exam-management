@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { ACCEPTED_IMAGE_TYPES, LIMITS, extensionFor, validateFile } from "@/lib/utils/files";
+import { T, tNow } from "@/lib/i18n/client";
 
 /** Uploads a question image to the private question-assets bucket under {examId}/. */
 export function QuestionImageUpload({
@@ -34,7 +35,7 @@ export function QuestionImageUpload({
       onChange(path, URL.createObjectURL(file));
     } catch (error) {
       console.error(error);
-      toast.error("The image couldn't be uploaded. Try again.");
+      toast.error(tNow("The image couldn't be uploaded. Try again."));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -64,7 +65,7 @@ export function QuestionImageUpload({
         {uploading ? <Loader2 className="animate-spin" aria-hidden /> : <ImagePlus aria-hidden />}
         {value ? "Replace image" : "Attach image or diagram"}
       </Button>
-      <p className="text-xs text-muted-foreground">PNG, JPG or WebP, up to 5 MB. Stored privately.</p>
+      <p className="text-xs text-muted-foreground"><T>PNG, JPG or WebP, up to 5 MB. Stored privately.</T></p>
     </div>
   );
 }

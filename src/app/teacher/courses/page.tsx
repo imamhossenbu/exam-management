@@ -8,6 +8,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { listTeacherCourses } from "@/features/courses/queries";
 import { CoursesTable } from "@/features/courses/components/courses-table";
 import { CourseFormDialog } from "@/features/courses/components/course-form-dialog";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { title: "Courses" };
 
@@ -27,7 +28,7 @@ export default function CoursesPage() {
           <CourseFormDialog
             trigger={
               <Button>
-                <Plus aria-hidden /> New course
+                <Plus aria-hidden /> <T>New course</T>
               </Button>
             }
           />

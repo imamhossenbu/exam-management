@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/utils/datetime";
 import { enrollByEmailSchema, type EnrollByEmailInput } from "@/lib/validations/courses";
 import { enrollByEmailAction, setMemberStatusAction } from "../actions";
 import type { CourseMemberRow } from "../queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = CourseMemberRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -41,11 +42,11 @@ function MemberActions({ member }: { member: Row }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem asChild>
-          <Link href={`/teacher/students/${member.studentId}`}>View profile</Link>
+          <Link href={`/teacher/students/${member.studentId}`}><T>View profile</T></Link>
         </DropdownMenuItem>
         {member.status !== "active" ? (
           <DropdownMenuItem onSelect={() => set("active")}>
-            <UserCheck aria-hidden /> Reactivate
+            <UserCheck aria-hidden /> <T>Reactivate</T>
           </DropdownMenuItem>
         ) : null}
         {member.status === "active" ? (
@@ -56,7 +57,7 @@ function MemberActions({ member }: { member: Row }) {
             onConfirm={() => set("suspended")}
             trigger={
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <UserX aria-hidden /> Suspend
+                <UserX aria-hidden /> <T>Suspend</T>
               </DropdownMenuItem>
             }
           />
@@ -70,7 +71,7 @@ function MemberActions({ member }: { member: Row }) {
             onConfirm={() => set("removed")}
             trigger={
               <DropdownMenuItem destructive onSelect={(e) => e.preventDefault()}>
-                <UserMinus aria-hidden /> Remove
+                <UserMinus aria-hidden /> <T>Remove</T>
               </DropdownMenuItem>
             }
           />
@@ -100,7 +101,7 @@ const columns = [
     cell: (info) => <Badge tone={STATUS[info.getValue()].tone}>{STATUS[info.getValue()].label}</Badge>,
   }),
   col.accessor("joinedAt", { header: "Joined", sortFn: "datetime", cell: (info) => formatDate(info.getValue(), info.row.original.timezone) }),
-  col.display({ id: "actions", header: () => <span className="sr-only">Actions</span>, cell: (info) => <MemberActions member={info.row.original} /> }),
+  col.display({ id: "actions", header: () => <span className="sr-only"><T>Actions</T></span>, cell: (info) => <MemberActions member={info.row.original} /> }),
 ];
 
 export function EnrollStudentDialog({ courseId }: { courseId: string }) {
@@ -111,13 +112,13 @@ export function EnrollStudentDialog({ courseId }: { courseId: string }) {
     <Dialog open={open} onOpenChange={(o) => !pending && (setOpen(o), o && form.reset({ courseId, email: "" }))}>
       <DialogTrigger asChild>
         <Button variant="outline">
-          <UserPlus aria-hidden /> Enroll by email
+          <UserPlus aria-hidden /> <T>Enroll by email</T>
         </Button>
       </DialogTrigger>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle>Enroll an existing student</DialogTitle>
-          <DialogDescription>The student must already have an account. Otherwise, share an invitation code.</DialogDescription>
+          <DialogTitle><T>Enroll an existing student</T></DialogTitle>
+          <DialogDescription><T>The student must already have an account. Otherwise, share an invitation code.</T></DialogDescription>
         </DialogHeader>
         <form
           noValidate
@@ -133,7 +134,7 @@ export function EnrollStudentDialog({ courseId }: { courseId: string }) {
           </Field>
           <DialogFooter>
             <Button type="submit" pending={pending}>
-              Enroll
+              <T>Enroll</T>
             </Button>
           </DialogFooter>
         </form>

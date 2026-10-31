@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils/cn";
 import { createGalleryAlbumAction, deleteGalleryPhotoAction } from "../actions";
 import { registerStudyFileAction } from "@/features/notes/actions";
 import type { GalleryImage } from "../queries";
+import { T, tNow } from "@/lib/i18n/client";
 
 type Props = {
   photos: GalleryImage[];
@@ -160,7 +161,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
   async function handleBatchUpload(e: React.FormEvent) {
     e.preventDefault();
     if (selectedFiles.length === 0) {
-      toast.error("Please select at least one photo to upload.");
+      toast.error(tNow("Please select at least one photo to upload."));
       return;
     }
 
@@ -236,7 +237,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
       router.refresh();
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong during upload.");
+      toast.error(tNow("Something went wrong during upload."));
     } finally {
       setIsUploading(false);
       setUploadProgress("");
@@ -247,7 +248,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
   async function handleDeletePhoto(id: string) {
     const res = await deleteGalleryPhotoAction(id);
     if (res.ok) {
-      toast.success("Photo removed from gallery");
+      toast.success(tNow("Photo removed from gallery"));
       if (lightboxIndex !== null) setLightboxIndex(null);
       router.refresh();
       return true;
@@ -304,7 +305,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
           </div>
 
           <Button onClick={() => setIsUploadOpen(true)} size="sm" className="gap-1.5 shrink-0 h-9">
-            <Plus className="size-4" /> Upload Photos
+            <Plus className="size-4" /> <T>Upload Photos</T>
           </Button>
         </div>
       </div>
@@ -325,7 +326,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
           </p>
           {photos.length === 0 ? (
             <Button onClick={() => setIsUploadOpen(true)} className="mt-5 gap-2" size="sm">
-              <UploadCloud className="size-4" /> Upload First Photos
+              <UploadCloud className="size-4" /> <T>Upload First Photos</T>
             </Button>
           ) : (
             <Button
@@ -364,7 +365,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                   />
                 ) : (
                   <div className="size-full grid place-items-center text-xs text-muted-foreground">
-                    Image
+                    <T>Image</T>
                   </div>
                 )}
 
@@ -476,7 +477,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
               {/* View Resource */}
               <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex gap-1.5 text-xs text-black bg-white hover:bg-white/90">
                 <Link href={`/student/notes/${activePhoto.noteId}`}>
-                  <ExternalLink className="size-3.5" /> View Notebook
+                  <ExternalLink className="size-3.5" /> <T>View Notebook</T>
                 </Link>
               </Button>
 
@@ -569,17 +570,17 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
           <DialogHeader className="pr-8">
             <DialogTitle className="flex items-center gap-2 text-base font-semibold">
               <Images className="size-5 text-primary" />
-              Upload Study Photos
+              <T>Upload Study Photos</T>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add photos of whiteboard notes, lecture slides, formulas, or diagrams to your study gallery.
+              <T>Add photos of whiteboard notes, lecture slides, formulas, or diagrams to your study gallery.</T>
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleBatchUpload} className="space-y-4">
             {/* Subject Selector with Quick Pills */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Subject</label>
+              <label className="text-xs font-semibold text-foreground"><T>Subject</T></label>
               <div className="flex flex-wrap items-center gap-1.5">
                 {suggestedSubjects.map((sub) => {
                   const isSelected = uploadSubject.toLowerCase() === sub.toLowerCase();
@@ -613,8 +614,8 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
             {/* Collection / Topic Title */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                <span>Collection / Topic Title</span>
-                <span className="text-[10px] text-muted-foreground font-normal">Optional (auto-named from file if blank)</span>
+                <span><T>Collection / Topic Title</T></span>
+                <span className="text-[10px] text-muted-foreground font-normal"><T>Optional (auto-named from file if blank)</T></span>
               </label>
               <Input
                 disabled={isUploading}
@@ -660,10 +661,10 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                   <UploadCloud className="size-5" />
                 </div>
                 <p className="text-xs font-semibold text-foreground">
-                  Click or drag & drop multiple images here
+                  <T>Click or drag & drop multiple images here</T>
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  PNG, JPG, or WebP up to 10MB each
+                  <T>PNG, JPG, or WebP up to 10MB each</T>
                 </p>
               </div>
             ) : (
@@ -697,7 +698,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                   onChange={(e) => e.target.files?.length && handleFilesSelected(e.target.files)}
                 />
                 <Plus className="size-4 text-primary" />
-                <span className="text-xs font-medium text-foreground">Add more photos</span>
+                <span className="text-xs font-medium text-foreground"><T>Add more photos</T></span>
                 <span className="text-[10px] text-muted-foreground">(click or drag & drop)</span>
               </div>
             )}
@@ -787,7 +788,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                 {isUploading ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
-                    <span>Uploading…</span>
+                    <span><T>Uploading…</T></span>
                   </>
                 ) : (
                   `Upload ${selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""} to Gallery`

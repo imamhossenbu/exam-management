@@ -6,6 +6,9 @@ import { SignOutItem } from "./sign-out-item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { NavKind } from "./nav-config";
+import { trChildren } from "@/lib/i18n/tr";
+import { LanguageSwitcher } from "./language-switcher";
+import { getT } from "@/lib/i18n/server";
 
 function initials(name: string, email: string | null) {
   const source = name.trim() || email || "?";
@@ -22,7 +25,8 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
   if (!profile) redirect("/login");
   if (profile.role !== kind) redirect(homeFor(profile.role));
 
-  const roleLabel = profile.role === "teacher" ? "Teacher" : profile.student_class ? `Class ${profile.student_class}` : "Student";
+  const t = await getT();
+  const roleLabel = profile.role === "teacher" ? t("Teacher") : profile.student_class ? t("Class {name}", { name: profile.student_class }) : t("Student");
 
   return (
     <DropdownMenu>
@@ -47,10 +51,10 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
         </div>
         <div className="hidden sm:flex flex-col text-left">
           <span className="max-w-[120px] truncate text-xs font-semibold leading-tight text-foreground">
-            {profile.full_name || "Account"}
+            {profile.full_name || trChildren("Account")}
           </span>
           <span className="text-[10px] font-medium text-muted-foreground leading-none">
-            {roleLabel}
+            {trChildren(roleLabel)}
           </span>
         </div>
         <ChevronDown className="hidden sm:inline-block size-3 text-muted-foreground/80 shrink-0" aria-hidden />
@@ -72,13 +76,13 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
             )}
             <div className="min-w-0 flex-1">
               <span className="block truncate text-xs font-semibold text-foreground">
-                {profile.full_name || "Unnamed user"}
+                {profile.full_name || trChildren("Unnamed user")}
               </span>
               <span className="block truncate text-[11px] text-muted-foreground">
                 {profile.email}
               </span>
               <span className="mt-1 inline-block rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-medium text-primary-soft-foreground">
-                {roleLabel}
+                {trChildren(roleLabel)}
               </span>
             </div>
           </div>
@@ -86,9 +90,13 @@ export async function UserMenu({ kind }: { kind: NavKind }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={`/${kind}/settings`} className="flex items-center gap-2 text-xs">
-            <Settings className="size-3.5" aria-hidden /> Settings & Profile
+            <Settings className="size-3.5" aria-hidden /> {trChildren("Settings & Profile")}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div className="px-2 py-1.5">
+          <LanguageSwitcher />
+        </div>
         <DropdownMenuSeparator />
         <SignOutItem />
       </DropdownMenuContent>

@@ -6,6 +6,7 @@ import { Brand } from "@/components/shared/brand";
 import { PublicNavUser, PublicNavUserSkeleton } from "@/components/shared/public-nav-user";
 import { Button } from "@/components/ui/button";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { T } from "@/lib/i18n/client";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -54,22 +55,22 @@ export default function HomePage() {
           <div className="absolute top-[-10rem] left-1/2 -z-10 h-[28rem] w-[46rem] -translate-x-1/2 rounded-full bg-brand-gradient opacity-20 blur-3xl" aria-hidden />
           <div className="mx-auto flex max-w-4xl flex-col items-center px-4 pt-8 pb-10 text-center sm:pt-12 sm:pb-14 md:px-6 md:pt-14 md:pb-16">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-surface/80 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-card backdrop-blur">
-              <Sparkles className="size-3 text-primary" aria-hidden /> A private exam room for your class
+              <Sparkles className="size-3 text-primary" aria-hidden /> <T>A private exam room for your class</T>
             </span>
             <h1 className="mt-4 max-w-xl text-xl font-semibold tracking-[-0.025em] text-balance sm:text-2xl md:text-[2rem] md:leading-[1.2]">
-              Exams, grading and notes in <span className="text-brand-gradient">one calm place.</span>
+              <T>Exams, grading and notes in</T> <span className="text-brand-gradient"><T>one calm place.</T></span>
             </h1>
             <p className="text-subtle mt-3 max-w-md text-xs sm:text-sm text-pretty leading-relaxed">
-              Take timed exams, upload handwritten answers and review detailed feedback. New students sign up and join with the invitation code from their teacher.
+              <T>Take timed exams, upload handwritten answers and review detailed feedback. New students sign up and join with the invitation code from their teacher.</T>
             </p>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Button asChild size="sm" className="h-9 px-4 text-xs font-medium">
                 <Link href="/signup">
-                  Create student account <ArrowRight className="size-3.5" aria-hidden />
+                  <T>Create student account</T> <ArrowRight className="size-3.5" aria-hidden />
                 </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="h-9 px-4 text-xs font-medium">
-                <Link href="/login">Sign in</Link>
+                <Link href="/login"><T>Sign in</T></Link>
               </Button>
             </div>
           </div>
@@ -77,9 +78,9 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-5xl px-4 pb-12 sm:pb-16 md:px-6" aria-labelledby="features-heading">
           <h2 id="features-heading" className="text-center text-base font-semibold tracking-tight sm:text-lg md:text-xl">
-            Everything a class needs
+            <T>Everything a class needs</T>
           </h2>
-          <p className="text-subtle mx-auto mt-1 max-w-md text-center text-xs">Built for one teacher and their students, with security and fairness at the core.</p>
+          <p className="text-subtle mx-auto mt-1 max-w-md text-center text-xs"><T>Built for one teacher and their students, with security and fairness at the core.</T></p>
           <ul className="mt-6 sm:mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <li key={f.title} className="surface surface-interactive p-3.5 sm:p-4">
@@ -96,7 +97,7 @@ export default function HomePage() {
         <section className="border-y bg-muted/40" aria-labelledby="steps-heading">
           <div className="mx-auto max-w-5xl px-4 py-10 sm:py-12 md:px-6">
             <h2 id="steps-heading" className="text-center text-base font-semibold tracking-tight sm:text-lg md:text-xl">
-              How it works for students
+              <T>How it works for students</T>
             </h2>
             <ol className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 md:grid-cols-3">
               {STEPS.map((s, i) => (
@@ -116,14 +117,14 @@ export default function HomePage() {
         <section className="mx-auto max-w-5xl px-4 py-8 sm:py-10 md:px-6">
           <div className="relative overflow-hidden rounded-xl bg-brand-gradient px-4 py-6 text-center text-white shadow-elevated sm:px-6 sm:py-8">
             <div className="bg-grid absolute inset-0 opacity-20" aria-hidden />
-            <h2 className="relative text-base font-semibold tracking-tight sm:text-lg md:text-xl">Ready for your next exam?</h2>
-            <p className="relative mx-auto mt-1 max-w-sm text-xs text-white/80">Sign in to see what&apos;s coming up, or create your account to join your course.</p>
+            <h2 className="relative text-base font-semibold tracking-tight sm:text-lg md:text-xl"><T>Ready for your next exam?</T></h2>
+            <p className="relative mx-auto mt-1 max-w-sm text-xs text-white/80"><T>Sign in to see what&apos;s coming up, or create your account to join your course.</T></p>
             <div className="relative mt-4 flex flex-col justify-center gap-2 sm:flex-row">
               <Button asChild size="sm" variant="secondary" className="h-8.5 px-3.5 text-xs bg-white text-[oklch(0.3_0.1_277)] hover:bg-white/90">
-                <Link href="/signup">Create account</Link>
+                <Link href="/signup"><T>Create account</T></Link>
               </Button>
               <Button asChild size="sm" variant="ghost" className="h-8.5 px-3.5 text-xs text-white hover:bg-white/15 hover:text-white">
-                <Link href="/login">Sign in</Link>
+                <Link href="/login"><T>Sign in</T></Link>
               </Button>
             </div>
           </div>
@@ -133,7 +134,7 @@ export default function HomePage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2.5 px-4 py-6 text-xs sm:text-sm text-muted-foreground sm:flex-row md:px-6">
           <Brand subtle />
-          <p>Private exam platform · Your data stays with your class.</p>
+          <p><T>Private exam platform · Your data stays with your class.</T></p>
         </div>
       </footer>
     </div>

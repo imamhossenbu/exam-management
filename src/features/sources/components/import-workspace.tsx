@@ -18,6 +18,7 @@ import type { SourceRow } from "../queries";
 import { DraftReviewList, toEditable, type EditableDraft } from "./draft-review-list";
 import { SourceUploader } from "./source-uploader";
 import { blankQuestion } from "@/features/exams/components/question-editor-dialog";
+import { T, tNow } from "@/lib/i18n/client";
 
 const STATUS_META: Record<Enums<"extraction_status">, { label: string; tone: "neutral" | "success" | "warning" | "info" }> = {
   pending: { label: "Not extracted", tone: "neutral" },
@@ -27,7 +28,7 @@ const STATUS_META: Record<Enums<"extraction_status">, { label: string; tone: "ne
 };
 
 function SourcePreview({ source }: { source: SourceRow }) {
-  if (!source.url) return <p className="text-subtle">Preview unavailable.</p>;
+  if (!source.url) return <p className="text-subtle"><T>Preview unavailable.</T></p>;
   if (source.mimeType === "application/pdf") {
     return <iframe src={source.url} title={`Preview of ${source.fileName}`} className="h-[28rem] w-full rounded-md border bg-muted" />;
   }
@@ -75,7 +76,7 @@ export function ImportWorkspace({
       await worker.terminate();
       const recognized = result.data.text.trim();
       if (!recognized) {
-        toast.error("No text was recognised. Type the questions manually.");
+        toast.error(tNow("No text was recognised. Type the questions manually."));
       } else {
         setText(recognized);
         await saveText.run(selected.id, recognized, "ocr");
@@ -83,7 +84,7 @@ export function ImportWorkspace({
       }
     } catch (error) {
       console.error(error);
-      toast.error("OCR isn't available right now (it needs to download a language model). Type the text manually instead.");
+      toast.error(tNow("OCR isn't available right now (it needs to download a language model). Type the text manually instead."));
     } finally {
       setOcrProgress(null);
     }
@@ -92,7 +93,7 @@ export function ImportWorkspace({
   function parse() {
     const found = parseQuestions(text);
     if (found.length === 0) {
-      toast.error("No numbered questions found. Make sure each question starts with “1.” / “১.”, “2.” / “২.”, … or add drafts manually.");
+      toast.error(tNow("No numbered questions found. Make sure each question starts with “1.” / “১.”, “2.” / “২.”, … or add drafts manually."));
       return;
     }
     setDrafts(toEditable(found, examType));
@@ -130,7 +131,7 @@ export function ImportWorkspace({
           </ul>
         ) : null}
         <Button variant="outline" className="w-full" onClick={addBlankDraft}>
-          <Sparkles aria-hidden /> Add a blank draft
+          <Sparkles aria-hidden /> <T>Add a blank draft</T>
         </Button>
       </aside>
 
@@ -138,12 +139,12 @@ export function ImportWorkspace({
         {selected ? (
           <div className="grid gap-4 xl:grid-cols-2">
             <div className="space-y-2">
-              <h2 className="section-title">Original</h2>
+              <h2 className="section-title"><T>Original</T></h2>
               <SourcePreview source={selected} />
             </div>
             <div className="space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="section-title">Text</h2>
+                <h2 className="section-title"><T>Text</T></h2>
                 <div className="flex flex-wrap gap-2">
                   {selected.mimeType === "application/pdf" ? (
                     <Button size="sm" variant="outline" pending={extract.pending} onClick={() => extract.run(selected.id)}>
@@ -155,7 +156,7 @@ export function ImportWorkspace({
                     </Button>
                   )}
                   <Button size="sm" variant="outline" pending={saveText.pending} disabled={text === selected.text} onClick={() => saveText.run(selected.id, text, "manual")}>
-                    Save text
+                    <T>Save text</T>
                   </Button>
                 </div>
               </div>
@@ -169,7 +170,7 @@ export function ImportWorkspace({
                 className="font-mono text-xs"
               />
               <Button onClick={parse} disabled={!text.trim()}>
-                <Wand2 aria-hidden /> Create drafts from text
+                <Wand2 aria-hidden /> <T>Create drafts from text</T>
               </Button>
             </div>
           </div>

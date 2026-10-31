@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime } from "@/lib/utils/datetime";
 import type { StudentResultRow } from "../result-queries";
+import { T } from "@/lib/i18n/client";
 
 type Row = StudentResultRow & { timezone: string };
 const col = dataTableColumns<Row>();
@@ -25,7 +26,7 @@ const columns = [
           {info.row.original.courseTitle} · Attempt {info.row.original.attemptNumber}
           {info.row.original.multipleAttempts && info.row.original.counted ? (
             <Badge tone="info" className="ml-2">
-              Counts for result
+              <T>Counts for result</T>
             </Badge>
           ) : null}
         </p>
@@ -53,10 +54,10 @@ const columns = [
   }),
   col.display({
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only"><T>Actions</T></span>,
     cell: (info) => (
       <Button asChild variant="ghost" size="sm">
-        <Link href={`/student/attempts/${info.row.original.id}/result`}>View</Link>
+        <Link href={`/student/attempts/${info.row.original.id}/result`}><T>View</T></Link>
       </Button>
     ),
   }),
@@ -79,7 +80,7 @@ export function StudentResultsTable({ results, timezone }: { results: StudentRes
           description="After you submit an exam, it appears here."
           action={
             <Button asChild>
-              <Link href="/student/exams">See exams</Link>
+              <Link href="/student/exams"><T>See exams</T></Link>
             </Button>
           }
         />

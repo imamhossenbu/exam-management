@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useServerAction } from "@/components/forms/use-server-action";
 import { formatMinutes } from "@/lib/utils/datetime";
 import { startAttemptAction } from "../actions";
+import { T } from "@/lib/i18n/client";
 
 export function StartExamButton({
   examId,
@@ -29,12 +30,12 @@ export function StartExamButton({
     <Dialog onOpenChange={() => setAgreed(false)}>
       <DialogTrigger asChild>
         <Button size="lg">
-          <PlayCircle aria-hidden /> Start exam
+          <PlayCircle aria-hidden /> <T>Start exam</T>
         </Button>
       </DialogTrigger>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle>Ready to start?</DialogTitle>
+          <DialogTitle><T>Ready to start?</T></DialogTitle>
           <DialogDescription>
             The timer starts on the server as soon as you begin and keeps running even if you close this page. You&apos;ll have{" "}
             <strong>{formatMinutes(effective)}</strong>
@@ -44,20 +45,20 @@ export function StartExamButton({
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           {mcqEffective ? (
             <li>
-              <strong className="text-foreground">MCQs come first, with {formatMinutes(mcqEffective)}.</strong> When that time is up (or you finish early) your MCQ
-              answers lock and the written questions open.
+              <strong className="text-foreground">MCQs come first, with {formatMinutes(mcqEffective)}.</strong> <T>When that time is up (or you finish early) your MCQ
+              answers lock and the written questions open.</T>
             </li>
           ) : null}
-          <li>Answers save automatically. Keep an eye on the save indicator.</li>
-          <li>When time runs out, your saved answers are submitted automatically.</li>
-          <li>Leaving the exam tab is recorded for your teacher.</li>
+          <li><T>Answers save automatically. Keep an eye on the save indicator.</T></li>
+          <li><T>When time runs out, your saved answers are submitted automatically.</T></li>
+          <li><T>Leaving the exam tab is recorded for your teacher.</T></li>
         </ul>
         <label className="flex items-center gap-2 text-sm font-medium">
-          <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> I&apos;ve read the instructions
+          <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)} /> <T>I&apos;ve read the instructions</T>
         </label>
         <DialogFooter>
           <Button pending={pending} disabled={!agreed} onClick={() => run(examId)}>
-            Begin now
+            <T>Begin now</T>
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -16,6 +16,7 @@ import { submitAttemptAction } from "../actions";
 import type { TakingFile, TakingQuestion } from "../queries";
 import { AnswerUploads } from "./answer-uploads";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
+import { T, tNow } from "@/lib/i18n/client";
 
 type ServerAnswer = { question_id: string; selected_option_id: string | null; text_answer: string | null; marked_for_review: boolean; revision: number };
 
@@ -137,7 +138,7 @@ export function ExamRunner(props: Props) {
         onClosed: () => setClosedByServer(true),
         onRefused: (id, kept) => {
           if (kept) setValues((v) => ({ ...v, [id]: kept }));
-          toast.warning("The MCQ time was over, so your last MCQ change wasn't saved.");
+          toast.warning(tNow("The MCQ time was over, so your last MCQ change wasn't saved."));
         },
         persist: (id, value, revision) => writeLocal(attemptId, id, value, revision),
       },
@@ -169,7 +170,7 @@ export function ExamRunner(props: Props) {
         }
       } catch {
         // The server finalizes expired attempts on its own; the saved answers are safe.
-        toast.error("Couldn't confirm submission. Your saved answers will be submitted automatically at the deadline.");
+        toast.error(tNow("Couldn't confirm submission. Your saved answers will be submitted automatically at the deadline."));
       }
       router.replace(`/student/attempts/${attemptId}/result`);
     },
@@ -209,8 +210,8 @@ export function ExamRunner(props: Props) {
       phaseRef.current = "written";
       setEndSectionOpen(false);
       setCurrent(firstWritten);
-      if (reason === "timeout") toast.info("MCQ time is up. Your MCQ answers are locked — the written part is open now.", { duration: 8000 });
-      else toast.success("MCQ answers handed in. The written part is open now.");
+      if (reason === "timeout") toast.info(tNow("MCQ time is up. Your MCQ answers are locked — the written part is open now."), { duration: 8000 });
+      else toast.success(tNow("MCQ answers handed in. The written part is open now."));
     },
     [firstWritten],
   );
@@ -243,17 +244,17 @@ export function ExamRunner(props: Props) {
   React.useEffect(() => {
     if (mcqPhase && mcqRemaining <= 60_000 && !warnedRef.current.mcq) {
       warnedRef.current.mcq = true;
-      toast.warning("1 minute left for MCQs. They lock automatically when time is up.");
+      toast.warning(tNow("1 minute left for MCQs. They lock automatically when time is up."));
     }
   }, [mcqPhase, mcqRemaining]);
   React.useEffect(() => {
     if (remaining <= 5 * 60_000 && remaining > 60_000 && !warnedRef.current.five) {
       warnedRef.current.five = true;
-      toast.warning("5 minutes left.");
+      toast.warning(tNow("5 minutes left."));
     }
     if (remaining <= 60_000 && remaining > 0 && !warnedRef.current.one) {
       warnedRef.current.one = true;
-      toast.warning("1 minute left. Your answers will be submitted automatically.");
+      toast.warning(tNow("1 minute left. Your answers will be submitted automatically."));
     }
   }, [remaining]);
 
@@ -291,12 +292,12 @@ export function ExamRunner(props: Props) {
       // Make sure every MCQ choice is on the server before the section closes.
       const saved = await Promise.race([queue.flush(), new Promise<boolean>((r) => setTimeout(() => r(false), 6000))]);
       if (!saved) {
-        toast.error("Some MCQ answers haven't reached the server yet. Check your connection and try again.");
+        toast.error(tNow("Some MCQ answers haven't reached the server yet. Check your connection and try again."));
         return;
       }
       const { data, error } = await createClient().rpc("end_mcq_section", { p_attempt_id: attemptId });
       if (error || !data) {
-        toast.error("Couldn't hand in the MCQ section. Check your connection and try again.");
+        toast.error(tNow("Couldn't hand in the MCQ section. Check your connection and try again."));
         return;
       }
       enterWrittenPart("early");
@@ -408,10 +409,10 @@ export function ExamRunner(props: Props) {
           {mcqPhase ? (
             <>
               <Button variant="outline" onClick={() => setConfirmOpen(true)} disabled={submitting}>
-                <Send aria-hidden /> Submit exam
+                <Send aria-hidden /> <T>Submit exam</T>
               </Button>
               <Button onClick={() => setEndSectionOpen(true)} disabled={submitting || endingSection}>
-                <Lock aria-hidden /> Finish MCQs
+                <Lock aria-hidden /> <T>Finish MCQs</T>
               </Button>
             </>
           ) : (
@@ -426,9 +427,9 @@ export function ExamRunner(props: Props) {
         <div role="note" className="flex gap-2 rounded-md border bg-info-soft px-3 py-2 text-sm text-info-soft-foreground">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
           <div>
-            <p className="font-medium">Your teacher returned this attempt for correction.</p>
+            <p className="font-medium"><T>Your teacher returned this attempt for correction.</T></p>
             {props.returnNote ? <p className="mt-1 whitespace-pre-wrap">{props.returnNote}</p> : null}
-            <p className="mt-1">Upload corrected answer pages, then resubmit before the deadline. Multiple-choice answers can&apos;t be changed.</p>
+            <p className="mt-1"><T>Upload corrected answer pages, then resubmit before the deadline. Multiple-choice answers can&apos;t be changed.</T></p>
           </div>
         </div>
       ) : null}
@@ -439,12 +440,12 @@ export function ExamRunner(props: Props) {
           <p>
             {mcqPhase ? (
               <>
-                <span className="font-medium">Part 1 of 2 · MCQ section.</span> Answer the {mcqIndexes.length} MCQs before the section timer runs out. The written
-                questions open after that — or as soon as you click <span className="font-medium">Finish MCQs</span>. Unused MCQ time carries over to the written part.
+                <span className="font-medium"><T>Part 1 of 2 · MCQ section.</T></span> Answer the {mcqIndexes.length} MCQs before the section timer runs out. The written
+                questions open after that — or as soon as you click <span className="font-medium"><T>Finish MCQs</T></span>. Unused MCQ time carries over to the written part.
               </>
             ) : (
               <>
-                <span className="font-medium">Part 2 of 2 · Written part.</span> Your MCQ answers are locked. You can still look at them, but not change them.
+                <span className="font-medium"><T>Part 2 of 2 · Written part.</T></span> Your MCQ answers are locked. You can still look at them, but not change them.
               </>
             )}
           </p>
@@ -464,12 +465,12 @@ export function ExamRunner(props: Props) {
             <div className="flex items-center gap-2">
               {q.type === "mcq" && sectioned && mcqLocked ? (
                 <Badge>
-                  <Lock className="size-3" aria-hidden /> Locked
+                  <Lock className="size-3" aria-hidden /> <T>Locked</T>
                 </Badge>
               ) : null}
               <Badge>{q.marks} mark{q.marks === 1 ? "" : "s"}</Badge>
               {q.negativeMarks > 0 ? <Badge tone="danger">−{q.negativeMarks} if wrong</Badge> : null}
-              {saveStates[q.id] === "error" ? <Badge tone="danger">Not saved</Badge> : saveStates[q.id] === "pending" || saveStates[q.id] === "saving" ? <Badge>Saving…</Badge> : null}
+              {saveStates[q.id] === "error" ? <Badge tone="danger"><T>Not saved</T></Badge> : saveStates[q.id] === "pending" || saveStates[q.id] === "saving" ? <Badge><T>Saving…</T></Badge> : null}
             </div>
           </div>
           <p className="prose-text">{q.body}</p>
@@ -480,7 +481,7 @@ export function ExamRunner(props: Props) {
 
           {q.type === "mcq" ? (
             <fieldset className="mt-5 grid gap-2" disabled={qLocked || returned}>
-              <legend className="sr-only">Choose one answer</legend>
+              <legend className="sr-only"><T>Choose one answer</T></legend>
               {q.options.map((o, i) => {
                 const checked = values[q.id]?.selectedOptionId === o.id;
                 return (
@@ -501,7 +502,7 @@ export function ExamRunner(props: Props) {
               {values[q.id]?.selectedOptionId && !qLocked && !returned ? (
                 <div>
                   <Button type="button" variant="link" size="sm" className="px-0" onClick={() => change(q.id, { selectedOptionId: null })}>
-                    Clear my answer
+                    <T>Clear my answer</T>
                   </Button>
                 </div>
               ) : null}
@@ -546,7 +547,7 @@ export function ExamRunner(props: Props) {
               {!returned ? (
                 <div>
                   <label htmlFor={`text-${q.id}`} className="text-sm font-medium">
-                    Typed answer <span className="font-normal text-muted-foreground">(optional, in addition to uploads)</span>
+                    <T>Typed answer</T> <span className="font-normal text-muted-foreground">(optional, in addition to uploads)</span>
                   </label>
                   <Textarea
                     id={`text-${q.id}`}
@@ -565,7 +566,7 @@ export function ExamRunner(props: Props) {
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t pt-4">
             <Button variant="outline" disabled={current === 0} onClick={() => setCurrent((c) => c - 1)}>
-              <ArrowLeft aria-hidden /> Previous
+              <ArrowLeft aria-hidden /> <T>Previous</T>
             </Button>
             {!returned ? (
               <Button variant="ghost" disabled={qLocked} onClick={() => change(q.id, { marked: !values[q.id]?.marked })} aria-pressed={values[q.id]?.marked ?? false}>
@@ -575,11 +576,11 @@ export function ExamRunner(props: Props) {
             ) : null}
             {isLastMcq ? (
               <Button onClick={() => setEndSectionOpen(true)} disabled={submitting || endingSection}>
-                <Lock aria-hidden /> Finish MCQs
+                <Lock aria-hidden /> <T>Finish MCQs</T>
               </Button>
             ) : (
               <Button variant="outline" disabled={current === questions.length - 1} onClick={() => setCurrent((c) => c + 1)}>
-                Next <ArrowRight aria-hidden />
+                <T>Next</T> <ArrowRight aria-hidden />
               </Button>
             )}
           </div>
@@ -599,7 +600,7 @@ export function ExamRunner(props: Props) {
                     <span className="tabular-nums normal-case">{formatDuration(mcqRemaining)} left</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 normal-case">
-                      <Lock className="size-3" aria-hidden /> Locked
+                      <Lock className="size-3" aria-hidden /> <T>Locked</T>
                     </span>
                   )}
                 </p>
@@ -610,7 +611,7 @@ export function ExamRunner(props: Props) {
                   <span>Written · {cqIndexes.filter((i) => isAnswered(questions[i])).length}/{cqIndexes.length}</span>
                   {mcqPhase ? (
                     <span className="inline-flex items-center gap-1 normal-case">
-                      <Lock className="size-3" aria-hidden /> After MCQs
+                      <Lock className="size-3" aria-hidden /> <T>After MCQs</T>
                     </span>
                   ) : null}
                 </p>
@@ -625,18 +626,18 @@ export function ExamRunner(props: Props) {
           )}
           <ul className="mt-4 space-y-1 text-xs text-muted-foreground">
             <li className="flex items-center gap-2">
-              <span className="size-3 rounded-sm bg-primary" aria-hidden /> Answered
+              <span className="size-3 rounded-sm bg-primary" aria-hidden /> <T>Answered</T>
             </li>
             <li className="flex items-center gap-2">
-              <span className="size-3 rounded-sm ring-2 ring-warning" aria-hidden /> Marked for review
+              <span className="size-3 rounded-sm ring-2 ring-warning" aria-hidden /> <T>Marked for review</T>
             </li>
             <li className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-danger" aria-hidden /> Not saved yet
+              <span className="size-2.5 rounded-full bg-danger" aria-hidden /> <T>Not saved yet</T>
             </li>
           </ul>
           {props.instructions ? (
             <details className="mt-4 text-sm">
-              <summary className="cursor-pointer font-medium">Instructions</summary>
+              <summary className="cursor-pointer font-medium"><T>Instructions</T></summary>
               <p className="prose-text mt-2 text-muted-foreground">{props.instructions}</p>
             </details>
           ) : null}
@@ -647,27 +648,27 @@ export function ExamRunner(props: Props) {
         <DialogContent size="sm">
           <DialogHeader>
             <DialogTitle>{returned ? "Resubmit your corrections?" : "Submit your exam?"}</DialogTitle>
-            <DialogDescription>Submission is final. You won&apos;t be able to change your answers afterwards.</DialogDescription>
+            <DialogDescription><T>Submission is final. You won&apos;t be able to change your answers afterwards.</T></DialogDescription>
           </DialogHeader>
           <ul className="space-y-1 text-sm">
             <li>
-              Answered: <span className="font-semibold">{answeredCount}</span> of {questions.length}
+              <T>Answered:</T> <span className="font-semibold">{answeredCount}</span> of {questions.length}
             </li>
             {questions.length - answeredCount > 0 ? <li className="text-warning-soft-foreground">{questions.length - answeredCount} question(s) unanswered</li> : null}
             {markedCount ? <li>{markedCount} marked for review</li> : null}
             {mcqPhase ? (
               <li className="font-medium text-danger">
-                You haven&apos;t reached the written part yet. Submitting now ends the whole exam — to move on to the written questions, use Finish MCQs instead.
+                <T>You haven&apos;t reached the written part yet. Submitting now ends the whole exam — to move on to the written questions, use Finish MCQs instead.</T>
               </li>
             ) : null}
-            {anyError || !online ? <li className="text-danger">Some answers haven&apos;t reached the server yet. We&apos;ll try once more before submitting.</li> : null}
+            {anyError || !online ? <li className="text-danger"><T>Some answers haven&apos;t reached the server yet. We&apos;ll try once more before submitting.</T></li> : null}
           </ul>
           <DialogFooter>
             <Button variant="outline" disabled={submitting} onClick={() => setConfirmOpen(false)}>
-              Keep working
+              <T>Keep working</T>
             </Button>
             <Button pending={submitting} onClick={() => finish("student")}>
-              Submit final answers
+              <T>Submit final answers</T>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -677,27 +678,27 @@ export function ExamRunner(props: Props) {
         <Dialog open={endSectionOpen && mcqPhase} onOpenChange={(o) => !endingSection && setEndSectionOpen(o)}>
           <DialogContent size="sm">
             <DialogHeader>
-              <DialogTitle>Finish the MCQ section?</DialogTitle>
+              <DialogTitle><T>Finish the MCQ section?</T></DialogTitle>
               <DialogDescription>
                 Your MCQ answers will be locked and the written part opens. The {formatDuration(mcqRemaining)} you have left for MCQs carries over to the written part.
               </DialogDescription>
             </DialogHeader>
             <ul className="space-y-1 text-sm">
               <li>
-                MCQs answered: <span className="font-semibold">{mcqAnswered}</span> of {mcqIndexes.length}
+                <T>MCQs answered:</T> <span className="font-semibold">{mcqAnswered}</span> of {mcqIndexes.length}
               </li>
               {mcqIndexes.length - mcqAnswered > 0 ? <li className="text-warning-soft-foreground">{mcqIndexes.length - mcqAnswered} MCQ(s) unanswered</li> : null}
               {mcqIndexes.some((i) => values[questions[i].id]?.marked) ? (
                 <li>{mcqIndexes.filter((i) => values[questions[i].id]?.marked).length} MCQ(s) marked for review</li>
               ) : null}
-              {anyError || !online ? <li className="text-danger">Some answers haven&apos;t reached the server yet. Reconnect before finishing.</li> : null}
+              {anyError || !online ? <li className="text-danger"><T>Some answers haven&apos;t reached the server yet. Reconnect before finishing.</T></li> : null}
             </ul>
             <DialogFooter>
               <Button variant="outline" disabled={endingSection} onClick={() => setEndSectionOpen(false)}>
-                Keep answering MCQs
+                <T>Keep answering MCQs</T>
               </Button>
               <Button pending={endingSection} onClick={() => void handInMcqs()}>
-                Lock MCQs and continue
+                <T>Lock MCQs and continue</T>
               </Button>
             </DialogFooter>
           </DialogContent>
