@@ -1210,6 +1210,8 @@ export type Database = {
     };
     Functions: {
       archive_exam: { Args: { p_exam_id: string }; Returns: undefined };
+      claim_exam_announcements: { Args: { p_exam_id: string }; Returns: { student_id: string; email: string; full_name: string; timezone: string }[] };
+      claim_result_notifications: { Args: { p_exam_id?: string }; Returns: { student_id: string; email: string; full_name: string; exam_id: string; exam_title: string; course_title: string; attempt_id: string; total_score: number; max_score: number; percentage: number }[] };
       close_exam: { Args: { p_exam_id: string }; Returns: number };
       correct_answer_key: { Args: { p_question_id: string; p_correct_option_id: string }; Returns: number };
       delete_answer_file: { Args: { p_file_id: string }; Returns: string };
@@ -1226,6 +1228,7 @@ export type Database = {
       publish_results: { Args: { p_exam_id: string }; Returns: undefined };
       redeem_course_invite: { Args: { p_code: string }; Returns: { status: string; course_id: string | null; course_title: string | null }[] };
       register_answer_file: { Args: { p_attempt_id: string; p_question_id: string; p_part_id: string | null; p_storage_path: string; p_file_name: string; p_mime_type: string; p_size_bytes: number }; Returns: string };
+      release_notifications: { Args: { p_kind: string; p_exam_id: string; p_student_ids: string[] }; Returns: undefined };
       reopen_grading: { Args: { p_attempt_id: string }; Returns: undefined };
       reorder_questions: { Args: { p_exam_id: string; p_question_ids: string[] }; Returns: undefined };
       restore_exam: { Args: { p_exam_id: string }; Returns: undefined };

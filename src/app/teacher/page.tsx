@@ -15,6 +15,7 @@ import { formatDateTime } from "@/lib/utils/datetime";
 import { listTeacherExams } from "@/features/exams/queries";
 import { listAttempts, listAttemptsPage } from "@/features/grading/queries";
 import { PHASE_META, examPhase } from "@/features/exams/status";
+import { notifyReleasedResults } from "@/features/notifications/send";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -33,6 +34,8 @@ async function Dashboard() {
   const live = withPhase.filter((e) => e.phase === "live");
   const upcoming = withPhase.filter((e) => e.phase === "scheduled" || e.phase === "live").sort((a, b) => a.startsAt.localeCompare(b.startsAt)).slice(0, 6);
   const recent = recentPage.rows;
+  // Results released by time alone (an "after close" window ending) are emailed from here.
+  await notifyReleasedResults(supabase, null);
   const uniqueStudents = new Set((students.data ?? []).map((s) => s.student_id)).size;
 
   return (

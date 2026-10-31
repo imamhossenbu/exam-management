@@ -5,6 +5,7 @@ import { refresh } from "next/cache";
 import { requireStudent } from "@/lib/auth/dal";
 import { dbFail, invalid, ok, type ActionResult } from "@/lib/action-result";
 import { uuid } from "@/lib/validations/courses";
+import { notifyReleasedResults } from "@/features/notifications/send";
 
 export async function startAttemptAction(examId: string): Promise<ActionResult> {
   const id = uuid.safeParse(examId);
@@ -22,6 +23,8 @@ export async function submitAttemptAction(attemptId: string): Promise<ActionResu
   const { supabase } = await requireStudent();
   const { data, error } = await supabase.rpc("submit_attempt", { p_attempt_id: id.data });
   if (error) return dbFail(error, "submitAttempt");
+  // MCQ-only exams with immediate release have a result right away.
+  if (data === "submitted") await notifyReleasedResults(supabase, null);
   refresh();
   return ok({ status: data }, data === "already_submitted" ? "This attempt was already submitted." : "Your answers have been submitted.");
 }

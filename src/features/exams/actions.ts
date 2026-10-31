@@ -8,6 +8,7 @@ import { zonedInputToUtc } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
 import { effectiveMcqMinutes, examSettingsSchema, questionSchema, toQuestionPayload, type ExamSettingsOutput } from "@/lib/validations/exams";
 import { z } from "zod";
+import { announceExam, notifyReleasedResults } from "@/features/notifications/send";
 
 function toExamRow(v: ExamSettingsOutput, timezone: string) {
   const starts = zonedInputToUtc(v.startsAt, timezone);
@@ -126,6 +127,7 @@ export async function publishExamAction(examId: string): Promise<ActionResult<{ 
   if (problems.length) return ok({ problems });
   const { error: pubErr } = await supabase.rpc("publish_exam", { p_exam_id: id.data });
   if (pubErr) return dbFail(pubErr, "publishExam");
+  await announceExam(supabase, id.data);
   refresh();
   return ok({ problems: [] }, "Exam published");
 }
@@ -146,6 +148,8 @@ export async function examLifecycleAction(examId: string, op: keyof typeof LIFEC
   const { rpc, message } = LIFECYCLE[op];
   const { error } = await supabase.rpc(rpc, { p_exam_id: id.data });
   if (error) return dbFail(error, `exam.${op}`);
+  // Publishing results or closing the exam can release results (and answer keys) to students.
+  if (op === "publishResults" || op === "close") await notifyReleasedResults(supabase, id.data);
   refresh();
   return ok(undefined, message);
 }

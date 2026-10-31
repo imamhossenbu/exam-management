@@ -6,6 +6,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { dbFail, fail, invalid, ok, type ActionResult } from "@/lib/action-result";
 import { zonedInputToUtc } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
+import { notifyReleasedResults } from "@/features/notifications/send";
 
 const gradeSchema = z.object({
   attemptId: uuid,
@@ -42,6 +43,10 @@ export async function attemptGradingAction(attemptId: string, op: keyof typeof A
   const { supabase } = await requireTeacher();
   const { error } = await supabase.rpc(ATTEMPT_OPS[op].rpc, { p_attempt_id: id.data });
   if (error) return dbFail(error, `grading.${op}`);
+  if (op === "finalize") {
+    const { data: attempt } = await supabase.from("exam_attempts").select("exam_id").eq("id", id.data).maybeSingle();
+    if (attempt) await notifyReleasedResults(supabase, attempt.exam_id);
+  }
   refresh();
   return ok(undefined, ATTEMPT_OPS[op].message);
 }

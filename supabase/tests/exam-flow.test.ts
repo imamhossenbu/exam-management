@@ -802,3 +802,45 @@ describe("which attempt counts, and the results overview", () => {
     expect(c.p).toBe("latest");
   });
 });
+
+describe("email notification claims", () => {
+  type Ann = { student_id: string; email: string };
+  type Res = { student_id: string; attempt_id: string; total_score: string };
+
+  it("announces a published exam once to each active student, teacher only", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    const first = await db.as<Ann>(teacher, "select * from public.claim_exam_announcements($1)", [exam.examId]);
+    expect(first.map((r) => r.student_id).sort()).toEqual([alice, bob].sort());
+    expect(await db.as(teacher, "select * from public.claim_exam_announcements($1)", [exam.examId])).toHaveLength(0);
+    await expect(db.as(alice, "select * from public.claim_exam_announcements($1)", [exam.examId])).rejects.toThrow(/FORBIDDEN/);
+  });
+
+  it("claims a result only once it is visible, once per student, and can be released for a retry", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { release: "manual", mcq: [{ marks: 2 }] });
+    const attemptId = await start(alice, exam.examId);
+    await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1);
+    await db.as(alice, "select public.submit_attempt($1)", [attemptId]);
+    // Graded but not published (manual): nothing to send yet.
+    expect(await db.as(teacher, "select * from public.claim_result_notifications($1)", [exam.examId])).toHaveLength(0);
+    await db.as(teacher, "select public.publish_results($1)", [exam.examId]);
+    const sent = await db.as<Res>(teacher, "select * from public.claim_result_notifications($1)", [exam.examId]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ student_id: alice, attempt_id: attemptId });
+    expect(Number(sent[0].total_score)).toBe(2);
+    expect(await db.as(teacher, "select * from public.claim_result_notifications($1)", [exam.examId])).toHaveLength(0);
+    // Sending failed: release, and the next claim returns it again.
+    await db.as(teacher, "select public.release_notifications('result_released', $1, $2)", [exam.examId, [alice]]);
+    expect(await db.as(teacher, "select * from public.claim_result_notifications($1)", [exam.examId])).toHaveLength(1);
+  });
+
+  it("lets a student claim only their own result (immediate release)", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { release: "immediate", mcq: [{ marks: 1 }] });
+    const a = await start(alice, exam.examId);
+    await db.as(alice, "select public.submit_attempt($1)", [a]);
+    const b = await start(bob, exam.examId);
+    await db.as(bob, "select public.submit_attempt($1)", [b]);
+    const mine = await db.as<Res>(alice, "select * from public.claim_result_notifications($1)", [exam.examId]);
+    expect(mine.map((r) => r.student_id)).toEqual([alice]);
+    await expect(db.as(alice, "select public.release_notifications('result_released', $1, $2)", [exam.examId, [bob]])).rejects.toThrow(/FORBIDDEN/);
+  });
+});
