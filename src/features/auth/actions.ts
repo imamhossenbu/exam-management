@@ -183,6 +183,9 @@ export async function resendConfirmationAction(input: unknown): Promise<ActionRe
           redirectTo: `${site}/auth/confirm?next=/student`,
         },
       });
+      // Not shown to the user (that would reveal whether the account exists); we fall back to
+      // Supabase's own resend below. Logged so a broken key/SMTP setup doesn't go unnoticed.
+      if (linkErr) console.warn("[resendConfirmationAction:generateLink]", linkErr.status, linkErr.code ?? linkErr.name);
       const otp = linkData?.properties?.email_otp;
       if (otp) {
         await sendVerificationOtpEmail({
