@@ -105,3 +105,25 @@ export function formatMinutes(minutes: number): string {
   const m = minutes % 60;
   return m ? `${h} h ${m} min` : `${h} h`;
 }
+
+/**
+ * Whether `iso` falls within the calendar days `from`..`to` (YYYY-MM-DD, inclusive) in `timeZone`.
+ * Empty bounds are open. Compares instants, not strings.
+ */
+export function inLocalDayRange(iso: string | null | undefined, from: string, to: string, timeZone: string): boolean {
+  if (!from && !to) return true;
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return false;
+  if (from) {
+    const start = zonedInputToUtc(`${from}T00:00`, timeZone);
+    if (start && t < new Date(start).getTime()) return false;
+  }
+  if (to) {
+    const next = new Date(`${to}T00:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + 1);
+    const end = zonedInputToUtc(`${next.toISOString().slice(0, 10)}T00:00`, timeZone);
+    if (end && t >= new Date(end).getTime()) return false;
+  }
+  return true;
+}

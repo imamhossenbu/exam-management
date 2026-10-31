@@ -31,3 +31,21 @@ describe("timezone conversion", () => {
     expect(formatDuration(-5)).toBe("00m 00s");
   });
 });
+
+describe("inLocalDayRange", () => {
+  it("uses the teacher's timezone for calendar days", async () => {
+    const { inLocalDayRange } = await import("./datetime");
+    // 20:30 UTC on 31 Oct is 02:30 on 1 Nov in Dhaka (UTC+6).
+    const iso = "2026-10-31T20:30:00+00:00";
+    expect(inLocalDayRange(iso, "2026-11-01", "", "Asia/Dhaka")).toBe(true);
+    expect(inLocalDayRange(iso, "", "2026-10-31", "Asia/Dhaka")).toBe(false);
+    expect(inLocalDayRange(iso, "", "2026-10-31", "UTC")).toBe(true);
+    expect(inLocalDayRange(iso, "2026-11-01", "2026-11-01", "Asia/Dhaka")).toBe(true);
+  });
+
+  it("treats empty bounds as open and missing timestamps as outside a range", async () => {
+    const { inLocalDayRange } = await import("./datetime");
+    expect(inLocalDayRange(null, "", "", "UTC")).toBe(true);
+    expect(inLocalDayRange(null, "2026-01-01", "", "UTC")).toBe(false);
+  });
+});

@@ -36,7 +36,9 @@ export async function listAttempts(supabase: ServerSupabase, filter: { examId?: 
     passed: a.result?.passed ?? null,
     mcqScore: a.result ? Number(a.result.mcq_score) : null,
     cqScore: a.result ? Number(a.result.cq_score) : null,
-    gradingStatus: a.status === "in_progress" ? ("in_progress" as const) : (a.result?.grading_status ?? "pending"),
+    // Returned attempts are with the student for corrections; they can't be graded until resubmitted.
+    gradingStatus:
+      a.status === "in_progress" ? ("in_progress" as const) : a.status === "returned" ? ("returned" as const) : (a.result?.grading_status ?? "pending"),
     tabSwitches: a.attempt_events.filter((e) => e.event_type === "visibility_hidden").length,
   }));
   return filter.needsGrading ? rows.filter((r) => r.gradingStatus === "pending" || r.gradingStatus === "in_review") : rows;

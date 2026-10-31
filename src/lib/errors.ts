@@ -9,6 +9,7 @@ const MESSAGES: Record<string, string> = {
   EXAM_NOT_FOUND: "Exam not found.",
   EXAM_LOCKED: "This exam is published, so its questions can't be changed. Duplicate it to make a revised version.",
   EXAM_SETTINGS_LOCKED: "Scoring settings can't change once the exam is published.",
+  EXAM_WINDOW_ENDED: "This exam's window has already ended, so it can't be reopened (results or answers may already be out). Duplicate the exam to run it again.",
   EXAM_NOT_DELETABLE: "Only draft exams can be deleted. Archive it instead.",
   EXAM_NOT_DRAFT: "Only draft exams can be published.",
   EXAM_NOT_PUBLISHED: "The exam isn't published.",

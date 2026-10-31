@@ -389,7 +389,10 @@ describe("result visibility and CQ grading", () => {
     await db.as(teacher, "select public.publish_results($1)", [exam.examId]);
     const rows = await db.as<Result>(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId]);
     expect(rows).toHaveLength(1);
-    expect(await db.as(alice, "select * from public.grades where attempt_id = $1", [attemptId])).toHaveLength(3);
+    // Written-part grades show now; the MCQ mark waits for the window to close (it reveals the answer).
+    const grades = await db.as<{ is_auto: boolean }>(alice, "select is_auto from public.grades where attempt_id = $1", [attemptId]);
+    expect(grades).toHaveLength(2);
+    expect(grades.every((g) => !g.is_auto)).toBe(true);
   });
 
   it("keeps released results private from other students", async () => {
@@ -590,12 +593,7 @@ describe("timed MCQ section (mixed exams)", () => {
     expect(second.getTime()).toBe(first.getTime());
     expect(first.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
 
-    // Inside the network grace an in-flight MCQ save is still accepted; after it, refused.
-    expect((await save(bob, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("saved");
-    await db.sql(
-      "update public.exam_attempts set started_at = now() - interval '2 minutes', mcq_deadline_at = now() - interval '1 minute' where id = $1",
-      [attemptId],
-    );
+    // Handing in closes the section at once (no grace window to keep changing MCQs).
     expect((await save(bob, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("section_closed");
     await expect(db.as(bob, "select public.end_mcq_section($1)", [attemptId])).resolves.toBeDefined();
   });
@@ -621,5 +619,99 @@ describe("timed MCQ section (mixed exams)", () => {
     const [{ duplicate_exam: copyId }] = await db.as<{ duplicate_exam: string }>(teacher, "select public.duplicate_exam($1)", [exam.examId]);
     const [copy] = await db.sql<{ mcq_duration_minutes: number }>("select mcq_duration_minutes from public.exams where id = $1", [copyId]);
     expect(copy.mcq_duration_minutes).toBe(20);
+  });
+});
+
+describe("exam/result audit fixes", () => {
+  const cq = async (uid: Uid, attemptId: string, questionId: string, text: string, revision: number) =>
+    (await db.as<{ status: string }>(uid, "select * from public.save_answer($1, $2, null, $3, false, $4)", [attemptId, questionId, text, revision]))[0];
+  const submit = (uid: Uid, attemptId: string) => db.as(uid, "select public.submit_attempt($1)", [attemptId]);
+
+  it("hands a returned attempt back to the teacher when the resubmit deadline passes", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [], cq: [{ marks: 5 }], type: "cq" });
+    await db.as(teacher, "update public.exams set allow_resubmission = true where id = $1", [exam.examId]);
+    const attemptId = await start(alice, exam.examId);
+    await cq(alice, attemptId, exam.cq[0].id, "answer", 1);
+    await submit(alice, attemptId);
+    await db.as(teacher, "select public.return_attempt($1, 'fix it', now() + interval '1 hour')", [attemptId]);
+    await db.sql("update public.exam_attempts set resubmit_deadline_at = now() - interval '1 minute' where id = $1", [attemptId]);
+    await db.as(teacher, "select public.finalize_expired_attempts()");
+    const [a] = await db.sql<{ status: string }>("select status from public.exam_attempts where id = $1", [attemptId]);
+    expect(a.status).toBe("submitted");
+    await db.as(teacher, "select public.save_cq_grade($1, $2, null, 4, null)", [attemptId, exam.cq[0].id]);
+    await db.as(teacher, "select public.finalize_grading($1)", [attemptId]);
+  });
+
+  it("keeps per-question MCQ marks hidden until the window closes; totals still show (immediate release)", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { maxAttempts: 2, mcq: [{ marks: 2, negative: 0.5 }, { marks: 2 }] });
+    const attemptId = await start(alice, exam.examId);
+    await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].wrong, 1);
+    await save(alice, attemptId, exam.mcq[1].id, exam.mcq[1].correct, 1);
+    await submit(alice, attemptId);
+    expect(await db.as(alice, "select total_score from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(1);
+    expect(await db.as(alice, "select * from public.grades where attempt_id = $1", [attemptId])).toHaveLength(0);
+    await db.sql("update public.exams set ends_at = now() - interval '1 minute' where id = $1", [exam.examId]);
+    expect(await db.as(alice, "select * from public.grades where attempt_id = $1", [attemptId])).toHaveLength(2);
+  });
+
+  it("recomputes pass/fail when the pass mark changes", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { passMarks: 3, mcq: [{ marks: 2 }, { marks: 2 }] });
+    const attemptId = await start(alice, exam.examId);
+    await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1);
+    await submit(alice, attemptId);
+    const passed = async () => (await db.sql<{ passed: boolean }>("select passed from public.attempt_results where attempt_id = $1", [attemptId]))[0].passed;
+    expect(await passed()).toBe(false);
+    await db.as(teacher, "update public.exams set pass_marks = 1 where id = $1", [exam.examId]);
+    expect(await passed()).toBe(true);
+  });
+
+  it("moves deadlines of attempts in progress when the window end changes", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { durationMinutes: 600, mcq: [{ marks: 1 }] });
+    const attemptId = await start(alice, exam.examId);
+    const hoursLeft = async () =>
+      (await db.sql<{ h: number }>("select extract(epoch from deadline_at - now()) / 3600 as h from public.exam_attempts where id = $1", [attemptId]))[0].h;
+    expect(Math.round(await hoursLeft())).toBe(2);
+    await db.as(teacher, "update public.exams set ends_at = now() + interval '5 hours' where id = $1", [exam.examId]);
+    expect(Math.round(await hoursLeft())).toBe(5);
+    await db.sql("update public.exam_attempts set started_at = now() - interval '10 minutes' where id = $1", [attemptId]);
+    await db.as(teacher, "update public.exams set ends_at = now() - interval '1 minute' where id = $1", [exam.examId]);
+    expect((await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("deadline_passed");
+  });
+
+  it("refuses to reopen a window that has already ended", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    await db.sql("update public.exams set ends_at = now() - interval '1 minute' where id = $1", [exam.examId]);
+    await expect(
+      db.as(teacher, "update public.exams set ends_at = now() + interval '1 hour' where id = $1", [exam.examId]),
+    ).rejects.toThrow(/EXAM_WINDOW_ENDED/);
+  });
+
+  it("hides results for every release mode", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { release: "immediate", mcq: [{ marks: 1 }] });
+    const attemptId = await start(alice, exam.examId);
+    await submit(alice, attemptId);
+    expect(await db.as(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(1);
+    await db.as(teacher, "select public.unpublish_results($1)", [exam.examId]);
+    expect(await db.as(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(0);
+    await db.as(teacher, "select public.publish_results($1)", [exam.examId]);
+    expect(await db.as(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(1);
+  });
+
+  it("duplicates with whole-minute times so the copy stays editable after it starts", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    const [{ duplicate_exam: copyId }] = await db.as<{ duplicate_exam: string }>(teacher, "select public.duplicate_exam($1)", [exam.examId]);
+    const [c] = await db.sql<{ s: number; e: number }>(
+      "select extract(second from starts_at) as s, extract(second from ends_at) as e from public.exams where id = $1",
+      [copyId],
+    );
+    expect(Number(c.s)).toBe(0);
+    expect(Number(c.e)).toBe(0);
+  });
+
+  it("refuses to reopen grading on an attempt that isn't submitted", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    const attemptId = await start(bob, exam.examId);
+    await expect(db.as(teacher, "select public.reopen_grading($1)", [attemptId])).rejects.toThrow(/ATTEMPT_NOT_SUBMITTED/);
+    expect(await db.sql("select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(0);
   });
 });

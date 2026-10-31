@@ -16,6 +16,7 @@ const GRADING: Record<AttemptRow["gradingStatus"], { label: string; tone: BadgeT
   in_progress: { label: "In progress", tone: "info" },
   pending: { label: "Needs grading", tone: "warning" },
   in_review: { label: "Grading", tone: "info" },
+  returned: { label: "Returned to student", tone: "neutral" },
   graded: { label: "Graded", tone: "success" },
 };
 

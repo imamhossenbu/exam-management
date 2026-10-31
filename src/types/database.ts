@@ -448,6 +448,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           mcq_deadline_at: string | null;
+          mcq_handed_in_at: string | null;
         };
         Insert: {
           id?: string;
@@ -467,6 +468,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           mcq_deadline_at?: string | null;
+          mcq_handed_in_at?: string | null;
         };
         Update: {
           id?: string;
@@ -486,6 +488,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           mcq_deadline_at?: string | null;
+          mcq_handed_in_at?: string | null;
         };
         Relationships: [
           {

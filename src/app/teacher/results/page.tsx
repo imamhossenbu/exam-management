@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, NativeSelect } from "@/components/ui/input";
 import { requireTeacher } from "@/lib/auth/dal";
 import { uuid } from "@/lib/validations/courses";
+import { inLocalDayRange } from "@/lib/utils/datetime";
 import { listAttempts } from "@/features/grading/queries";
 import { studentTrends, summarizeExams } from "@/features/grading/analytics";
 import { AttemptsTable } from "@/features/grading/components/attempts-table";
@@ -39,8 +40,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
     (r) =>
       r.status !== "in_progress" &&
       (!f.course || r.courseId === f.course) &&
-      (!f.from || (r.submittedAt ?? "") >= f.from) &&
-      (!f.to || (r.submittedAt ?? "") <= `${f.to}T23:59:59.999Z`),
+      inLocalDayRange(r.submittedAt, f.from ?? "", f.to ?? "", profile.timezone),
   );
   const summaries = summarizeExams(rows);
   const trends = studentTrends(rows);

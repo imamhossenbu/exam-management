@@ -3,7 +3,7 @@ import { getCurrentProfile } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { listAttempts } from "@/features/grading/queries";
 import { toCsv } from "@/lib/utils/csv";
-import { formatDateTime } from "@/lib/utils/datetime";
+import { formatDateTime, inLocalDayRange } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
 
 /** Teacher-only CSV export. RLS limits rows to the teacher's own exams; answer keys are never included. */
@@ -18,15 +18,16 @@ export async function GET(request: NextRequest) {
   if ((examId && !uuid.safeParse(examId).success) || (courseId && !uuid.safeParse(courseId).success)) {
     return NextResponse.json({ error: "Invalid filter" }, { status: 400 });
   }
-  const from = params.get("from");
-  const to = params.get("to");
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const from = params.get("from") ?? "";
+  const to = params.get("to") ?? "";
+  if ((from && !DATE.test(from)) || (to && !DATE.test(to))) return NextResponse.json({ error: "Invalid filter" }, { status: 400 });
 
   const supabase = await createClient();
   let rows = await listAttempts(supabase, { examId: examId ?? undefined });
   rows = rows.filter((r) => r.status !== "in_progress");
   if (courseId) rows = rows.filter((r) => r.courseId === courseId);
-  if (from) rows = rows.filter((r) => (r.submittedAt ?? "") >= from);
-  if (to) rows = rows.filter((r) => (r.submittedAt ?? "") <= `${to}T23:59:59.999Z`);
+  rows = rows.filter((r) => inLocalDayRange(r.submittedAt, from, to, profile.timezone));
 
   const csv = toCsv([
     ["Course", "Exam", "Student", "Email", "Attempt", "Submitted", "Submission", "MCQ score", "Written score", "Total", "Max", "Percentage", "Passed", "Grading status", "Tab left (count)"],

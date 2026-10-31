@@ -103,9 +103,12 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
               {exam.pass_marks !== null ? <p className="text-xs text-muted-foreground">Pass mark {Number(exam.pass_marks)}</p> : null}
             </div>
           </div>
-          {!keysReleased && exam.reveal_answers ? (
+          {!keysReleased && exam.exam_type !== "cq" ? (
             <p className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="size-4" aria-hidden /> Correct answers will be shown after the exam closes for everyone.
+              <Clock className="size-4" aria-hidden />
+              {exam.reveal_answers
+                ? "Marks for each MCQ and the correct answers will be shown after the exam closes for everyone."
+                : "Your teacher doesn't show marks for each MCQ or the correct answers for this exam."}
             </p>
           ) : null}
         </>
@@ -119,9 +122,14 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
               <li key={q.id} className="surface p-5">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold">Question {i + 1}</h3>
-                  <Badge tone={total > 0 ? "success" : total < 0 ? "danger" : "neutral"}>
-                    {total} / {q.marks}
-                  </Badge>
+                  {q.type === "mcq" && q.grades.length === 0 ? (
+                    // Per-question MCQ marks reveal the answer, so they wait for the window to close.
+                    <Badge>— / {q.marks}</Badge>
+                  ) : (
+                    <Badge tone={total > 0 ? "success" : total < 0 ? "danger" : "neutral"}>
+                      {total} / {q.marks}
+                    </Badge>
+                  )}
                 </div>
                 <p className="prose-text">{q.body}</p>
                 {q.type === "mcq" ? (
