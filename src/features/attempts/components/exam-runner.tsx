@@ -16,7 +16,7 @@ import { submitAttemptAction } from "../actions";
 import type { TakingFile, TakingQuestion } from "../queries";
 import { AnswerUploads } from "./answer-uploads";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
-import { T, tNow } from "@/lib/i18n/client";
+import { T, tNow, useT } from "@/lib/i18n/client";
 
 type ServerAnswer = { question_id: string; selected_option_id: string | null; text_answer: string | null; marked_for_review: boolean; revision: number };
 
@@ -76,6 +76,7 @@ function useOnline() {
 }
 
 export function ExamRunner(props: Props) {
+  const t = useT();
   const { attemptId, studentId, questions, mode } = props;
   const router = useRouter();
   const returned = mode === "returned";
@@ -199,7 +200,7 @@ export function ExamRunner(props: Props) {
     if (Object.keys(restored).length) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time recovery of locally persisted answers
       setValues((v) => ({ ...v, ...restored }));
-      toast.info(`Restored ${Object.keys(restored).length} unsaved answer(s) from this device.`);
+      toast.info(tNow("Restored {v0} unsaved answer(s) from this device.", { v0: Object.keys(restored).length }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -440,12 +441,15 @@ export function ExamRunner(props: Props) {
           <p>
             {mcqPhase ? (
               <>
-                <span className="font-medium"><T>Part 1 of 2 · MCQ section.</T></span> Answer the {mcqIndexes.length} MCQs before the section timer runs out. The written
-                questions open after that — or as soon as you click <span className="font-medium"><T>Finish MCQs</T></span>. Unused MCQ time carries over to the written part.
+                <span className="font-medium"><T>Part 1 of 2 · MCQ section.</T></span>{" "}
+                <T vars={{ n: mcqIndexes.length }}>
+                  {"Answer the {n} MCQs before the section timer runs out. The written questions open after that — or as soon as you click Finish MCQs. Unused MCQ time carries over to the written part."}
+                </T>
               </>
             ) : (
               <>
-                <span className="font-medium"><T>Part 2 of 2 · Written part.</T></span> Your MCQ answers are locked. You can still look at them, but not change them.
+                <span className="font-medium"><T>Part 2 of 2 · Written part.</T></span>{" "}
+                <T>Your MCQ answers are locked. You can still look at them, but not change them.</T>
               </>
             )}
           </p>
@@ -468,8 +472,14 @@ export function ExamRunner(props: Props) {
                   <Lock className="size-3" aria-hidden /> <T>Locked</T>
                 </Badge>
               ) : null}
-              <Badge>{q.marks} mark{q.marks === 1 ? "" : "s"}</Badge>
-              {q.negativeMarks > 0 ? <Badge tone="danger">−{q.negativeMarks} if wrong</Badge> : null}
+              <Badge>
+                <T vars={{ n: q.marks }}>{q.marks === 1 ? "{n} mark" : "{n} marks"}</T>
+              </Badge>
+              {q.negativeMarks > 0 ? (
+                <Badge tone="danger">
+                  <T vars={{ n: q.negativeMarks }}>{"−{n} if wrong"}</T>
+                </Badge>
+              ) : null}
               {saveStates[q.id] === "error" ? <Badge tone="danger"><T>Not saved</T></Badge> : saveStates[q.id] === "pending" || saveStates[q.id] === "saving" ? <Badge><T>Saving…</T></Badge> : null}
             </div>
           </div>
@@ -526,7 +536,7 @@ export function ExamRunner(props: Props) {
                     studentId={studentId}
                     questionId={q.id}
                     partId={p.id}
-                    label={`Answer sheets for (${p.label})`}
+                    label={t("Answer sheets for ({label})", { label: p.label })}
                     files={filesFor(q.id, p.id)}
                     disabled={locked}
                     onChange={(next) => setFiles((all) => [...all.filter((f) => !(f.questionId === q.id && f.partId === p.id)), ...next])}

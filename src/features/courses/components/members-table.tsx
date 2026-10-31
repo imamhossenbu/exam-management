@@ -64,7 +64,7 @@ function MemberActions({ member }: { member: Row }) {
         ) : null}
         {member.status !== "removed" ? (
           <ConfirmDialog
-            title={`Remove ${member.name} from the course?`}
+            title={<T vars={{ name: member.name }}>{"Remove {name} from the course?"}</T>}
             description="They lose access to this course. Their past attempts and results are kept. They can rejoin later with a valid code."
             confirmLabel="Remove"
             destructive

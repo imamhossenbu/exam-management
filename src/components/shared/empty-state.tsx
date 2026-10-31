@@ -11,7 +11,7 @@ export function EmptyState({
   className,
 }: {
   icon: LucideIcon;
-  title: string;
+  title: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;

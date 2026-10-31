@@ -82,7 +82,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
 
     if (validItems.length > 0) {
       setSelectedFiles((prev) => [...prev, ...validItems]);
-      toast.info(`Added ${validItems.length} file(s) to attach.`);
+      toast.info(tNow("Added {v0} file(s) to attach.", { v0: validItems.length }));
     }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -167,7 +167,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
 
           if (uploadError) {
             console.error(uploadError);
-            toast.error(`Failed to upload ${item.file.name}`);
+            toast.error(tNow("Failed to upload {v0}", { v0: item.file.name }));
             continue;
           }
 
@@ -183,7 +183,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
         }
 
         if (uploadCount > 0) {
-          toast.success(`Attached ${uploadCount} file(s) to this resource.`);
+          toast.success(tNow("Attached {v0} file(s) to this resource.", { v0: uploadCount }));
         }
       }
 
@@ -254,7 +254,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
             </h4>
           </div>
           <span className="text-[11px] text-muted-foreground font-medium">
-            {selectedFiles.length > 0 ? `${selectedFiles.length} file(s) selected` : "Upload immediately"}
+            {selectedFiles.length > 0 ? <T vars={{ n: selectedFiles.length }}>{"{n} file(s) selected"}</T> : <T>Upload immediately</T>}
           </span>
         </div>
 
@@ -414,7 +414,7 @@ export function NoteForm({ noteId, ownerId, defaultValues, suggestions }: Props)
           ) : noteId ? (
             "Save resource"
           ) : (
-            `Create Resource${selectedFiles.length > 0 ? ` (${selectedFiles.length} files)` : ""}`
+            selectedFiles.length > 0 ? <T vars={{ n: selectedFiles.length }}>{"Create Resource ({n} files)"}</T> : <T>Create Resource</T>
           )}
         </Button>
       </div>

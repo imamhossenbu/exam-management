@@ -9,6 +9,7 @@ import { toUserMessage } from "@/lib/errors";
 import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFile } from "@/lib/utils/files";
 import type { TakingFile } from "../queries";
 import { T, tNow } from "@/lib/i18n/client";
+import { trChildren } from "@/lib/i18n/tr";
 
 type Props = {
   attemptId: string;
@@ -41,7 +42,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
       const path = `${studentId}/${attemptId}/${crypto.randomUUID()}.${extensionFor(file.type)}`;
       const { error: upErr } = await supabase.storage.from("answer-sheets").upload(path, file, { contentType: file.type, upsert: false });
       if (upErr) {
-        toast.error(`${file.name} couldn't be uploaded. ${navigator.onLine ? "Uploads may be closed." : "You're offline."}`);
+        toast.error(`${tNow("{v0} couldn't be uploaded.", { v0: file.name })} ${tNow(navigator.onLine ? "Uploads may be closed." : "You're offline.")}`);
         continue;
       }
       const { data: id, error } = await supabase.rpc("register_answer_file", {
@@ -62,7 +63,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
     }
     if (added.length) {
       onChange([...files, ...added]);
-      toast.success(`${added.length} file(s) uploaded`);
+      toast.success(tNow("{v0} file(s) uploaded", { v0: added.length }));
     }
     setBusy(false);
     if (inputRef.current) inputRef.current.value = "";
@@ -84,7 +85,7 @@ export function AnswerUploads({ attemptId, studentId, questionId, partId, label,
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">{label}</p>
+      <p className="text-sm font-medium">{trChildren(label)}</p>
       {files.length ? (
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {files.map((f, i) => (

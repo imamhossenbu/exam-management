@@ -39,7 +39,7 @@ export function SignUpForm() {
       description="After signing up, join your course with the invitation code from your teacher."
       footer={
         <>
-          Already have an account?{" "}
+          <T>Already have an account?</T>{" "}
           <Link href="/login" className="font-medium text-primary hover:underline">
             <T>Sign in</T>
           </Link>

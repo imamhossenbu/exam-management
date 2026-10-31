@@ -80,7 +80,7 @@ export function ImportWorkspace({
       } else {
         setText(recognized);
         await saveText.run(selected.id, recognized, "ocr");
-        toast.info(`OCR confidence ${Math.round(result.data.confidence)}%. Check the text carefully.`);
+        toast.info(tNow("OCR confidence {v0}%. Check the text carefully.", { v0: Math.round(result.data.confidence) }));
       }
     } catch (error) {
       console.error(error);
@@ -97,7 +97,7 @@ export function ImportWorkspace({
       return;
     }
     setDrafts(toEditable(found, examType));
-    toast.success(`Found ${found.length} draft question(s). Review each one.`);
+    toast.success(tNow("Found {v0} draft question(s). Review each one.", { v0: found.length }));
   }
 
   function addBlankDraft() {

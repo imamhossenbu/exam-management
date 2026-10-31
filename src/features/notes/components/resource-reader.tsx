@@ -250,7 +250,7 @@ export function ResourceReader({ note, ownerId, taxonomy }: Props) {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">
-                      {pdfs.length > 1 ? `PDF Documents (${pdfs.length})` : activePdf?.fileName}
+                      {pdfs.length > 1 ? <T vars={{ n: pdfs.length }}>{"PDF Documents ({n})"}</T> : activePdf?.fileName}
                     </h3>
                     <p className="text-xs text-muted-foreground">
                       {activePdf ? `${formatBytes(activePdf.sizeBytes)} · Built-in PDF reader` : ""}

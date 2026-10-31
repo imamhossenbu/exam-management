@@ -14,7 +14,8 @@ import { formatMinutes } from "@/lib/utils/datetime";
 import { RELEASE_LABEL } from "../status";
 import { createExamAction, updateExamAction } from "../actions";
 import type { CourseOption } from "@/features/courses/queries";
-import { T } from "@/lib/i18n/client";
+import { T, useT } from "@/lib/i18n/client";
+import { trChildren } from "@/lib/i18n/tr";
 
 type Props = {
   courses: CourseOption[];
@@ -33,7 +34,7 @@ function CheckboxField({ id, label, description, disabled, ...rest }: { id: stri
         <Label htmlFor={id}>{label}</Label>
         {description ? (
           <p id={`${id}-d`} className="mt-1 text-xs text-muted-foreground">
-            {description}
+            {trChildren(description)}
           </p>
         ) : null}
       </div>
@@ -44,6 +45,7 @@ function CheckboxField({ id, label, description, disabled, ...rest }: { id: stri
 const zod = zodResolver(examSettingsSchema);
 
 export function ExamSettingsForm({ courses, defaultValues, examId, locked = false, timezone }: Props) {
+  const t = useT();
   // react-hook-form reports disabled fields (locked settings, the course when editing, the
   // subject before a course is chosen) as undefined. Validate them with their original values.
   const resolver = React.useCallback<Resolver<ExamSettingsInput, unknown, ExamSettingsOutput>>(
@@ -191,7 +193,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
         <CardHeader>
           <CardTitle><T>Timing</T></CardTitle>
           <CardDescription>
-            Times are in your timezone ({timezone}). Each attempt ends at whichever comes first: start + duration, or the window end.
+            <T vars={{ timezone }}>{"Times are in your timezone ({timezone}). Each attempt ends at whichever comes first: start + duration, or the window end."}</T>
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
@@ -218,7 +220,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
                 {sectioned && durationMinutes > mcqMinutes ? (
                   <>
                     <p className="font-medium">
-                      MCQ {formatMinutes(mcqMinutes)}, then written part {formatMinutes(durationMinutes - mcqMinutes)}
+                      {t("MCQ {mcq}, then written part {written}", { mcq: formatMinutes(mcqMinutes), written: formatMinutes(durationMinutes - mcqMinutes) })}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       <T>Students answer all MCQs first. When the MCQ time is up — or they hand the section in early — their MCQ answers lock and the written

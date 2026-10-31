@@ -98,7 +98,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
       </form>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Submitted attempts" value={overview.submitted} hint={`${overview.counted} counted (one per student and exam)`} icon={ClipboardList} />
+        <StatCard label="Submitted attempts" value={overview.submitted} hint={<T vars={{ n: overview.counted }}>{"{n} counted (one per student and exam)"}</T>} icon={ClipboardList} />
         <StatCard label="Awaiting grading" value={overview.pending} hint="Counted attempts not fully graded" icon={Hourglass} tone="warning" />
         <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint="Counted, fully graded attempts" icon={BarChart3} tone="info" />
         <StatCard label="Pass rate" value={passRate === null ? "—" : `${passRate}%`} hint="Exams with a pass mark" icon={Award} tone="success" />
@@ -172,7 +172,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
                   <tr>
                     {["Exam", "Graded", "Pending", "Average", "Highest", "Lowest", "Pass rate"].map((h) => (
                       <th key={h} scope="col" className="px-4 py-2 font-medium">
-                        {h}
+                        <T>{h}</T>
                       </th>
                     ))}
                   </tr>
@@ -202,8 +202,9 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
           <div>
             <h2 className="section-title mb-3"><T>All attempts</T></h2>
             <p className="mb-3 text-sm text-muted-foreground">
-              Showing {attemptsPage.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, attemptsPage.total)} of {attemptsPage.total}. Search and
-              filters in the table apply to this page; use the filters above for the whole list.
+              <T vars={{ from: attemptsPage.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, attemptsPage.total), total: attemptsPage.total }}>
+                {"Showing {from}–{to} of {total}. Search and filters in the table apply to this page; use the filters above for the whole list."}
+              </T>
             </p>
             <AttemptsTable
               attempts={rows}
@@ -227,7 +228,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
                   <span />
                 )}
                 <span className="text-muted-foreground tabular-nums">
-                  Page {page} of {lastPage}
+                  <T vars={{ page, last: lastPage }}>{"Page {page} of {last}"}</T>
                 </span>
                 {page < lastPage ? (
                   <Button asChild variant="outline" size="sm">
@@ -248,7 +249,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
 export default function ResultsPage({ searchParams }: PageProps<"/teacher/results">) {
   return (
     <>
-      <PageHeader title="Results" description="Scores, trends and exports across your courses. Averages use each student\u2019s counted attempt (best or latest, per exam) once fully graded." />
+      <PageHeader title="Results" description="Scores, trends and exports across your courses. Averages use each student’s counted attempt (best or latest, per exam) once fully graded." />
       <Suspense
         fallback={
           <div className="space-y-6">

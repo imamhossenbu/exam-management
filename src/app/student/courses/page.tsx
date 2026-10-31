@@ -44,7 +44,8 @@ async function Courses() {
             </div>
             {c.description ? <p className="text-subtle mt-2 line-clamp-3">{c.description}</p> : null}
             <p className="mt-4 text-xs text-muted-foreground">
-              {c.examCount} exam{c.examCount === 1 ? "" : "s"} · Joined {formatDate(c.joinedAt, profile.timezone)}
+              <T vars={{ n: c.examCount }}>{c.examCount === 1 ? "{n} exam" : "{n} exams"}</T> ·{" "}
+              <T vars={{ date: formatDate(c.joinedAt, profile.timezone) }}>{"Joined {date}"}</T>
             </p>
           </Link>
         </li>

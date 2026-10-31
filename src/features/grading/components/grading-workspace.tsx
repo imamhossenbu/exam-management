@@ -14,7 +14,7 @@ import { attemptGradingAction, returnAttemptAction, saveGradeAction } from "../a
 import type { Annotation, GradingData, GradingQuestion } from "../queries";
 import { AnnotatedFile } from "./annotated-file";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
-import { T } from "@/lib/i18n/client";
+import { T, tNow } from "@/lib/i18n/client";
 
 type Grade = GradingData["grades"][number];
 
@@ -49,7 +49,7 @@ function GradeItem({
         e.preventDefault();
         const value = Number(marks);
         if (marks === "" || Number.isNaN(value) || value < 0 || value > max) {
-          setError(`Enter marks between 0 and ${max}.`);
+          setError(tNow("Enter marks between 0 and {v0}.", { v0: max }));
           return;
         }
         setError(null);

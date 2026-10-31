@@ -7,6 +7,7 @@ import { PublicNavUser, PublicNavUserSkeleton } from "@/components/shared/public
 import { Button } from "@/components/ui/button";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { T } from "@/lib/i18n/client";
+import { trChildren } from "@/lib/i18n/tr";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -87,8 +88,8 @@ export default function HomePage() {
                 <span className="grid size-7.5 sm:size-8 place-items-center rounded-lg bg-primary-soft text-primary-soft-foreground">
                   <f.icon className="size-3.5 sm:size-4" aria-hidden />
                 </span>
-                <h3 className="section-title mt-2.5 text-xs sm:text-[13px] font-semibold">{f.title}</h3>
-                <p className="text-subtle mt-1 text-[11px] sm:text-xs leading-relaxed">{f.body}</p>
+                <h3 className="section-title mt-2.5 text-xs sm:text-[13px] font-semibold">{trChildren(f.title)}</h3>
+                <p className="text-subtle mt-1 text-[11px] sm:text-xs leading-relaxed">{trChildren(f.body)}</p>
               </li>
             ))}
           </ul>
@@ -106,8 +107,8 @@ export default function HomePage() {
                     <s.icon className="size-4 text-primary" aria-hidden />
                     <span className="absolute -top-1 -right-1 grid size-4.5 place-items-center rounded-full bg-brand-gradient text-[10px] font-semibold text-white">{i + 1}</span>
                   </span>
-                  <h3 className="section-title mt-2.5 text-xs sm:text-[13px] font-semibold">{s.title}</h3>
-                  <p className="text-subtle mt-1 text-[11px] sm:text-xs max-w-xs">{s.body}</p>
+                  <h3 className="section-title mt-2.5 text-xs sm:text-[13px] font-semibold">{trChildren(s.title)}</h3>
+                  <p className="text-subtle mt-1 text-[11px] sm:text-xs max-w-xs">{trChildren(s.body)}</p>
                 </li>
               ))}
             </ol>

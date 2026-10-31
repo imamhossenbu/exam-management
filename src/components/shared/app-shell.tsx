@@ -7,6 +7,7 @@ import { MobileNav } from "./mobile-nav";
 import { NavList, SidebarNav } from "./sidebar-nav";
 import type { NavKind } from "./nav-config";
 import { T } from "@/lib/i18n/client";
+import { trChildren } from "@/lib/i18n/tr";
 
 /**
  * Static dashboard chrome. The user menu (which reads the session) is passed
@@ -32,7 +33,7 @@ export function AppShell({ kind, userSlot, children }: { kind: NavKind; userSlot
         <div className="m-3 rounded-xl border bg-surface p-3 shadow-card">
           <p className="flex items-center gap-2 text-xs font-medium">
             <ShieldCheck className="size-3.5 text-success" aria-hidden />
-            {kind === "teacher" ? "Teacher workspace" : "Student workspace"}
+            {trChildren(kind === "teacher" ? "Teacher workspace" : "Student workspace")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground"><T>Your data is private and protected by row-level security.</T></p>
         </div>

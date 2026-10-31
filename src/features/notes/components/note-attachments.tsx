@@ -11,7 +11,7 @@ import { ACCEPTED_DOCUMENT_TYPES, LIMITS, extensionFor, formatBytes, validateFil
 import { deleteStudyFileAction, registerStudyFileAction } from "../actions";
 import type { NoteDetail } from "../queries";
 import { cn } from "@/lib/utils/cn";
-import { T } from "@/lib/i18n/client";
+import { T, tNow } from "@/lib/i18n/client";
 
 export function NoteAttachments({
   noteId,
@@ -52,7 +52,7 @@ export function NoteAttachments({
         .upload(path, file, { contentType: file.type, upsert: false });
 
       if (error) {
-        toast.error(`${file.name} couldn't be uploaded.`);
+        toast.error(tNow("{v0} couldn't be uploaded.", { v0: file.name }));
         continue;
       }
 
@@ -75,7 +75,7 @@ export function NoteAttachments({
     setBusy(false);
     setProgressMsg("");
     if (successCount > 0) {
-      toast.success(`Successfully uploaded ${successCount} file(s)`);
+      toast.success(tNow("Successfully uploaded {v0} file(s)", { v0: successCount }));
     }
     if (inputRef.current) inputRef.current.value = "";
   }

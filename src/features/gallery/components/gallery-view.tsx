@@ -199,7 +199,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
         const item = selectedFiles[i];
         const stepPct = Math.round(10 + ((i + 0.5) / selectedFiles.length) * 85);
         setUploadPercent(stepPct);
-        setUploadProgress(`Uploading photo ${i + 1} of ${selectedFiles.length}: ${item.file.name}…`);
+        setUploadProgress(tNow("Uploading photo {v0} of {v1}: {v2}\u2026", { v0: i + 1, v1: selectedFiles.length, v2: item.file.name }));
 
         const ext = extensionFor(item.file.type);
         const path = `${ownerId}/${noteId}/${crypto.randomUUID()}.${ext}`;
@@ -210,7 +210,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
 
         if (upErr) {
           console.error(upErr);
-          toast.error(`Failed to upload ${item.file.name}`);
+          toast.error(tNow("Failed to upload {v0}", { v0: item.file.name }));
           continue;
         }
 
@@ -229,7 +229,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
 
       setUploadPercent(100);
       setUploadProgress("Done!");
-      toast.success(`Uploaded ${uploadedCount} photo(s) to gallery!`);
+      toast.success(tNow("Uploaded {v0} photo(s) to gallery!", { v0: uploadedCount }));
       selectedFiles.forEach((item) => URL.revokeObjectURL(item.previewUrl));
       setSelectedFiles([]);
       setUploadTitle("");
@@ -273,7 +273,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
                 : "bg-muted/70 text-muted-foreground hover:text-foreground",
             )}
           >
-            All Photos ({photos.length})
+            <T vars={{ n: photos.length }}>{"All Photos ({n})"}</T>
           </button>
           {subjects.map((s) => (
             <button
@@ -317,7 +317,7 @@ export function GalleryView({ photos, ownerId, subjects, timezone }: Props) {
             <Images className="size-7" />
           </div>
           <h3 className="text-base font-semibold text-foreground">
-            {photos.length === 0 ? "Your Study Photo Gallery is Empty" : "No matching photos found"}
+            <T>{photos.length === 0 ? "Your Study Photo Gallery is Empty" : "No matching photos found"}</T>
           </h3>
           <p className="mt-1 text-xs text-muted-foreground max-w-sm">
             {photos.length === 0

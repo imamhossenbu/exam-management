@@ -34,7 +34,8 @@ export function StudentExamList({ exams, timezone, now, emptyAction }: { exams: 
               {formatDateTime(e.startsAt, timezone)} – {formatDateTime(e.endsAt, timezone)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {EXAM_TYPE_LABEL[e.examType]} · {e.totalMarks} marks · {formatMinutes(e.durationMinutes)} · Attempts {e.attemptsUsed}/{e.maxAttempts}
+              <T>{EXAM_TYPE_LABEL[e.examType]}</T> · <T vars={{ n: e.totalMarks }}>{"{n} marks"}</T> · {formatMinutes(e.durationMinutes)} ·{" "}
+              <T vars={{ used: e.attemptsUsed, max: e.maxAttempts }}>{"Attempts {used}/{max}"}</T>
             </p>
             <div className="mt-auto flex gap-2">
               <Button asChild size="sm" variant={canStart ? "default" : "outline"}>

@@ -43,7 +43,14 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
       <PageHeader
         breadcrumbs={crumbs}
         title={exam.title}
-        description={`${exam.course?.title ?? ""} · Attempt ${attempt.attempt_number} · Submitted ${formatDateTime(attempt.submitted_at, tz)}${attempt.submitted_via === "timeout" ? " automatically when time ran out" : ""}`}
+        description={
+          <>
+            {exam.course?.title ?? ""} · <T vars={{ n: attempt.attempt_number }}>{"Attempt {n}"}</T> ·{" "}
+            <T vars={{ when: formatDateTime(attempt.submitted_at, tz) }}>
+              {attempt.submitted_via === "timeout" ? "Submitted {when} automatically when time ran out" : "Submitted {when}"}
+            </T>
+          </>
+        }
       />
 
       {attempt.status === "returned" ? (

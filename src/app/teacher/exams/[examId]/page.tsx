@@ -46,8 +46,14 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
         }
         description={
           <>
-            {EXAM_TYPE_LABEL[exam.exam_type]} · {Number(exam.total_marks)} marks · {formatMinutes(exam.duration_minutes)}
-            {exam.mcq_duration_minutes ? ` (MCQ ${formatMinutes(exam.mcq_duration_minutes)} first)` : ""} · {formatDateTime(exam.starts_at, tz)} –{" "}
+            <T>{EXAM_TYPE_LABEL[exam.exam_type]}</T> · <T vars={{ n: Number(exam.total_marks) }}>{"{n} marks"}</T> · {formatMinutes(exam.duration_minutes)}
+            {exam.mcq_duration_minutes ? (
+              <>
+                {" "}
+                <T vars={{ time: formatMinutes(exam.mcq_duration_minutes) }}>{"(MCQ {time} first)"}</T>
+              </>
+            ) : null}{" "}
+            · {formatDateTime(exam.starts_at, tz)} –{" "}
             {formatDateTime(exam.ends_at, tz, { withZone: true })}
             {exam.subject ? ` · ${exam.subject.name}` : ""}
             {chapters.length ? ` (${chapters.map((c) => c.name).join(", ")})` : ""}
@@ -58,7 +64,7 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
             {attemptCount > 0 ? (
               <Button asChild variant="outline">
                 <Link href={`/teacher/exams/${exam.id}/attempts`}>
-                  <Users aria-hidden /> Attempts ({attemptCount})
+                  <Users aria-hidden /> <T vars={{ n: attemptCount }}>{"Attempts ({n})"}</T>
                 </Link>
               </Button>
             ) : null}
@@ -74,12 +80,20 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
       />
       {phase !== "draft" ? (
         <p className="mb-4 text-sm text-muted-foreground">
-          Results: {exam.results_published_at ? `published ${formatDateTime(exam.results_published_at, tz)}` : RELEASE_LABEL[exam.results_release].toLowerCase()}.
+          {exam.results_published_at ? (
+            <T vars={{ when: formatDateTime(exam.results_published_at, tz) }}>{"Results: published {when}."}</T>
+          ) : (
+            <>
+              <T>Results:</T> <T>{RELEASE_LABEL[exam.results_release]}</T>
+            </>
+          )}
         </p>
       ) : null}
       <Tabs defaultValue="questions" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
+          <TabsTrigger value="questions">
+            <T vars={{ n: questions.length }}>{"Questions ({n})"}</T>
+          </TabsTrigger>
           <TabsTrigger value="settings"><T>Settings</T></TabsTrigger>
         </TabsList>
         <TabsContent value="questions">

@@ -35,7 +35,7 @@ async function Dashboard() {
     return (
       <EmptyState
         icon={Ticket}
-        title={`Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}!`}
+        title={profile.full_name ? <T vars={{ name: profile.full_name.split(" ")[0] }}>{"Welcome, {name}!"}</T> : <T>Welcome!</T>}
         description="Join your course with the invitation code from your teacher to see exams and results."
         action={
           <Button asChild>
@@ -60,7 +60,7 @@ async function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="My courses" value={courses.length} icon={GraduationCap} />
         <StatCard label="Live or upcoming exams" value={active.length} icon={Radio} tone="success" />
-        <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint={`${released.length} released result(s)`} icon={Trophy} tone="warning" />
+        <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint={<T vars={{ n: released.length }}>{"{n} released result(s)"}</T>} icon={Trophy} tone="warning" />
         <StatCard label="Resources" value={notes.count ?? 0} icon={FileStack} tone="info" hint="PDFs & study notes" />
       </div>
 

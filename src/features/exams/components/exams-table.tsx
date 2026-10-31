@@ -24,7 +24,8 @@ const columns = [
           {info.getValue()}
         </Link>
         <p className="text-xs text-muted-foreground">
-          {EXAM_TYPE_LABEL[info.row.original.examType]} · {info.row.original.totalMarks} marks · {formatMinutes(info.row.original.durationMinutes)}
+          <T>{EXAM_TYPE_LABEL[info.row.original.examType]}</T> · <T vars={{ n: info.row.original.totalMarks }}>{"{n} marks"}</T> ·{" "}
+          {formatMinutes(info.row.original.durationMinutes)}
         </p>
       </div>
     ),

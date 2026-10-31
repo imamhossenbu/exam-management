@@ -29,13 +29,13 @@ export function SourceUploader({ teacherId, examId, onUploaded }: { teacherId: s
       const { error } = await supabase.storage.from("question-sources").upload(path, file, { contentType: file.type, upsert: false });
       if (error) {
         console.error(error);
-        toast.error(`${file.name} couldn't be uploaded.`);
+        toast.error(tNow("{v0} couldn't be uploaded.", { v0: file.name }));
         continue;
       }
       try {
         const result = await registerSourceAction({ storagePath: path, fileName: file.name, mimeType: file.type, sizeBytes: file.size, examId: examId ?? null });
         if (result.ok) {
-          toast.success(`${file.name} uploaded`);
+          toast.success(tNow("{v0} uploaded", { v0: file.name }));
           onUploaded?.(result.data.id);
         } else {
           toast.error(result.error);

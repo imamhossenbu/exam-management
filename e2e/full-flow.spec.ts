@@ -32,20 +32,20 @@ async function signIn(browser: Browser, email: string, password: string) {
     if (m.type() === "error") consoleErrors.add(`${new URL(page.url()).pathname}: ${m.text().slice(0, 300)}`);
   });
   page.on("pageerror", (e) => consoleErrors.add(`${new URL(page.url()).pathname}: ${e.message.slice(0, 300)}`));
-  await useEnglish(context);
+  await setEnglishCookie(context);
   await page.goto("/login");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/(teacher|student)(\/|$)/, { timeout: 60_000 });
   // Signing in applies the profile's language (Bangla by default); these tests read English text.
-  await useEnglish(page.context());
+  await setEnglishCookie(page.context());
   await page.reload();
   return page;
 }
 
 /** The UI defaults to Bangla; the suite asserts on English text. */
-async function useEnglish(context: BrowserContext) {
+async function setEnglishCookie(context: BrowserContext) {
   await context.addCookies([{ name: "lang", value: "en", url: process.env.E2E_BASE_URL ?? "http://localhost:3000" }]);
 }
 
@@ -70,7 +70,7 @@ async function confirm(page: Page, label: string) {
 test.describe.configure({ mode: "serial" });
 
 test.beforeEach(async ({ context }) => {
-  await useEnglish(context);
+  await setEnglishCookie(context);
 });
 
 test.afterAll(() => {

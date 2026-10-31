@@ -8,7 +8,7 @@ import { T } from "@/lib/i18n/client";
 
 type ConfirmDialogProps = {
   trigger: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   description: React.ReactNode;
   confirmLabel?: string;
   destructive?: boolean;

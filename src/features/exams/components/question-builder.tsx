@@ -87,12 +87,16 @@ function QuestionCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">Q{index + 1}</span>
+            <span className="text-sm font-semibold"><T vars={{ n: index + 1 }}>{"Q{n}"}</T></span>
             <Badge tone={q.type === "mcq" ? "primary" : "info"}>{q.type === "mcq" ? "MCQ" : "Written"}</Badge>
             <Badge>
-              {q.marks} mark{q.marks === 1 ? "" : "s"}
+              <T vars={{ n: q.marks }}>{q.marks === 1 ? "{n} mark" : "{n} marks"}</T>
             </Badge>
-            {q.negativeMarks > 0 ? <Badge tone="danger">−{q.negativeMarks} if wrong</Badge> : null}
+            {q.negativeMarks > 0 ? (
+              <Badge tone="danger">
+                <T vars={{ n: q.negativeMarks }}>{"−{n} if wrong"}</T>
+              </Badge>
+            ) : null}
             {q.type === "mcq" && q.correctIndex < 0 ? <Badge tone="warning"><T>No correct option</T></Badge> : null}
           </div>
           <p className="prose-text">{q.body}</p>
@@ -144,7 +148,7 @@ function QuestionCard({
                 <Copy />
               </Button>
               <ConfirmDialog
-                title={`Delete question ${index + 1}?`}
+                title={<T vars={{ n: index + 1 }}>{"Delete question {n}?"}</T>}
                 description="This can't be undone."
                 confirmLabel="Delete"
                 destructive
@@ -218,15 +222,19 @@ export function QuestionBuilder({
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm">
-            <span className="font-semibold tabular-nums">{order.length}</span> question{order.length === 1 ? "" : "s"} ·{" "}
+            <T vars={{ n: order.length }}>{order.length === 1 ? "{n} question" : "{n} questions"}</T> ·{" "}
             <span className={cn("font-semibold tabular-nums", balanced ? "text-success" : "text-warning")}>
               {sum} / {totalMarks}
             </span>{" "}
-            marks allocated
+            <T>marks allocated</T>
           </p>
           {!balanced && editable ? (
             <p className="text-xs text-muted-foreground">
-              {sum < totalMarks ? `Add ${totalMarks - sum} more mark(s)` : `Remove ${sum - totalMarks} mark(s)`}, or change the exam total, before publishing.
+              {sum < totalMarks ? (
+                <T vars={{ n: totalMarks - sum }}>{"Add {n} more mark(s), or change the exam total, before publishing."}</T>
+              ) : (
+                <T vars={{ n: sum - totalMarks }}>{"Remove {n} mark(s), or change the exam total, before publishing."}</T>
+              )}
             </p>
           ) : null}
         </div>

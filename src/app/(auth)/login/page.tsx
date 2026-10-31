@@ -36,7 +36,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       description="Sign in to your exam workspace."
       footer={
         <>
-          New student?{" "}
+          <T>New student?</T>{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
             <T>Create an account</T>
           </Link>

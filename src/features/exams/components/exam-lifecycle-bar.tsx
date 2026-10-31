@@ -82,7 +82,7 @@ export function ExamLifecycleBar({
           title="Close the exam now?"
           description={
             openAttemptCount > 0
-              ? `${openAttemptCount} attempt(s) in progress will be submitted immediately with their saved answers. No new attempts can start.`
+              ? <T vars={{ n: openAttemptCount }}>{"{n} attempt(s) in progress will be submitted immediately with their saved answers. No new attempts can start."}</T>
               : "No new attempts can start."
           }
           confirmLabel="Close exam"

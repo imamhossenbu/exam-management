@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { trChildren } from "@/lib/i18n/tr";
 
 const TONES = {
   brand: "bg-primary/20 text-[oklch(0.85_0.1_277)] ring-primary/40",
@@ -38,8 +39,8 @@ export function AuthCard({
     <div className="animate-fade-in">
       <div className="mb-3 sm:mb-3.5 text-center">
         {icon ? <AuthIcon icon={icon} tone={tone} /> : null}
-        <h1 className="text-base sm:text-lg font-semibold tracking-tight text-white">{title}</h1>
-        {description ? <p className="mt-1 text-xs text-white/70 leading-relaxed">{description}</p> : null}
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight text-white">{trChildren(title)}</h1>
+        {description ? <p className="mt-1 text-xs text-white/70 leading-relaxed">{trChildren(description)}</p> : null}
       </div>
       {children}
       {footer ? <div className="mt-3.5 border-t border-white/10 pt-3 text-center text-xs text-white/60 sm:mt-4 sm:pt-3.5">{footer}</div> : null}

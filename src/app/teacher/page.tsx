@@ -44,7 +44,7 @@ async function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Active courses" value={courses.count ?? 0} icon={BookOpen} />
         <StatCard label="Enrolled students" value={uniqueStudents} icon={Users} tone="info" />
-        <StatCard label="Live exams" value={live.length} hint={`${live.reduce((s, e) => s + e.attemptCount, 0)} attempts so far`} icon={Radio} tone="success" />
+        <StatCard label="Live exams" value={live.length} hint={<T vars={{ n: live.reduce((s, e) => s + e.attemptCount, 0) }}>{"{n} attempts so far"}</T>} icon={Radio} tone="success" />
         <StatCard label="Awaiting grading" value={toGrade.length} icon={ClipboardCheck} tone="warning" />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
