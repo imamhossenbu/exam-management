@@ -21,6 +21,11 @@
 --  9. reopen_grading accepted attempts that were not submitted.
 -- 10. Answer keys could be released while an attempt was still inside its
 --     5 s save grace.
+-- 11. close_exam failed on a scheduled (not yet started) exam: ends_at = now()
+--     fell before starts_at (exams_check1).
+-- 12. start_attempt finalized an expired attempt and then raised (attempt
+--     limit / exam ended), which rolled the finalization back. It now returns
+--     the finalized attempt so the student lands on its result.
 -- =============================================================================
 
 -- 1. ---------------------------------------------------------------------------
@@ -379,5 +384,135 @@ begin
   update public.grades set status = 'draft' where attempt_id = p_attempt_id and not is_auto;
   perform app_private.recompute_result(p_attempt_id);
   perform app_private.write_audit('grading.reopened', 'exam_attempt', p_attempt_id);
+end;
+$$;
+
+-- 11. --------------------------------------------------------------------------
+create or replace function public.close_exam(p_exam_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_exam public.exams := app_private.require_exam_owner(p_exam_id);
+  r record;
+  v_count integer := 0;
+begin
+  if v_exam.status <> 'published' then
+    raise exception 'EXAM_NOT_PUBLISHED' using errcode = 'P0001';
+  end if;
+  -- A scheduled exam closes before it ever opens: pull its start back too (ends_at > starts_at).
+  update public.exams
+  set status = 'closed', closed_at = now(),
+      starts_at = least(starts_at, now() - interval '1 second'),
+      ends_at = least(ends_at, now())
+  where id = p_exam_id;
+  for r in select id from public.exam_attempts where exam_id = p_exam_id and status = 'in_progress' for update loop
+    perform app_private.finalize_attempt(r.id, 'teacher');
+    v_count := v_count + 1;
+  end loop;
+  perform app_private.write_audit('exam.closed', 'exam', p_exam_id, jsonb_build_object('finalized_attempts', v_count));
+  return v_count;
+end;
+$$;
+
+-- 12. --------------------------------------------------------------------------
+create or replace function public.start_attempt(p_exam_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := app_private.require_uid();
+  v_exam public.exams;
+  v_open public.exam_attempts;
+  v_used integer;
+  v_order uuid[];
+  v_opt_order jsonb;
+  v_deadline timestamptz;
+  v_finalized uuid;
+  v_id uuid;
+begin
+  if not exists (select 1 from public.profiles where id = v_uid and role = 'student') then
+    raise exception 'FORBIDDEN' using errcode = '42501';
+  end if;
+
+  -- Serialize concurrent starts for this student/exam pair.
+  perform pg_advisory_xact_lock(hashtextextended(p_exam_id::text || ':' || v_uid::text, 0));
+
+  select e.* into v_exam from public.exams e where e.id = p_exam_id;
+  if v_exam.id is null or not app_private.is_active_member(v_exam.course_id) then
+    raise exception 'EXAM_NOT_FOUND' using errcode = 'P0002';
+  end if;
+
+  -- Finalize this student's expired attempt (if any) before counting.
+  for v_open in
+    select a.* from public.exam_attempts a
+    where a.exam_id = p_exam_id and a.student_id = v_uid and a.status = 'in_progress'
+    for update
+  loop
+    if v_open.deadline_at + app_private.save_grace() < now() then
+      perform app_private.finalize_attempt(v_open.id, 'timeout');
+      v_finalized := v_open.id;
+    else
+      return v_open.id; -- resume the open attempt
+    end if;
+  end loop;
+
+  if v_exam.status <> 'published' then
+    if v_finalized is not null then return v_finalized; end if;
+    raise exception 'EXAM_NOT_AVAILABLE' using errcode = 'P0001';
+  end if;
+  if now() < v_exam.starts_at then
+    if v_finalized is not null then return v_finalized; end if;
+    raise exception 'EXAM_NOT_STARTED' using errcode = 'P0001';
+  end if;
+  if now() >= v_exam.ends_at then
+    if v_finalized is not null then return v_finalized; end if;
+    raise exception 'EXAM_ENDED' using errcode = 'P0001';
+  end if;
+
+  select count(*) into v_used from public.exam_attempts where exam_id = p_exam_id and student_id = v_uid;
+  if v_used >= v_exam.max_attempts then
+    if v_finalized is not null then return v_finalized; end if;
+    raise exception 'ATTEMPT_LIMIT_REACHED' using errcode = 'P0001';
+  end if;
+
+  -- Sectioned exams keep every MCQ before every CQ; shuffling happens within each section.
+  select array_agg(id order by
+      case when v_exam.mcq_duration_minutes is not null and type = 'cq' then 1 else 0 end,
+      case when v_exam.shuffle_questions then random() else position end,
+      id)
+  into v_order from public.questions where exam_id = p_exam_id;
+
+  if v_order is null then
+    raise exception 'EXAM_NOT_AVAILABLE' using errcode = 'P0001';
+  end if;
+
+  select coalesce(jsonb_object_agg(question_id, ids), '{}'::jsonb) into v_opt_order
+  from (
+    select o.question_id,
+      jsonb_agg(o.id order by case when v_exam.shuffle_options then random() else o.position end, o.id) as ids
+    from public.question_options o
+    join public.questions q on q.id = o.question_id
+    where q.exam_id = p_exam_id
+    group by o.question_id
+  ) s;
+
+  v_deadline := least(now() + make_interval(mins => v_exam.duration_minutes), v_exam.ends_at);
+
+  insert into public.exam_attempts (exam_id, student_id, attempt_number, deadline_at, mcq_deadline_at, question_order, option_order)
+  values (
+    p_exam_id, v_uid, v_used + 1,
+    v_deadline,
+    case when v_exam.mcq_duration_minutes is null then null
+         else least(now() + make_interval(mins => v_exam.mcq_duration_minutes), v_deadline) end,
+    v_order, v_opt_order)
+  returning id into v_id;
+
+  perform app_private.write_audit('attempt.started', 'exam_attempt', v_id, jsonb_build_object('exam_id', p_exam_id));
+  return v_id;
 end;
 $$;

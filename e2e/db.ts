@@ -71,6 +71,12 @@ export function cleanupE2EData() {
     delete from public.exam_chapters where exam_id in (select id from x_exams);
     delete from public.question_sources where course_id in (select id from x_courses) or exam_id in (select id from x_exams);
     delete from public.audit_logs where entity_id::text in (select id::text from x_exams union all select id::text from x_courses union all select id::text from x_attempts);
+    delete from public.audit_logs where actor_id in (select id from x_users)
+      or (entity_type = 'question' and entity_id in (select id from x_questions))
+      or (entity_type = 'course_member' and entity_id in (
+            select id from public.course_members where course_id in (select id from x_courses) or student_id in (select id from x_users)))
+      or details->>'course_id' in (select id::text from x_courses)
+      or details->>'source_exam_id' in (select id::text from x_exams);
     delete from public.exams where id in (select id from x_exams);
     delete from public.course_members where course_id in (select id from x_courses) or student_id in (select id from x_users);
     delete from public.course_invites where course_id in (select id from x_courses);

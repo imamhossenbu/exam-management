@@ -714,4 +714,29 @@ describe("exam/result audit fixes", () => {
     await expect(db.as(teacher, "select public.reopen_grading($1)", [attemptId])).rejects.toThrow(/ATTEMPT_NOT_SUBMITTED/);
     expect(await db.sql("select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(0);
   });
+
+  it("closes a scheduled exam that hasn't opened yet", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    // Fixture only: move it into the future without the settings guard.
+    await db.sql(
+      `begin; set local session_replication_role = replica;
+       update public.exams set starts_at = now() + interval '1 day', ends_at = now() + interval '2 days' where id = '${exam.examId}';
+       commit;`,
+    );
+    await db.as(teacher, "select public.close_exam($1)", [exam.examId]);
+    const [e] = await db.sql<{ status: string }>("select status from public.exams where id = $1", [exam.examId]);
+    expect(e.status).toBe("closed");
+    await expect(start(alice, exam.examId)).rejects.toThrow(/EXAM_NOT_AVAILABLE/);
+  });
+
+  it("keeps the timeout finalization when starting again is refused (attempt limit)", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { maxAttempts: 1, mcq: [{ marks: 1 }] });
+    const attemptId = await start(alice, exam.examId);
+    await expireAttempt(db, attemptId);
+    // Returns the finalized attempt (the app opens its result) instead of rolling the timeout back.
+    expect(await start(alice, exam.examId)).toBe(attemptId);
+    const [a] = await db.sql<{ status: string; submitted_via: string }>("select status, submitted_via from public.exam_attempts where id = $1", [attemptId]);
+    expect(a).toEqual({ status: "submitted", submitted_via: "timeout" });
+    await expect(start(alice, exam.examId)).rejects.toThrow(/ATTEMPT_LIMIT_REACHED/);
+  });
 });
