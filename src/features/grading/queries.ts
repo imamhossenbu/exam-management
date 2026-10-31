@@ -1,21 +1,41 @@
 import "server-only";
 import type { ServerSupabase } from "@/lib/supabase/server";
 
-/** Attempts across the teacher's exams, newest first. Expired attempts are finalized first. */
-export async function listAttempts(supabase: ServerSupabase, filter: { examId?: string; needsGrading?: boolean } = {}) {
-  await supabase.rpc("finalize_expired_attempts");
+const ATTEMPT_SELECT =
+  "id, attempt_number, status, started_at, submitted_at, submitted_via, deadline_at, exam:exams!inner(id, title, exam_type, total_marks, course_id, course:courses(id, title)), student:profiles!exam_attempts_student_id_fkey(id, full_name, email), result:attempt_results(total_score, max_score, percentage, passed, grading_status, mcq_score, cq_score), attempt_events(event_type)";
+const CHUNK = 1000;
+
+export type AttemptFilter = {
+  examId?: string;
+  courseId?: string;
+  /** Submitted attempts that still need grading. */
+  needsGrading?: boolean;
+  /** Leave out attempts still in progress. */
+  submittedOnly?: boolean;
+  /** Submission time bounds (ISO instants; `to` is exclusive). */
+  from?: string | null;
+  to?: string | null;
+};
+
+function attemptsQuery(supabase: ServerSupabase, f: AttemptFilter, count = false) {
   let query = supabase
     .from("exam_attempts")
-    .select(
-      "id, attempt_number, status, started_at, submitted_at, submitted_via, deadline_at, exam:exams!inner(id, title, exam_type, total_marks, course:courses(id, title)), student:profiles!exam_attempts_student_id_fkey(id, full_name, email), result:attempt_results(total_score, max_score, percentage, passed, grading_status, mcq_score, cq_score), attempt_events(event_type)",
-    )
+    .select(ATTEMPT_SELECT, count ? { count: "exact" } : undefined)
     .order("started_at", { ascending: false })
-    .limit(2000);
-  if (filter.examId) query = query.eq("exam_id", filter.examId);
-  if (filter.needsGrading) query = query.eq("status", "submitted");
-  const { data, error } = await query;
-  if (error) throw error;
-  const rows = data.map((a) => ({
+    .order("id");
+  if (f.examId) query = query.eq("exam_id", f.examId);
+  if (f.courseId) query = query.eq("exam.course_id", f.courseId);
+  if (f.needsGrading) query = query.eq("status", "submitted");
+  else if (f.submittedOnly) query = query.neq("status", "in_progress");
+  if (f.from) query = query.gte("submitted_at", f.from);
+  if (f.to) query = query.lt("submitted_at", f.to);
+  return query;
+}
+
+type RawAttempt = NonNullable<Awaited<ReturnType<typeof attemptsQuery>>["data"]>[number];
+
+function toRow(a: RawAttempt) {
+  return {
     id: a.id,
     attemptNumber: a.attempt_number,
     status: a.status,
@@ -40,9 +60,45 @@ export async function listAttempts(supabase: ServerSupabase, filter: { examId?: 
     gradingStatus:
       a.status === "in_progress" ? ("in_progress" as const) : a.status === "returned" ? ("returned" as const) : (a.result?.grading_status ?? "pending"),
     tabSwitches: a.attempt_events.filter((e) => e.event_type === "visibility_hidden").length,
-  }));
+  };
+}
+
+/** Every matching attempt, fetched in chunks (no row cap). Expired attempts are finalized first. */
+export async function listAttempts(supabase: ServerSupabase, filter: AttemptFilter = {}) {
+  await supabase.rpc("finalize_expired_attempts");
+  const rows: ReturnType<typeof toRow>[] = [];
+  for (let offset = 0; ; offset += CHUNK) {
+    const { data, error } = await attemptsQuery(supabase, filter).range(offset, offset + CHUNK - 1);
+    if (error) throw error;
+    rows.push(...data.map(toRow));
+    if (data.length < CHUNK) break;
+  }
   return filter.needsGrading ? rows.filter((r) => r.gradingStatus === "pending" || r.gradingStatus === "in_review") : rows;
 }
+
+/** Ids of the attempts that count as each student's result (best or latest, per exam setting). */
+export async function countedAttemptIds(supabase: ServerSupabase, examId?: string | null) {
+  const ids = new Set<string>();
+  for (let offset = 0; ; offset += CHUNK) {
+    let query = supabase.from("counted_attempts").select("attempt_id").order("attempt_id").range(offset, offset + CHUNK - 1);
+    if (examId) query = query.eq("exam_id", examId);
+    const { data, error } = await query;
+    if (error) throw error;
+    for (const r of data) if (r.attempt_id) ids.add(r.attempt_id);
+    if (data.length < CHUNK) break;
+  }
+  return ids;
+}
+
+/** One page of matching attempts plus the total count, for large result lists. */
+export async function listAttemptsPage(supabase: ServerSupabase, filter: AttemptFilter, page: number, pageSize = 50) {
+  await supabase.rpc("finalize_expired_attempts");
+  const offset = Math.max(0, page - 1) * pageSize;
+  const { data, error, count } = await attemptsQuery(supabase, filter, true).range(offset, offset + pageSize - 1);
+  if (error) throw error;
+  return { rows: data.map(toRow), total: count ?? 0 };
+}
+
 export type AttemptRow = Awaited<ReturnType<typeof listAttempts>>[number];
 
 export async function getAttemptForGrading(supabase: ServerSupabase, attemptId: string) {

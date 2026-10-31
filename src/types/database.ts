@@ -564,6 +564,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           mcq_duration_minutes: number | null;
+          result_policy: Database["public"]["Enums"]["result_policy"];
         };
         Insert: {
           id?: string;
@@ -591,6 +592,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           mcq_duration_minutes?: number | null;
+          result_policy?: Database["public"]["Enums"]["result_policy"];
         };
         Update: {
           id?: string;
@@ -618,6 +620,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           mcq_duration_minutes?: number | null;
+          result_policy?: Database["public"]["Enums"]["result_policy"];
         };
         Relationships: [
           {
@@ -1193,7 +1196,18 @@ export type Database = {
         ];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      counted_attempts: {
+        Row: {
+          attempt_id: string | null;
+          exam_id: string | null;
+          student_id: string | null;
+          attempt_number: number | null;
+          submitted_at: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       archive_exam: { Args: { p_exam_id: string }; Returns: undefined };
       close_exam: { Args: { p_exam_id: string }; Returns: number };
@@ -1215,6 +1229,7 @@ export type Database = {
       reopen_grading: { Args: { p_attempt_id: string }; Returns: undefined };
       reorder_questions: { Args: { p_exam_id: string; p_question_ids: string[] }; Returns: undefined };
       restore_exam: { Args: { p_exam_id: string }; Returns: undefined };
+      results_overview: { Args: { p_course_id?: string; p_exam_id?: string; p_from?: string; p_to?: string }; Returns: Json };
       return_attempt: { Args: { p_attempt_id: string; p_note: string | null; p_resubmit_deadline: string }; Returns: undefined };
       save_answer: { Args: { p_attempt_id: string; p_question_id: string; p_selected_option_id: string | null; p_text_answer: string | null; p_marked_for_review: boolean; p_revision: number }; Returns: { status: string; saved_at: string | null; revision: number | null }[] };
       save_cq_grade: { Args: { p_attempt_id: string; p_question_id: string; p_part_id: string | null; p_marks: number; p_feedback: string | null }; Returns: undefined };
@@ -1236,6 +1251,7 @@ export type Database = {
       grading_status: "pending" | "in_review" | "graded";
       membership_status: "active" | "suspended" | "removed";
       question_type: "mcq" | "cq";
+      result_policy: "best" | "latest";
       results_release: "immediate" | "after_close" | "manual";
       submission_method: "student" | "timeout" | "teacher";
     };

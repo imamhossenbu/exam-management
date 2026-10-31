@@ -62,6 +62,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
   const subjectId = useWatch({ control: form.control, name: "subjectId" });
   const examType = useWatch({ control: form.control, name: "examType" });
   const chapterIds = useWatch({ control: form.control, name: "chapterIds" }) ?? [];
+  const maxAttempts = Number(useWatch({ control: form.control, name: "maxAttempts" }) || 1);
   const durationMinutes = Number(useWatch({ control: form.control, name: "durationMinutes" }));
   const mcqMinutes = Number(useWatch({ control: form.control, name: "mcqDurationMinutes" }) || 0);
   const sectioned = examType === "mixed" && mcqMinutes > 0;
@@ -255,6 +256,22 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
               </NativeSelect>
             )}
           </Field>
+          {maxAttempts > 1 ? (
+            <Field
+              id="resultPolicy"
+              label="Which attempt counts"
+              description="Used for the student's result, averages and pass rates when they take the exam more than once."
+              error={errors.resultPolicy?.message}
+              className="max-w-md"
+            >
+              {(a) => (
+                <NativeSelect {...a} {...form.register("resultPolicy")}>
+                  <option value="best">Best attempt (highest score)</option>
+                  <option value="latest">Latest attempt</option>
+                </NativeSelect>
+              )}
+            </Field>
+          ) : null}
           <CheckboxField
             id="revealAnswers"
             label="Show correct answers and explanations with results"

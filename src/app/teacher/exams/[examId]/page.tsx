@@ -115,6 +115,7 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
               shuffleQuestions: exam.shuffle_questions,
               shuffleOptions: exam.shuffle_options,
               resultsRelease: exam.results_release,
+              resultPolicy: exam.result_policy,
               revealAnswers: exam.reveal_answers,
               allowResubmission: exam.allow_resubmission,
             }}

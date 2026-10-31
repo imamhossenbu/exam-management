@@ -44,6 +44,15 @@ const columns = await q(`
   where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
   order by c.table_name, c.ordinal_position`);
 
+const viewColumns = await q(`
+  select c.table_name, c.column_name, c.udt_name
+  from information_schema.columns c
+  join information_schema.tables t on t.table_name = c.table_name and t.table_schema = c.table_schema
+  where c.table_schema = 'public' and t.table_type = 'VIEW'
+  order by c.table_name, c.ordinal_position`);
+const views = {};
+for (const c of viewColumns) (views[c.table_name] ??= []).push(c);
+
 const fks = await q(`
   select con.conname, cl.relname as table_name, rcl.relname as ref_table,
     array(select a.attname::text from unnest(con.conkey) with ordinality k(n, o) join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k.n order by k.o) as cols,
@@ -148,7 +157,16 @@ ${rels}
 `;
 }
 out += `    };
-    Views: { [_ in never]: never };
+    Views: {
+${Object.entries(views)
+  .map(([name, cols]) => `      ${name}: {
+        Row: {
+${cols.map((c) => `          ${c.column_name}: ${tsType(c.udt_name)} | null;`).join("\n")}
+        };
+        Relationships: [];
+      };`)
+  .join("\n")}
+    };
     Functions: {
 `;
 for (const f of functions) {

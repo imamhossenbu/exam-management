@@ -28,6 +28,8 @@ export const examSettingsSchema = z
     shuffleQuestions: z.boolean().default(false),
     shuffleOptions: z.boolean().default(false),
     resultsRelease: z.enum(["immediate", "after_close", "manual"]),
+    /** With several attempts: which one is the student's result. */
+    resultPolicy: z.enum(["best", "latest"]).default("best"),
     revealAnswers: z.boolean().default(true),
     allowResubmission: z.boolean().default(false),
   })

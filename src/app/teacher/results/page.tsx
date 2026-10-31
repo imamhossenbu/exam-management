@@ -11,15 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, NativeSelect } from "@/components/ui/input";
 import { requireTeacher } from "@/lib/auth/dal";
 import { uuid } from "@/lib/validations/courses";
-import { inLocalDayRange } from "@/lib/utils/datetime";
-import { listAttempts } from "@/features/grading/queries";
-import { studentTrends, summarizeExams } from "@/features/grading/analytics";
+import { localDayBounds } from "@/lib/utils/datetime";
+import { listAttemptsPage } from "@/features/grading/queries";
+import { parseOverview } from "@/features/grading/analytics";
 import { AttemptsTable } from "@/features/grading/components/attempts-table";
 import { ExamAverageChart } from "@/features/grading/components/exam-average-chart";
 
 export const metadata: Metadata = { title: "Results" };
 
-type Filters = { course?: string; exam?: string; from?: string; to?: string };
+type Filters = { course?: string; exam?: string; from?: string; to?: string; page?: string };
+const PAGE_SIZE = 50;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
@@ -31,24 +32,27 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
     to: raw.to && DATE.test(raw.to) ? raw.to : "",
   };
   const { profile, supabase } = await requireTeacher();
-  const [all, { data: courses }, { data: exams }] = await Promise.all([
-    listAttempts(supabase, { examId: f.exam || undefined }),
+  const page = Math.max(1, Number(raw.page) || 1);
+  const bounds = localDayBounds(f.from, f.to, profile.timezone);
+  const filter = { examId: f.exam || undefined, courseId: f.course || undefined, submittedOnly: true, from: bounds.from, to: bounds.to };
+  const [overviewRes, attemptsPage, { data: courses }, { data: exams }] = await Promise.all([
+    supabase.rpc("results_overview", { p_course_id: f.course || undefined, p_exam_id: f.exam || undefined, p_from: bounds.from ?? undefined, p_to: bounds.to ?? undefined }),
+    listAttemptsPage(supabase, filter, page, PAGE_SIZE),
     supabase.from("courses").select("id, title").order("title"),
     supabase.from("exams").select("id, title, course_id").neq("status", "draft").order("starts_at", { ascending: false }),
   ]);
-  const rows = all.filter(
-    (r) =>
-      r.status !== "in_progress" &&
-      (!f.course || r.courseId === f.course) &&
-      inLocalDayRange(r.submittedAt, f.from ?? "", f.to ?? "", profile.timezone),
-  );
-  const summaries = summarizeExams(rows);
-  const trends = studentTrends(rows);
-  const graded = rows.filter((r) => r.gradingStatus === "graded" && r.percentage !== null);
-  const avg = graded.length ? Math.round((graded.reduce((s, r) => s + r.percentage!, 0) / graded.length) * 10) / 10 : null;
-  const withPass = graded.filter((r) => r.passed !== null);
-  const passRate = withPass.length ? Math.round((withPass.filter((r) => r.passed).length / withPass.length) * 1000) / 10 : null;
-  const csvParams = new URLSearchParams(Object.entries({ examId: f.exam, courseId: f.course, from: f.from, to: f.to }).filter(([, v]) => v));
+  if (overviewRes.error) throw overviewRes.error;
+  const overview = parseOverview(overviewRes.data);
+  const summaries = overview.exams;
+  const trends = overview.students;
+  const rows = attemptsPage.rows;
+  const avg = overview.average;
+  const passRate = overview.passRate;
+  const filterParams = Object.entries({ examId: f.exam, courseId: f.course, from: f.from, to: f.to }).filter(([, v]) => v);
+  const csvParams = new URLSearchParams(filterParams);
+  const pageHref = (n: number) =>
+    `/teacher/results?${new URLSearchParams([...Object.entries({ course: f.course, exam: f.exam, from: f.from, to: f.to }).filter(([, v]) => v), ["page", String(n)]]).toString()}`;
+  const lastPage = Math.max(1, Math.ceil(attemptsPage.total / PAGE_SIZE));
   const examOptions = (exams ?? []).filter((e) => !f.course || e.course_id === f.course);
 
   return (
@@ -93,13 +97,13 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
       </form>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Submitted attempts" value={rows.length} icon={ClipboardList} />
-        <StatCard label="Awaiting grading" value={rows.length - graded.length} icon={Hourglass} tone="warning" />
-        <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint="Fully graded attempts" icon={BarChart3} tone="info" />
+        <StatCard label="Submitted attempts" value={overview.submitted} hint={`${overview.counted} counted (one per student and exam)`} icon={ClipboardList} />
+        <StatCard label="Awaiting grading" value={overview.pending} hint="Counted attempts not fully graded" icon={Hourglass} tone="warning" />
+        <StatCard label="Average score" value={avg === null ? "—" : `${avg}%`} hint="Counted, fully graded attempts" icon={BarChart3} tone="info" />
         <StatCard label="Pass rate" value={passRate === null ? "—" : `${passRate}%`} hint="Exams with a pass mark" icon={Award} tone="success" />
       </div>
 
-      {rows.length === 0 ? (
+      {overview.submitted === 0 ? (
         <EmptyState icon={BarChart3} title="No results for this selection" description="Results appear once students submit attempts." />
       ) : (
         <>
@@ -196,9 +200,14 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
 
           <div>
             <h2 className="section-title mb-3">All attempts</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Showing {attemptsPage.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, attemptsPage.total)} of {attemptsPage.total}. Search and
+              filters in the table apply to this page; use the filters above for the whole list.
+            </p>
             <AttemptsTable
               attempts={rows}
               timezone={profile.timezone}
+              pageSize={PAGE_SIZE}
               toolbar={
                 <Button asChild variant="outline">
                   <a href={`/api/results?${csvParams.toString()}`} download>
@@ -207,6 +216,27 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
                 </Button>
               }
             />
+            {lastPage > 1 ? (
+              <nav aria-label="Attempt pages" className="mt-3 flex items-center justify-between gap-2 text-sm">
+                {page > 1 ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={pageHref(page - 1)}>Previous page</Link>
+                  </Button>
+                ) : (
+                  <span />
+                )}
+                <span className="text-muted-foreground tabular-nums">
+                  Page {page} of {lastPage}
+                </span>
+                {page < lastPage ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={pageHref(page + 1)}>Next page</Link>
+                  </Button>
+                ) : (
+                  <span />
+                )}
+              </nav>
+            ) : null}
           </div>
         </>
       )}
@@ -217,7 +247,7 @@ async function Results({ searchParams }: { searchParams: Promise<Filters> }) {
 export default function ResultsPage({ searchParams }: PageProps<"/teacher/results">) {
   return (
     <>
-      <PageHeader title="Results" description="Scores, trends and exports across your courses. Only fully graded attempts count towards averages." />
+      <PageHeader title="Results" description="Scores, trends and exports across your courses. Averages use each student\u2019s counted attempt (best or latest, per exam) once fully graded." />
       <Suspense
         fallback={
           <div className="space-y-6">

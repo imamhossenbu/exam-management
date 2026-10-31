@@ -21,9 +21,10 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
   const { profile: me, supabase } = await requireTeacher();
   const detail = await getStudentDetail(supabase, studentId);
   if (!detail) notFound();
-  const { profile, memberships, attempts } = detail;
+  const { profile, memberships, attempts, countedIds } = detail;
   const tz = me.timezone;
-  const graded = attempts.filter((a) => a.result?.grading_status === "graded");
+  // One result per exam: the counted attempt (best or latest, per exam setting).
+  const graded = attempts.filter((a) => countedIds.has(a.id) && a.result?.grading_status === "graded");
   const average = graded.length ? graded.reduce((s, a) => s + Number(a.result?.percentage ?? 0), 0) / graded.length : null;
 
   return (
@@ -107,6 +108,9 @@ async function StudentDetail({ params }: { params: Promise<{ studentId: string }
                             </Link>
                             <p className="text-xs text-muted-foreground">
                               {a.exam?.course?.title} · Attempt {a.attempt_number}
+                              {countedIds.has(a.id) && attempts.filter((x) => x.exam?.id === a.exam?.id).length > 1 ? (
+                                <Badge tone="info" className="ml-2">Counts for result</Badge>
+                              ) : null}
                             </p>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">{a.status === "in_progress" ? "In progress" : formatDateTime(a.submitted_at, tz)}</td>

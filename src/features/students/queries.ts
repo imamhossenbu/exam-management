@@ -24,7 +24,7 @@ export async function listStudents(supabase: ServerSupabase) {
 export type StudentRow = Awaited<ReturnType<typeof listStudents>>[number];
 
 export async function getStudentDetail(supabase: ServerSupabase, studentId: string) {
-  const [profile, memberships, attempts] = await Promise.all([
+  const [profile, memberships, attempts, counted] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email, created_at, role").eq("id", studentId).eq("role", "student").maybeSingle(),
     supabase
       .from("course_members")
@@ -38,8 +38,15 @@ export async function getStudentDetail(supabase: ServerSupabase, studentId: stri
       )
       .eq("student_id", studentId)
       .order("started_at", { ascending: false }),
+    supabase.from("counted_attempts").select("attempt_id").eq("student_id", studentId),
   ]);
-  for (const r of [profile, memberships, attempts]) if (r.error) throw r.error;
+  for (const r of [profile, memberships, attempts, counted]) if (r.error) throw r.error;
   if (!profile.data) return null;
-  return { profile: profile.data, memberships: memberships.data ?? [], attempts: attempts.data ?? [] };
+  return {
+    profile: profile.data,
+    memberships: memberships.data ?? [],
+    attempts: attempts.data ?? [],
+    /** The attempt that counts per exam (best or latest, per exam setting). */
+    countedIds: new Set((counted.data ?? []).map((c) => c.attempt_id).filter((id): id is string => Boolean(id))),
+  };
 }

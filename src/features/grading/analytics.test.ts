@@ -1,43 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { studentTrends, summarizeExams, type ScoredAttempt } from "./analytics";
+import { parseOverview } from "./analytics";
 
-const row = (over: Partial<ScoredAttempt>): ScoredAttempt => ({
-  examId: "e1",
-  examTitle: "Midterm",
-  courseTitle: "Physics",
-  studentId: "s1",
-  studentName: "Ada",
-  submittedAt: "2026-01-01T10:00:00Z",
-  percentage: 50,
-  passed: true,
-  gradingStatus: "graded",
-  ...over,
-});
-
-describe("results analytics", () => {
-  it("summarises graded attempts and counts pending ones separately", () => {
-    const [s] = summarizeExams([
-      row({ percentage: 80, passed: true }),
-      row({ studentId: "s2", percentage: 40, passed: false }),
-      row({ studentId: "s3", percentage: null, gradingStatus: "pending", passed: null }),
-    ]);
-    expect(s).toMatchObject({ graded: 2, pending: 1, average: 60, highest: 80, lowest: 40, passRate: 50 });
+describe("parseOverview", () => {
+  it("normalises numeric strings and nulls from the results_overview RPC", () => {
+    const o = parseOverview({
+      submitted: 3, counted: 2, pending: 1, average: "75.5", passRate: null,
+      exams: [{ examId: "e", examTitle: "T", courseTitle: "C", graded: 1, pending: 1, average: "75.5", highest: "75.5", lowest: "75.5", passRate: null }],
+      students: [{ studentId: "s", studentName: "A", attempts: 1, average: "75.5", recent: ["75.50"], change: null }],
+    });
+    expect(o.average).toBe(75.5);
+    expect(o.passRate).toBeNull();
+    expect(o.exams[0].highest).toBe(75.5);
+    expect(o.students[0].recent).toEqual([75.5]);
   });
 
-  it("returns nulls when nothing is graded yet", () => {
-    const [s] = summarizeExams([row({ percentage: null, gradingStatus: "pending" })]);
-    expect(s.average).toBeNull();
-    expect(s.passRate).toBeNull();
-  });
-
-  it("orders each student's scores chronologically and reports the change", () => {
-    const [t] = studentTrends([
-      row({ submittedAt: "2026-03-01T00:00:00Z", percentage: 90, examId: "e3" }),
-      row({ submittedAt: "2026-01-01T00:00:00Z", percentage: 60, examId: "e1" }),
-      row({ submittedAt: "2026-02-01T00:00:00Z", percentage: 75, examId: "e2" }),
-    ]);
-    expect(t.recent).toEqual([60, 75, 90]);
-    expect(t.change).toBe(30);
-    expect(t.average).toBe(75);
+  it("copes with an empty selection", () => {
+    expect(parseOverview({ submitted: 0, counted: 0, pending: 0, average: null, passRate: null, exams: [], students: [] })).toMatchObject({ exams: [], students: [], average: null });
+    expect(parseOverview(null).exams).toEqual([]);
   });
 });

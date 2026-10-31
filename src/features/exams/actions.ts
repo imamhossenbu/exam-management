@@ -29,6 +29,7 @@ function toExamRow(v: ExamSettingsOutput, timezone: string) {
     shuffle_questions: v.shuffleQuestions,
     shuffle_options: v.shuffleOptions,
     results_release: v.resultsRelease,
+    result_policy: v.resultPolicy,
     reveal_answers: v.revealAnswers,
     allow_resubmission: v.allowResubmission,
   };

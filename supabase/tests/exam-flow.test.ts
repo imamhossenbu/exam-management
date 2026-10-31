@@ -740,3 +740,65 @@ describe("exam/result audit fixes", () => {
     await expect(start(alice, exam.examId)).rejects.toThrow(/ATTEMPT_LIMIT_REACHED/);
   });
 });
+
+type Overview = { submitted: number; counted: number; average: string | number | null; passRate: string | number | null; exams: unknown[]; students: { attempts: number }[] };
+
+describe("which attempt counts, and the results overview", () => {
+  async function twoAttempts(policy: "best" | "latest") {
+    const exam = await seedPublishedExam(db, teacher, courseId, { maxAttempts: 2, passMarks: 2, mcq: [{ marks: 2 }, { marks: 2 }] });
+    await db.as(teacher, "update public.exams set result_policy = $2 where id = $1", [exam.examId, policy]);
+    const first = await start(alice, exam.examId); // 4/4
+    await save(alice, first, exam.mcq[0].id, exam.mcq[0].correct, 1);
+    await save(alice, first, exam.mcq[1].id, exam.mcq[1].correct, 1);
+    await db.as(alice, "select public.submit_attempt($1)", [first]);
+    const second = await start(alice, exam.examId); // 2/4
+    await save(alice, second, exam.mcq[0].id, exam.mcq[0].correct, 1);
+    await db.as(alice, "select public.submit_attempt($1)", [second]);
+    return { exam, first, second };
+  }
+  const counted = (uid: Uid, examId: string) =>
+    db.as<{ attempt_id: string }>(uid, "select attempt_id from public.counted_attempts where exam_id = $1", [examId]);
+
+  it("counts the best attempt by default and the latest when chosen", async () => {
+    const best = await twoAttempts("best");
+    expect((await counted(teacher, best.exam.examId)).map((r) => r.attempt_id)).toEqual([best.first]);
+    const latest = await twoAttempts("latest");
+    expect((await counted(teacher, latest.exam.examId)).map((r) => r.attempt_id)).toEqual([latest.second]);
+  });
+
+  it("shows students only their own counted attempt", async () => {
+    const { exam, first } = await twoAttempts("best");
+    expect((await counted(alice, exam.examId)).map((r) => r.attempt_id)).toEqual([first]);
+    expect(await counted(bob, exam.examId)).toHaveLength(0);
+  });
+
+  it("computes the overview over counted attempts only, and only for teachers", async () => {
+    const { exam } = await twoAttempts("best");
+    const [{ results_overview: o }] = await db.as<{ results_overview: Overview }>(teacher, "select public.results_overview(null, $1, null, null)", [exam.examId]);
+    expect(o.submitted).toBe(2);
+    expect(o.counted).toBe(1);
+    expect(Number(o.average)).toBe(100);
+    expect(Number(o.passRate)).toBe(100);
+    expect(o.exams).toHaveLength(1);
+    expect(o.students[0]).toMatchObject({ attempts: 1 });
+    await db.as(teacher, "update public.exams set result_policy = 'latest' where id = $1", [exam.examId]);
+    const [{ results_overview: o2 }] = await db.as<{ results_overview: Overview }>(teacher, "select public.results_overview(null, $1, null, null)", [exam.examId]);
+    expect(Number(o2.average)).toBe(50);
+    await expect(db.as(alice, "select public.results_overview()")).rejects.toThrow(/FORBIDDEN/);
+  });
+
+  it("filters the overview by submission time", async () => {
+    const { exam } = await twoAttempts("best");
+    const [{ results_overview: o }] = await db.as<{ results_overview: Overview }>(
+      teacher, "select public.results_overview(null, $1, now() + interval '1 day', null)", [exam.examId]);
+    expect(o.submitted).toBe(0);
+    expect(o.average).toBeNull();
+  });
+
+  it("keeps the policy when duplicating", async () => {
+    const { exam } = await twoAttempts("latest");
+    const [{ duplicate_exam: copy }] = await db.as<{ duplicate_exam: string }>(teacher, "select public.duplicate_exam($1)", [exam.examId]);
+    const [c] = await db.sql<{ p: string }>("select result_policy::text as p from public.exams where id = $1", [copy]);
+    expect(c.p).toBe("latest");
+  });
+});

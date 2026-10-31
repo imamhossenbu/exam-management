@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
-import { listAttempts } from "@/features/grading/queries";
+import { countedAttemptIds, listAttempts } from "@/features/grading/queries";
 import { toCsv } from "@/lib/utils/csv";
-import { formatDateTime, inLocalDayRange } from "@/lib/utils/datetime";
+import { formatDateTime, localDayBounds } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
 
 /** Teacher-only CSV export. RLS limits rows to the teacher's own exams; answer keys are never included. */
@@ -24,13 +24,12 @@ export async function GET(request: NextRequest) {
   if ((from && !DATE.test(from)) || (to && !DATE.test(to))) return NextResponse.json({ error: "Invalid filter" }, { status: 400 });
 
   const supabase = await createClient();
-  let rows = await listAttempts(supabase, { examId: examId ?? undefined });
-  rows = rows.filter((r) => r.status !== "in_progress");
-  if (courseId) rows = rows.filter((r) => r.courseId === courseId);
-  rows = rows.filter((r) => inLocalDayRange(r.submittedAt, from, to, profile.timezone));
+  const bounds = localDayBounds(from, to, profile.timezone);
+  const rows = await listAttempts(supabase, { examId: examId ?? undefined, courseId: courseId ?? undefined, submittedOnly: true, from: bounds.from, to: bounds.to });
+  const counted = await countedAttemptIds(supabase, examId);
 
   const csv = toCsv([
-    ["Course", "Exam", "Student", "Email", "Attempt", "Submitted", "Submission", "MCQ score", "Written score", "Total", "Max", "Percentage", "Passed", "Grading status", "Tab left (count)"],
+    ["Course", "Exam", "Student", "Email", "Attempt", "Submitted", "Submission", "MCQ score", "Written score", "Total", "Max", "Percentage", "Passed", "Grading status", "Counts for result", "Tab left (count)"],
     ...rows.map((r) => [
       r.courseTitle,
       r.examTitle,
@@ -46,6 +45,7 @@ export async function GET(request: NextRequest) {
       r.percentage,
       r.passed === null ? "" : r.passed ? "yes" : "no",
       r.gradingStatus,
+      counted.has(r.id) ? "yes" : "no",
       r.tabSwitches,
     ]),
   ]);

@@ -50,7 +50,8 @@ async function Dashboard() {
     return p === "live" || p === "scheduled";
   });
   active.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-  const released = results.filter((r) => r.released);
+  // One result per exam: the counted attempt (best or latest, per exam setting).
+  const released = results.filter((r) => r.released && r.counted);
   const avg = released.length ? Math.round((released.reduce((s, r) => s + (r.percentage ?? 0), 0) / released.length) * 10) / 10 : null;
 
   return (

@@ -55,6 +55,7 @@ async function NewExam({ searchParams }: { searchParams: Promise<{ course?: stri
         shuffleQuestions: false,
         shuffleOptions: false,
         resultsRelease: "after_close",
+        resultPolicy: "best",
         revealAnswers: true,
         allowResubmission: false,
       }}

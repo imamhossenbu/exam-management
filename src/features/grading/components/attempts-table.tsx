@@ -118,9 +118,11 @@ export function AttemptsTable({
   showExam = true,
   emptyTitle = "No attempts yet",
   toolbar,
+  pageSize = 25,
 }: {
   attempts: AttemptRow[];
   timezone: string;
+  pageSize?: number;
   showExam?: boolean;
   emptyTitle?: string;
   toolbar?: React.ReactNode;
@@ -134,7 +136,7 @@ export function AttemptsTable({
       getRowId={(r) => r.id}
       searchPlaceholder="Search students…"
       toolbar={toolbar}
-      pageSize={25}
+      pageSize={pageSize}
       filters={[
         ...(showExam ? [{ columnId: "examTitle", label: "Exams", options: exams.map((e) => ({ value: e, label: e })) }] : []),
         { columnId: "gradingStatus", label: "Grading", options: Object.entries(GRADING).map(([value, g]) => ({ value, label: g.label })) },

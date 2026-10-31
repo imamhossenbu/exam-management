@@ -13,16 +13,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireTeacher } from "@/lib/auth/dal";
 import { formatDateTime } from "@/lib/utils/datetime";
 import { listTeacherExams } from "@/features/exams/queries";
-import { listAttempts } from "@/features/grading/queries";
+import { listAttempts, listAttemptsPage } from "@/features/grading/queries";
 import { PHASE_META, examPhase } from "@/features/exams/status";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 async function Dashboard() {
   const { profile, supabase } = await requireTeacher();
-  const [exams, attempts, courses, students] = await Promise.all([
+  const [exams, toGrade, recentPage, courses, students] = await Promise.all([
     listTeacherExams(supabase),
-    listAttempts(supabase),
+    listAttempts(supabase, { needsGrading: true }),
+    listAttemptsPage(supabase, { submittedOnly: true }, 1, 6),
     supabase.from("courses").select("id", { count: "exact", head: true }).is("archived_at", null),
     supabase.from("course_members").select("student_id").eq("status", "active"),
   ]);
@@ -31,8 +32,7 @@ async function Dashboard() {
   const withPhase = exams.map((e) => ({ ...e, phase: examPhase({ status: e.status, starts_at: e.startsAt, ends_at: e.endsAt }, now) }));
   const live = withPhase.filter((e) => e.phase === "live");
   const upcoming = withPhase.filter((e) => e.phase === "scheduled" || e.phase === "live").sort((a, b) => a.startsAt.localeCompare(b.startsAt)).slice(0, 6);
-  const toGrade = attempts.filter((a) => a.gradingStatus === "pending" || a.gradingStatus === "in_review");
-  const recent = attempts.filter((a) => a.submittedAt).slice(0, 6);
+  const recent = recentPage.rows;
   const uniqueStudents = new Set((students.data ?? []).map((s) => s.student_id)).size;
 
   return (

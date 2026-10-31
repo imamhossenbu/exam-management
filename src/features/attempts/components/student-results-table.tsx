@@ -23,6 +23,11 @@ const columns = [
         </Link>
         <p className="text-xs text-muted-foreground">
           {info.row.original.courseTitle} · Attempt {info.row.original.attemptNumber}
+          {info.row.original.multipleAttempts && info.row.original.counted ? (
+            <Badge tone="info" className="ml-2">
+              Counts for result
+            </Badge>
+          ) : null}
         </p>
       </div>
     ),

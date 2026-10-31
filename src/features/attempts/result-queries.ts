@@ -60,13 +60,20 @@ export async function getStudentResult(supabase: ServerSupabase, attemptId: stri
 }
 
 export async function listStudentResults(supabase: ServerSupabase, studentId: string) {
-  const { data, error } = await supabase
-    .from("exam_attempts")
-    .select("id, attempt_number, status, submitted_at, exam:exams(id, title, total_marks, course:courses(title)), result:attempt_results(total_score, max_score, percentage, passed)")
-    .eq("student_id", studentId)
-    .neq("status", "in_progress")
-    .order("submitted_at", { ascending: false });
+  const [{ data, error }, counted] = await Promise.all([
+    supabase
+      .from("exam_attempts")
+      .select("id, attempt_number, status, submitted_at, exam:exams(id, title, total_marks, course:courses(title)), result:attempt_results(total_score, max_score, percentage, passed)")
+      .eq("student_id", studentId)
+      .neq("status", "in_progress")
+      .order("submitted_at", { ascending: false }),
+    supabase.from("counted_attempts").select("attempt_id").eq("student_id", studentId),
+  ]);
   if (error) throw error;
+  if (counted.error) throw counted.error;
+  const countedIds = new Set((counted.data ?? []).map((c) => c.attempt_id));
+  const perExam = new Map<string, number>();
+  for (const a of data) if (a.exam) perExam.set(a.exam.id, (perExam.get(a.exam.id) ?? 0) + 1);
   return data.map((a) => ({
     id: a.id,
     attemptNumber: a.attempt_number,
@@ -79,6 +86,10 @@ export async function listStudentResults(supabase: ServerSupabase, studentId: st
     maxScore: a.result ? Number(a.result.max_score) : Number(a.exam?.total_marks ?? 0),
     percentage: a.result ? Number(a.result.percentage) : null,
     passed: a.result?.passed ?? null,
+    /** This attempt is the student's result for the exam (best or latest, per exam setting). */
+    counted: countedIds.has(a.id),
+    /** The student has more than one attempt at this exam. */
+    multipleAttempts: (perExam.get(a.exam?.id ?? "") ?? 0) > 1,
   }));
 }
 export type StudentResultRow = Awaited<ReturnType<typeof listStudentResults>>[number];

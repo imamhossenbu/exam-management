@@ -1,15 +1,3 @@
-export type ScoredAttempt = {
-  examId: string;
-  examTitle: string;
-  courseTitle: string;
-  studentId: string;
-  studentName: string;
-  submittedAt: string | null;
-  percentage: number | null;
-  passed: boolean | null;
-  gradingStatus: string;
-};
-
 export type ExamSummary = {
   examId: string;
   examTitle: string;
@@ -22,50 +10,51 @@ export type ExamSummary = {
   passRate: number | null;
 };
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
-/** Per-exam statistics over fully graded attempts. Pending attempts are counted but not scored. */
-export function summarizeExams(rows: ScoredAttempt[]): ExamSummary[] {
-  const byExam = new Map<string, ScoredAttempt[]>();
-  for (const r of rows) (byExam.get(r.examId) ?? byExam.set(r.examId, []).get(r.examId)!).push(r);
-  return [...byExam.values()].map((list) => {
-    const graded = list.filter((r) => r.gradingStatus === "graded" && r.percentage !== null);
-    const pcts = graded.map((r) => r.percentage!);
-    const withPass = graded.filter((r) => r.passed !== null);
-    return {
-      examId: list[0].examId,
-      examTitle: list[0].examTitle,
-      courseTitle: list[0].courseTitle,
-      graded: graded.length,
-      pending: list.length - graded.length,
-      average: pcts.length ? round1(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null,
-      highest: pcts.length ? Math.max(...pcts) : null,
-      lowest: pcts.length ? Math.min(...pcts) : null,
-      passRate: withPass.length ? round1((withPass.filter((r) => r.passed).length / withPass.length) * 100) : null,
-    };
-  });
-}
-
 export type StudentTrend = { studentId: string; studentName: string; attempts: number; average: number; recent: number[]; change: number | null };
 
-/** Per-student averages and recent scores (oldest → newest) to show performance trends. */
-export function studentTrends(rows: ScoredAttempt[], recentCount = 5): StudentTrend[] {
-  const graded = rows.filter((r) => r.gradingStatus === "graded" && r.percentage !== null && r.submittedAt);
-  const byStudent = new Map<string, ScoredAttempt[]>();
-  for (const r of graded) (byStudent.get(r.studentId) ?? byStudent.set(r.studentId, []).get(r.studentId)!).push(r);
-  return [...byStudent.values()]
-    .map((list) => {
-      const sorted = [...list].sort((a, b) => a.submittedAt!.localeCompare(b.submittedAt!));
-      const pcts = sorted.map((r) => r.percentage!);
-      const recent = pcts.slice(-recentCount);
-      return {
-        studentId: list[0].studentId,
-        studentName: list[0].studentName,
-        attempts: pcts.length,
-        average: round1(pcts.reduce((a, b) => a + b, 0) / pcts.length),
-        recent,
-        change: recent.length >= 2 ? round1(recent[recent.length - 1] - recent[0]) : null,
-      };
-    })
-    .sort((a, b) => b.average - a.average);
+export type ResultsOverview = {
+  /** All submitted attempts in the selection. */
+  submitted: number;
+  /** One per student and exam: the attempt that counts (best or latest, per exam setting). */
+  counted: number;
+  pending: number;
+  average: number | null;
+  passRate: number | null;
+  exams: ExamSummary[];
+  students: StudentTrend[];
+};
+
+const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+
+/** Normalises the JSON returned by the results_overview() RPC (numerics arrive as numbers or strings). */
+export function parseOverview(raw: unknown): ResultsOverview {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  const exams = (o.exams as Record<string, unknown>[] | undefined) ?? [];
+  const students = (o.students as Record<string, unknown>[] | undefined) ?? [];
+  return {
+    submitted: Number(o.submitted ?? 0),
+    counted: Number(o.counted ?? 0),
+    pending: Number(o.pending ?? 0),
+    average: num(o.average),
+    passRate: num(o.passRate),
+    exams: exams.map((e) => ({
+      examId: String(e.examId),
+      examTitle: String(e.examTitle),
+      courseTitle: String(e.courseTitle),
+      graded: Number(e.graded),
+      pending: Number(e.pending),
+      average: num(e.average),
+      highest: num(e.highest),
+      lowest: num(e.lowest),
+      passRate: num(e.passRate),
+    })),
+    students: students.map((t) => ({
+      studentId: String(t.studentId),
+      studentName: String(t.studentName),
+      attempts: Number(t.attempts),
+      average: Number(t.average),
+      recent: ((t.recent as unknown[]) ?? []).map(Number),
+      change: num(t.change),
+    })),
+  };
 }
