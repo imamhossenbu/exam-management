@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "@/types/database";
 import { getPublicEnv } from "@/lib/env";
 
@@ -11,6 +12,9 @@ import { getPublicEnv } from "@/lib/env";
 export async function createClient() {
   // Read cookies first: it marks the render as request-time before env validation runs.
   const cookieStore = await cookies();
+  // Session checks compare token expiry with the current time (Date.now()). Cookies alone don't
+  // stop runtime prefetch prerenders from reaching that, so wait for the real request here.
+  await connection();
   const env = getPublicEnv();
   return createServerClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
