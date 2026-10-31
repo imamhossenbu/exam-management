@@ -108,6 +108,7 @@ export function ProfileForm({
         form.setValue("avatarUrl", dataUrl, { shouldDirty: true });
         toast.success("Profile photo updated. Click 'Save changes' to save.");
       };
+      img.onerror = () => toast.error("This image couldn't be opened. Choose a JPG, PNG or WebP photo.");
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);

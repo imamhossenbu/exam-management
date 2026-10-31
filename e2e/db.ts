@@ -83,6 +83,7 @@ export function cleanupE2EData() {
     delete from app_private.rate_limits where user_id in (select id from x_users);
     delete from storage.objects where bucket_id = 'answer-sheets' and (storage.foldername(name))[1] in (select id::text from x_users);
     delete from storage.objects where bucket_id = 'question-assets' and (storage.foldername(name))[1] in (select id::text from x_exams);
+    delete from storage.objects where bucket_id = 'avatars' and (storage.foldername(name))[1] in (select id::text from x_users);
     delete from public.profiles where id in (select id from x_users);
     delete from auth.identities where user_id in (select id from x_users);
     delete from auth.users where id in (select id from x_users);

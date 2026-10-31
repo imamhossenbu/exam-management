@@ -314,3 +314,25 @@ describe("private answer-sheet storage", () => {
     ).rejects.toThrow(/row-level security/);
   });
 });
+
+describe("profile photo storage", () => {
+  it("lets users write only inside their own avatars folder", async () => {
+    await db.as(alice, "insert into storage.objects (bucket_id, name) values ('avatars', $1)", [`${alice}/1.webp`]);
+    await expect(
+      db.as(carol, "insert into storage.objects (bucket_id, name) values ('avatars', $1)", [`${alice}/2.webp`]),
+    ).rejects.toThrow(/row-level security/);
+    await db.as(carol, "delete from storage.objects where bucket_id = 'avatars' and name = $1", [`${alice}/1.webp`]);
+    expect(await db.sql("select name from storage.objects where bucket_id = 'avatars'")).toHaveLength(1);
+    await db.as(alice, "delete from storage.objects where bucket_id = 'avatars' and name = $1", [`${alice}/1.webp`]);
+    expect(await db.sql("select name from storage.objects where bucket_id = 'avatars'")).toHaveLength(0);
+  });
+
+  it("serves avatars from a public, size- and type-limited bucket", async () => {
+    const [b] = await db.sql<{ public: boolean; file_size_limit: number; allowed_mime_types: string[] }>(
+      "select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'avatars'",
+    );
+    expect(b.public).toBe(true);
+    expect(Number(b.file_size_limit)).toBe(524288);
+    expect(b.allowed_mime_types).not.toContain("image/svg+xml");
+  });
+});

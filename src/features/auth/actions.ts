@@ -16,7 +16,7 @@ import {
   verifyOtpSchema,
 } from "@/lib/validations/auth";
 import { revalidatePath, refresh } from "next/cache";
-import { deleteAvatar, isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
+import { deleteAvatar, isBase64DataUrl, isLegacyDiskAvatar, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { sendVerificationOtpEmail, sendPasswordResetEmail } from "@/lib/email/mailer";
 
@@ -278,16 +278,19 @@ export async function updateProfileAction(input: unknown): Promise<ActionResult<
 
   let finalAvatarUrl = parsed.data.avatarUrl || "";
 
-  // If avatar is base64, save to static file and use lightweight relative URL
-  if (finalAvatarUrl && isBase64DataUrl(finalAvatarUrl)) {
+  if (isBase64DataUrl(finalAvatarUrl)) {
+    // New photo from the form: store it in Supabase Storage and keep only its public URL.
     try {
-      finalAvatarUrl = await saveAvatarFromBase64(profile.id, finalAvatarUrl);
+      finalAvatarUrl = await saveAvatarFromBase64(supabase, profile.id, finalAvatarUrl);
     } catch (err) {
       console.error("[action:saveAvatar]", err);
-      finalAvatarUrl = "";
+      const invalidPhoto = err instanceof Error && err.message === "INVALID_AVATAR";
+      const message = invalidPhoto ? "That photo couldn't be used. Choose a JPG, PNG or WebP image." : "We couldn't upload your photo. Please try again.";
+      return fail(message, { avatarUrl: [message] });
     }
-  } else if (!finalAvatarUrl) {
-    await deleteAvatar(profile.id);
+  } else if (!finalAvatarUrl || isLegacyDiskAvatar(finalAvatarUrl)) {
+    finalAvatarUrl = "";
+    await deleteAvatar(supabase, profile.id);
   }
 
   // 1. Update user metadata so custom fields are persisted without cookie bloat

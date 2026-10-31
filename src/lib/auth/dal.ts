@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isBase64DataUrl, saveAvatarFromBase64 } from "@/lib/auth/avatar";
+import { isBase64DataUrl, isLegacyDiskAvatar, saveAvatarFromBase64 } from "@/lib/auth/avatar";
 import type { Enums } from "@/types/database";
 
 export type CurrentProfile = {
@@ -27,50 +27,41 @@ export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> 
   const uid = claimsData?.claims?.sub;
   if (error || !uid) return null;
 
-  // 1. Fetch live auth user for latest metadata (avatar_url, student_class, etc.)
-  const { data: userData } = await supabase.auth.getUser();
-  const userMeta = (userData?.user?.user_metadata as Record<string, unknown>) ?? (claimsData?.claims?.user_metadata as Record<string, unknown>) ?? {};
-
-  // 2. Fetch profile from database
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, full_name, email, timezone")
+    .select("id, role, full_name, email, timezone, avatar_url, student_class, phone")
     .eq("id", uid)
     .maybeSingle();
-
   if (!profile) return null;
 
-  const raw = profile as unknown as Record<string, unknown>;
-  let avatar = (userMeta.avatar_url as string) || (raw.avatar_url as string) || null;
-  const studentClass = (userMeta.student_class as string) || (raw.student_class as string) || null;
-  const phone = (userMeta.phone as string) || (raw.phone as string) || null;
-  const fullName = (userMeta.full_name as string) || profile.full_name || "";
+  // The profiles row is the source of truth. Accounts edited before the profile columns existed
+  // only have these values in their auth metadata (already in the verified JWT: no extra request).
+  const meta = (claimsData?.claims?.user_metadata as Record<string, unknown> | undefined) ?? {};
+  const fromMeta = (key: string) => (typeof meta[key] === "string" && meta[key] ? (meta[key] as string) : null);
+  let avatar = profile.avatar_url || fromMeta("avatar_url");
+  if (isLegacyDiskAvatar(avatar)) avatar = null; // old on-disk paths never resolved
 
-  // Auto-heal: If user has a bloated base64 data URL in metadata, migrate it to disk and shrink cookies
+  // One-time repair: a photo still stored inline (base64) in metadata moves to Storage.
   if (avatar && isBase64DataUrl(avatar)) {
     try {
-      const cleanAvatar = await saveAvatarFromBase64(profile.id, avatar);
-      avatar = cleanAvatar;
-      await supabase.auth.updateUser({
-        data: {
-          ...userMeta,
-          avatar_url: cleanAvatar,
-        },
-      });
+      avatar = await saveAvatarFromBase64(supabase, profile.id, avatar);
+      await supabase.from("profiles").update({ avatar_url: avatar }).eq("id", profile.id);
+      await supabase.auth.updateUser({ data: { avatar_url: avatar } });
     } catch (err) {
-      console.error("[dal:cleanAvatar]", err);
+      console.error("[dal:moveAvatar]", err);
+      avatar = null;
     }
   }
 
   return {
     id: profile.id,
     role: profile.role,
-    full_name: fullName,
+    full_name: profile.full_name || fromMeta("full_name") || "",
     email: profile.email,
     timezone: profile.timezone,
     avatar_url: avatar,
-    student_class: studentClass,
-    phone: phone,
+    student_class: profile.student_class || fromMeta("student_class"),
+    phone: profile.phone || fromMeta("phone"),
   };
 });
 
