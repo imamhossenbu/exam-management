@@ -10,6 +10,7 @@ import { Field, FormError } from "@/components/ui/field";
 import { Checkbox, Input, Label, NativeSelect, Textarea } from "@/components/ui/input";
 import { applyFieldErrors, useServerAction } from "@/components/forms/use-server-action";
 import { examSettingsSchema, type ExamSettingsInput, type ExamSettingsOutput } from "@/lib/validations/exams";
+import { formatMinutes } from "@/lib/utils/datetime";
 import { RELEASE_LABEL } from "../status";
 import { createExamAction, updateExamAction } from "../actions";
 import type { CourseOption } from "@/features/courses/queries";
@@ -61,6 +62,9 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
   const subjectId = useWatch({ control: form.control, name: "subjectId" });
   const examType = useWatch({ control: form.control, name: "examType" });
   const chapterIds = useWatch({ control: form.control, name: "chapterIds" }) ?? [];
+  const durationMinutes = Number(useWatch({ control: form.control, name: "durationMinutes" }));
+  const mcqMinutes = Number(useWatch({ control: form.control, name: "mcqDurationMinutes" }) || 0);
+  const sectioned = examType === "mixed" && mcqMinutes > 0;
 
   const course = courses.find((c) => c.id === courseId);
   const subject = course?.subjects.find((s) => s.id === subjectId);
@@ -85,7 +89,7 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
       {locked ? (
         <div role="note" className="flex gap-2 rounded-md border bg-info-soft px-3 py-2 text-sm text-info-soft-foreground">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-          This exam is published. Scoring settings (type, marks, duration, shuffling) are frozen to protect attempts. You can still edit the text, extend the end
+          This exam is published. Scoring settings (type, marks, duration, MCQ section time, shuffling) are frozen to protect attempts. You can still edit the text, extend the end
           time, and change result settings. Duplicate the exam to make a revised version.
         </div>
       ) : null}
@@ -195,9 +199,39 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
           <Field id="endsAt" label="Closes" required error={errors.endsAt?.message}>
             {(a) => <Input type="datetime-local" {...a} {...form.register("endsAt")} />}
           </Field>
-          <Field id="durationMinutes" label="Duration (minutes)" required error={errors.durationMinutes?.message}>
+          <Field id="durationMinutes" label={examType === "mixed" ? "Total duration (minutes)" : "Duration (minutes)"} required error={errors.durationMinutes?.message}>
             {(a) => <Input type="number" min="1" max="1440" inputMode="numeric" placeholder="e.g. 60" disabled={locked} {...a} {...form.register("durationMinutes")} />}
           </Field>
+          {examType === "mixed" ? (
+            <div className="grid gap-4 rounded-md border bg-muted/40 p-4 sm:col-span-3 sm:grid-cols-[minmax(0,14rem)_1fr] sm:items-start">
+              <Field
+                id="mcqDurationMinutes"
+                label="MCQ section time (minutes)"
+                error={errors.mcqDurationMinutes?.message}
+                description="Optional. Leave empty for one shared timer."
+              >
+                {(a) => <Input type="number" min="1" max="1439" inputMode="numeric" placeholder="e.g. 30" disabled={locked} {...a} {...form.register("mcqDurationMinutes")} />}
+              </Field>
+              <div className="text-sm sm:pt-6" aria-live="polite">
+                {sectioned && durationMinutes > mcqMinutes ? (
+                  <>
+                    <p className="font-medium">
+                      MCQ {formatMinutes(mcqMinutes)}, then written part {formatMinutes(durationMinutes - mcqMinutes)}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Students answer all MCQs first. When the MCQ time is up — or they hand the section in early — their MCQ answers lock and the written
+                      questions open. Time saved on MCQs carries over to the written part.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Like a board exam: give MCQs their own fixed time. Students answer MCQs first; when that time ends the MCQ answers lock and the rest of the
+                    duration is for the written part.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

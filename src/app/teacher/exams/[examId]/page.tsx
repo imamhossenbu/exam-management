@@ -45,7 +45,8 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
         }
         description={
           <>
-            {EXAM_TYPE_LABEL[exam.exam_type]} · {Number(exam.total_marks)} marks · {formatMinutes(exam.duration_minutes)} · {formatDateTime(exam.starts_at, tz)} –{" "}
+            {EXAM_TYPE_LABEL[exam.exam_type]} · {Number(exam.total_marks)} marks · {formatMinutes(exam.duration_minutes)}
+            {exam.mcq_duration_minutes ? ` (MCQ ${formatMinutes(exam.mcq_duration_minutes)} first)` : ""} · {formatDateTime(exam.starts_at, tz)} –{" "}
             {formatDateTime(exam.ends_at, tz, { withZone: true })}
             {exam.subject ? ` · ${exam.subject.name}` : ""}
             {chapters.length ? ` (${chapters.map((c) => c.name).join(", ")})` : ""}
@@ -107,6 +108,7 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
               totalMarks: String(exam.total_marks),
               passMarks: exam.pass_marks === null ? "" : String(exam.pass_marks),
               durationMinutes: String(exam.duration_minutes),
+              mcqDurationMinutes: exam.mcq_duration_minutes === null ? "" : String(exam.mcq_duration_minutes),
               startsAt: utcToZonedInput(exam.starts_at, tz),
               endsAt: utcToZonedInput(exam.ends_at, tz),
               maxAttempts: String(exam.max_attempts),

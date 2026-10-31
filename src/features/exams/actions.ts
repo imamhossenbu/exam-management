@@ -6,7 +6,7 @@ import { requireTeacher } from "@/lib/auth/dal";
 import { dbFail, fail, invalid, ok, type ActionResult } from "@/lib/action-result";
 import { zonedInputToUtc } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
-import { examSettingsSchema, questionSchema, toQuestionPayload, type ExamSettingsOutput } from "@/lib/validations/exams";
+import { effectiveMcqMinutes, examSettingsSchema, questionSchema, toQuestionPayload, type ExamSettingsOutput } from "@/lib/validations/exams";
 import { z } from "zod";
 
 function toExamRow(v: ExamSettingsOutput, timezone: string) {
@@ -22,6 +22,7 @@ function toExamRow(v: ExamSettingsOutput, timezone: string) {
     total_marks: v.totalMarks,
     pass_marks: v.passMarks,
     duration_minutes: v.durationMinutes,
+    mcq_duration_minutes: effectiveMcqMinutes(v),
     starts_at: starts,
     ends_at: ends,
     max_attempts: v.maxAttempts,

@@ -106,6 +106,8 @@ export async function seedPublishedExam(
     release?: "immediate" | "after_close" | "manual";
     maxAttempts?: number;
     durationMinutes?: number;
+    mcqDurationMinutes?: number | null;
+    shuffleQuestions?: boolean;
     passMarks?: number | null;
     mcq?: { marks: number; negative?: number }[];
     cq?: { marks: number; parts?: number[] }[];
@@ -119,10 +121,13 @@ export async function seedPublishedExam(
   const [exam] = await db.as<{ id: string }>(
     teacher,
     `insert into public.exams (course_id, title, exam_type, total_marks, pass_marks, duration_minutes,
-       starts_at, ends_at, max_attempts, results_release)
-     values ($1, 'Test exam', $2, $3, $4, $5, now() - interval '1 hour', now() + interval '2 hours', $6, $7)
+       starts_at, ends_at, max_attempts, results_release, mcq_duration_minutes, shuffle_questions)
+     values ($1, 'Test exam', $2, $3, $4, $5, now() - interval '1 hour', now() + interval '2 hours', $6, $7, $8, $9)
      returning id`,
-    [courseId, type, total, opts.passMarks ?? null, opts.durationMinutes ?? 30, opts.maxAttempts ?? 1, opts.release ?? "immediate"],
+    [
+      courseId, type, total, opts.passMarks ?? null, opts.durationMinutes ?? 30, opts.maxAttempts ?? 1, opts.release ?? "immediate",
+      opts.mcqDurationMinutes ?? null, opts.shuffleQuestions ?? false,
+    ],
   );
 
   const mcqIds: { id: string; correct: string; wrong: string }[] = [];

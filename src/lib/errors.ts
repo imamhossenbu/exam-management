@@ -24,6 +24,7 @@ const MESSAGES: Record<string, string> = {
   ATTEMPT_FINALIZED: "This attempt has already been submitted.",
   ATTEMPT_NOT_SUBMITTED: "The attempt hasn't been submitted yet.",
   DEADLINE_PASSED: "The deadline has passed.",
+  NO_MCQ_SECTION: "This exam doesn't have a separately timed MCQ section.",
   QUESTION_NOT_FOUND: "Question not found.",
   INVALID_OPTION: "That option doesn't belong to this question.",
   INVALID_ANSWER: "That answer isn't valid.",

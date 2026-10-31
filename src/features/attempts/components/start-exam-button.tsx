@@ -9,10 +9,22 @@ import { useServerAction } from "@/components/forms/use-server-action";
 import { formatMinutes } from "@/lib/utils/datetime";
 import { startAttemptAction } from "../actions";
 
-export function StartExamButton({ examId, durationMinutes, minutesUntilClose }: { examId: string; durationMinutes: number; minutesUntilClose: number }) {
+export function StartExamButton({
+  examId,
+  durationMinutes,
+  mcqMinutes = null,
+  minutesUntilClose,
+}: {
+  examId: string;
+  durationMinutes: number;
+  /** Separately timed MCQ section (mixed exams). */
+  mcqMinutes?: number | null;
+  minutesUntilClose: number;
+}) {
   const [agreed, setAgreed] = React.useState(false);
   const { run, pending } = useServerAction(startAttemptAction);
   const effective = Math.min(durationMinutes, Math.max(0, Math.floor(minutesUntilClose)));
+  const mcqEffective = mcqMinutes ? Math.min(mcqMinutes, effective) : null;
   return (
     <Dialog onOpenChange={() => setAgreed(false)}>
       <DialogTrigger asChild>
@@ -30,6 +42,12 @@ export function StartExamButton({ examId, durationMinutes, minutesUntilClose }: 
           </DialogDescription>
         </DialogHeader>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          {mcqEffective ? (
+            <li>
+              <strong className="text-foreground">MCQs come first, with {formatMinutes(mcqEffective)}.</strong> When that time is up (or you finish early) your MCQ
+              answers lock and the written questions open.
+            </li>
+          ) : null}
           <li>Answers save automatically. Keep an eye on the save indicator.</li>
           <li>When time runs out, your saved answers are submitted automatically.</li>
           <li>Leaving the exam tab is recorded for your teacher.</li>

@@ -447,6 +447,7 @@ export type Database = {
           resubmit_deadline_at: string | null;
           created_at: string;
           updated_at: string;
+          mcq_deadline_at: string | null;
         };
         Insert: {
           id?: string;
@@ -465,6 +466,7 @@ export type Database = {
           resubmit_deadline_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          mcq_deadline_at?: string | null;
         };
         Update: {
           id?: string;
@@ -483,6 +485,7 @@ export type Database = {
           resubmit_deadline_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          mcq_deadline_at?: string | null;
         };
         Relationships: [
           {
@@ -557,6 +560,7 @@ export type Database = {
           results_published_at: string | null;
           created_at: string;
           updated_at: string;
+          mcq_duration_minutes: number | null;
         };
         Insert: {
           id?: string;
@@ -583,6 +587,7 @@ export type Database = {
           results_published_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          mcq_duration_minutes?: number | null;
         };
         Update: {
           id?: string;
@@ -609,6 +614,7 @@ export type Database = {
           results_published_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          mcq_duration_minutes?: number | null;
         };
         Relationships: [
           {
@@ -710,6 +716,9 @@ export type Database = {
           timezone: string;
           created_at: string;
           updated_at: string;
+          avatar_url: string | null;
+          student_class: string | null;
+          phone: string | null;
         };
         Insert: {
           id: string;
@@ -719,6 +728,9 @@ export type Database = {
           timezone?: string;
           created_at?: string;
           updated_at?: string;
+          avatar_url?: string | null;
+          student_class?: string | null;
+          phone?: string | null;
         };
         Update: {
           id?: string;
@@ -728,6 +740,9 @@ export type Database = {
           timezone?: string;
           created_at?: string;
           updated_at?: string;
+          avatar_url?: string | null;
+          student_class?: string | null;
+          phone?: string | null;
         };
         Relationships: [
 
@@ -1183,6 +1198,7 @@ export type Database = {
       delete_answer_file: { Args: { p_file_id: string }; Returns: string };
       duplicate_exam: { Args: { p_exam_id: string }; Returns: string };
       duplicate_question: { Args: { p_question_id: string }; Returns: string };
+      end_mcq_section: { Args: { p_attempt_id: string }; Returns: string };
       enroll_student_by_email: { Args: { p_course_id: string; p_email: string }; Returns: string };
       finalize_expired_attempts: { Args: Record<PropertyKey, never>; Returns: number };
       finalize_grading: { Args: { p_attempt_id: string }; Returns: undefined };

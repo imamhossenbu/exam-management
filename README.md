@@ -38,7 +38,7 @@ A private exam platform for **one teacher and their students**. The teacher crea
 | **Courses** | Create, edit and archive courses. Organise each course into **subjects** and **chapters**. |
 | **Invitations** | Generate invitation codes per course with an optional expiry date and maximum number of uses. Revoke codes at any time. Codes are 12 characters from an unambiguous alphabet (no `0/O`, `1/I/L`) and are stored only as SHA-256 hashes. |
 | **Members** | See who joined each course, suspend or remove students, and open a student's full history. |
-| **Exam builder** | MCQ-only, written (CQ)-only or mixed exams. Set total marks, pass mark, duration, opening/closing window, number of attempts, question/option shuffling, negative marking per question, and result-release rules. |
+| **Exam builder** | MCQ-only, written (CQ)-only or mixed exams. Set total marks, pass mark, duration, opening/closing window, number of attempts, question/option shuffling, negative marking per question, and result-release rules. Mixed exams can give MCQs their own fixed time (board-exam style): MCQs come first and lock when their time ends, then the written part gets the rest. |
 | **Questions** | MCQ with 2–10 options and one correct answer; CQ with optional sub-questions (a, b, c…) whose marks add up to the question's marks. Questions can include an image. Explanations, model answers and rubrics are private. |
 | **Question import** | Upload a PDF or photos of a question paper. Text is extracted (PDF text layer on the server, OCR in the browser for images), split into draft questions, and **every draft must be reviewed** before it is added to a draft exam. |
 | **Exam lifecycle** | Draft → Published → Closed → Archived. Publishing is blocked until question marks add up to the total. Published exams are frozen; duplicate an exam to revise it. |
@@ -87,6 +87,8 @@ A private exam platform for **one teacher and their students**. The teacher crea
 ### What happens when time runs out?
 
 Each attempt has a server-side `deadline_at = least(start time + duration, exam closing time)`. Saves arriving after the deadline (plus a 5-second network grace period) are rejected and the attempt is finalised and graded. Abandoned attempts are finalised by a scheduled job every minute, and also lazily whenever someone touches the attempt — so a closed browser tab never leaves an attempt open.
+
+When a mixed exam has an **MCQ section time**, the attempt also gets `mcq_deadline_at = least(start time + MCQ time, deadline_at)`, and every MCQ is placed before every written question (shuffling happens within each section). MCQ saves after that moment (plus the same grace) are refused with `section_closed`; the attempt stays open for the written part. A student can hand the MCQ section in early (`end_mcq_section`), which moves `mcq_deadline_at` to now — the unused MCQ time carries over to the written part.
 
 ---
 
@@ -238,6 +240,7 @@ Migrations live in `supabase/migrations/` and are applied in filename order:
 | `…000400_storage.sql` | Private buckets and storage policies |
 | `…000500_scheduled_jobs.sql` | pg_cron job that finalises abandoned attempts |
 | `…000600_question_editing.sql` | Transactional `save_question` / `set_exam_chapters` |
+| `20261031000100_mcq_section_timer.sql` | Timed MCQ section for mixed exams (`mcq_duration_minutes`, `mcq_deadline_at`, `end_mcq_section`) |
 
 **Option A — Supabase CLI (recommended)**
 

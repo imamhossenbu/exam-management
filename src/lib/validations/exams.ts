@@ -20,6 +20,8 @@ export const examSettingsSchema = z
     totalMarks: marks(10000),
     passMarks: optionalNumber(z.number().min(0).max(10000)),
     durationMinutes: z.coerce.number().int({ message: "Whole minutes only" }).min(1).max(1440),
+    // Mixed exams only: a separately timed MCQ section that comes first and locks when it ends.
+    mcqDurationMinutes: optionalNumber(z.number().int({ message: "Whole minutes only" }).min(1, { message: "At least 1 minute" }).max(1439)).default(null),
     startsAt: z.string().regex(LOCAL_DATETIME, { message: "Choose a start date and time" }),
     endsAt: z.string().regex(LOCAL_DATETIME, { message: "Choose an end date and time" }),
     maxAttempts: z.coerce.number().int().min(1).max(20),
@@ -33,10 +35,16 @@ export const examSettingsSchema = z
     if (v.endsAt <= v.startsAt) ctx.addIssue({ code: "custom", path: ["endsAt"], message: "The exam must end after it starts" });
     if (v.passMarks !== null && v.passMarks > v.totalMarks)
       ctx.addIssue({ code: "custom", path: ["passMarks"], message: "Pass mark can't exceed total marks" });
+    if (v.examType === "mixed" && v.mcqDurationMinutes !== null && v.mcqDurationMinutes >= v.durationMinutes)
+      ctx.addIssue({ code: "custom", path: ["mcqDurationMinutes"], message: "Must be shorter than the total duration, leaving time for the written part" });
     if (v.allowResubmission && v.examType === "mcq")
       ctx.addIssue({ code: "custom", path: ["allowResubmission"], message: "Only exams with written questions can be returned for correction" });
   });
 export type ExamSettingsInput = z.input<typeof examSettingsSchema>;
+/** The MCQ section time only applies to mixed exams; other types always store null. */
+export function effectiveMcqMinutes(v: Pick<ExamSettingsOutput, "examType" | "mcqDurationMinutes">) {
+  return v.examType === "mixed" ? v.mcqDurationMinutes : null;
+}
 export type ExamSettingsOutput = z.output<typeof examSettingsSchema>;
 
 export const questionSchema = z

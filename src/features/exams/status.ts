@@ -30,6 +30,13 @@ export const RELEASE_LABEL: Record<Enums<"results_release">, string> = {
   manual: "When I publish them",
 };
 
+/** The same release rules, worded for students. */
+export const STUDENT_RELEASE_LABEL: Record<Enums<"results_release">, string> = {
+  immediate: "as soon as they're graded",
+  after_close: "after the exam window closes",
+  manual: "when your teacher publishes them",
+};
+
 export const GRADING_META: Record<Enums<"grading_status">, { label: string; tone: BadgeTone }> = {
   pending: { label: "Needs grading", tone: "warning" },
   in_review: { label: "Grading in progress", tone: "info" },

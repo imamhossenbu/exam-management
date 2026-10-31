@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { examSettingsSchema, questionSchema, toQuestionPayload } from "./exams";
+import { effectiveMcqMinutes, examSettingsSchema, questionSchema, toQuestionPayload } from "./exams";
 
 const exam = {
   courseId: "6f1b8c2e-1f1a-4a3a-9a6e-2d3f4a5b6c7d",
@@ -34,6 +34,20 @@ describe("exam settings validation", () => {
     const paths = r.error!.issues.map((i) => i.path.join("."));
     expect(paths).toContain("endsAt");
     expect(paths).toContain("passMarks");
+  });
+
+  it("keeps an MCQ section time only when it is shorter than the total duration", () => {
+    const mixed = { ...exam, examType: "mixed", durationMinutes: "180" } as const;
+    expect(examSettingsSchema.parse({ ...mixed, mcqDurationMinutes: "30" }).mcqDurationMinutes).toBe(30);
+    expect(examSettingsSchema.parse({ ...mixed, mcqDurationMinutes: "" }).mcqDurationMinutes).toBeNull();
+    expect(examSettingsSchema.parse(mixed).mcqDurationMinutes).toBeNull();
+    const tooLong = examSettingsSchema.safeParse({ ...mixed, mcqDurationMinutes: "180" });
+    expect(tooLong.error?.issues.map((i) => i.path.join("."))).toContain("mcqDurationMinutes");
+  });
+
+  it("drops the MCQ section time for non-mixed exams", () => {
+    const v = examSettingsSchema.parse({ ...exam, mcqDurationMinutes: "500" });
+    expect(effectiveMcqMinutes(v)).toBeNull();
   });
 });
 

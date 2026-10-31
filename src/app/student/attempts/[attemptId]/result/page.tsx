@@ -12,7 +12,7 @@ import { formatDateTime } from "@/lib/utils/datetime";
 import { cn } from "@/lib/utils/cn";
 import { uuid } from "@/lib/validations/courses";
 import { getStudentResult } from "@/features/attempts/result-queries";
-import { RELEASE_LABEL } from "@/features/exams/status";
+import { STUDENT_RELEASE_LABEL } from "@/features/exams/status";
 import { AnnotatedFile } from "@/features/grading/components/annotated-file";
 
 async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
@@ -64,7 +64,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
           <h2 className="section-title">Your answers were submitted</h2>
           <p className="text-subtle max-w-md">
             {exam.exam_type !== "mcq" ? "Written answers need to be graded by your teacher. " : ""}
-            Results will be released {RELEASE_LABEL[exam.results_release].replace("I publish them", "your teacher publishes them").toLowerCase()}.
+            Results will be released {STUDENT_RELEASE_LABEL[exam.results_release]}.
           </p>
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <Hourglass className="size-3.5" aria-hidden /> Check back later.

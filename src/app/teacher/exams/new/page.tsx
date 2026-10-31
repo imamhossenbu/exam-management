@@ -48,6 +48,7 @@ async function NewExam({ searchParams }: { searchParams: Promise<{ course?: stri
         totalMarks: "20",
         passMarks: "",
         durationMinutes: "30",
+        mcqDurationMinutes: "",
         startsAt: `${tomorrow}T09:00`,
         endsAt: `${tomorrow}T11:00`,
         maxAttempts: "1",

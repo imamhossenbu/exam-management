@@ -58,7 +58,7 @@ export type StudentExamRow = Awaited<ReturnType<typeof listStudentExams>>[number
 export async function getAttemptForTaking(supabase: ServerSupabase, attemptId: string, studentId: string) {
   const { data: attempt, error } = await supabase
     .from("exam_attempts")
-    .select("id, exam_id, student_id, status, started_at, deadline_at, submitted_at, question_order, option_order, return_note, resubmit_deadline_at, attempt_number")
+    .select("id, exam_id, student_id, status, started_at, deadline_at, mcq_deadline_at, submitted_at, question_order, option_order, return_note, resubmit_deadline_at, attempt_number")
     .eq("id", attemptId)
     .eq("student_id", studentId)
     .maybeSingle();

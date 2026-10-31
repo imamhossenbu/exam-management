@@ -39,6 +39,7 @@ async function Attempt({ params }: { params: Promise<{ attemptId: string }> }) {
       mode={attempt.status === "returned" ? "returned" : "in_progress"}
       returnNote={attempt.return_note}
       deadlineAt={attempt.status === "returned" ? (attempt.resubmit_deadline_at ?? attempt.deadline_at) : attempt.deadline_at}
+      mcqDeadlineAt={attempt.status === "returned" ? null : attempt.mcq_deadline_at}
       serverNow={new Date(serverNow).toISOString()}
       questions={data.questions}
       answers={data.answers}

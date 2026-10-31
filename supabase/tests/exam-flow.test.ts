@@ -84,6 +84,22 @@ describe("exam builder and publication", () => {
     await expect(db.as(teacher, "select public.publish_exam($1)", [draftId])).rejects.toThrow(/EXAM_INVALID/);
   });
 
+  it("reports plain problems (no questions, past end time) instead of crashing", async () => {
+    const [empty] = await db.as<{ id: string }>(
+      teacher,
+      `insert into public.exams (course_id, title, exam_type, total_marks, duration_minutes, starts_at, ends_at)
+       values ($1, 'Empty', 'mcq', 10, 20, now() - interval '2 hours', now() - interval '1 hour') returning id`,
+      [courseId],
+    );
+    const [{ validate_exam_for_publish: problems }] = await db.as<{ validate_exam_for_publish: string[] }>(
+      teacher,
+      "select public.validate_exam_for_publish($1)",
+      [empty.id],
+    );
+    expect(problems).toContain("The exam has no questions.");
+    expect(problems).toContain("The exam end time is in the past.");
+  });
+
   it("does not let students call teacher operations", async () => {
     await expect(db.as(alice, "select public.publish_exam($1)", [draftId])).rejects.toThrow(/FORBIDDEN/);
     await expect(db.as(alice, "select public.finalize_expired_attempts()")).rejects.toThrow(/FORBIDDEN/);
@@ -484,5 +500,126 @@ describe("transactional question editing", () => {
   it("refuses edits once the exam is published", async () => {
     await db.as(teacher, "select public.publish_exam($1)", [examId]);
     await expect(db.as(teacher, "select public.save_question($1, null, $2)", [examId, JSON.stringify(payload)])).rejects.toThrow(/EXAM_LOCKED/);
+  });
+});
+
+describe("timed MCQ section (mixed exams)", () => {
+  async function cqSave(uid: Uid, attemptId: string, questionId: string, text: string, revision: number) {
+    const [row] = await db.as<{ status: string }>(
+      uid,
+      "select * from public.save_answer($1, $2, null, $3, false, $4)",
+      [attemptId, questionId, text, revision],
+    );
+    return row;
+  }
+
+  it("only allows a section time on mixed exams and below the overall duration", async () => {
+    const insert = (type: string, duration: number, mcq: number) =>
+      db.as(
+        teacher,
+        `insert into public.exams (course_id, title, exam_type, total_marks, duration_minutes, mcq_duration_minutes, starts_at, ends_at)
+         values ($1, 'Sectioned', $2, 10, $3, $4, now(), now() + interval '1 day')`,
+        [courseId, type, duration, mcq],
+      );
+    await expect(insert("mcq", 60, 20)).rejects.toThrow(/exams_mcq_duration_check/);
+    await expect(insert("mixed", 60, 60)).rejects.toThrow(/exams_mcq_duration_check/);
+    await expect(insert("mixed", 60, 20)).resolves.toBeDefined();
+  });
+
+  it("refuses to publish a timed MCQ section without written questions", async () => {
+    await expect(
+      seedPublishedExam(db, teacher, courseId, { type: "mixed", mcqDurationMinutes: 10, durationMinutes: 30 }),
+    ).rejects.toThrow(/EXAM_INVALID/);
+  });
+
+  it("puts every MCQ first, gives them their own deadline and locks them afterwards", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, {
+      durationMinutes: 60,
+      mcqDurationMinutes: 15,
+      shuffleQuestions: true,
+      mcq: [{ marks: 1 }, { marks: 1 }, { marks: 1 }],
+      cq: [{ marks: 5 }, { marks: 5 }],
+    });
+    const attemptId = await start(alice, exam.examId);
+    const [a] = await db.sql<{ question_order: string[]; section: number; total: number }>(
+      `select question_order,
+         extract(epoch from mcq_deadline_at - started_at) / 60 as section,
+         extract(epoch from deadline_at - started_at) / 60 as total
+       from public.exam_attempts where id = $1`,
+      [attemptId],
+    );
+    expect(Math.round(a.section)).toBe(15);
+    expect(Math.round(a.total)).toBe(60);
+    const mcqIds = new Set(exam.mcq.map((q) => q.id));
+    expect(a.question_order.slice(0, 3).every((id) => mcqIds.has(id))).toBe(true);
+
+    expect((await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("saved");
+
+    // MCQ time is up (past the grace period too).
+    await db.sql(
+      "update public.exam_attempts set started_at = now() - interval '20 minutes', mcq_deadline_at = now() - interval '1 minute' where id = $1",
+      [attemptId],
+    );
+    const late = await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].wrong, 2);
+    expect(late.status).toBe("section_closed");
+    expect(late.revision).toBe(1);
+    expect((await save(alice, attemptId, exam.mcq[1].id, exam.mcq[1].correct, 1)).status).toBe("section_closed");
+
+    // The written part is still open, and the attempt is not finalized.
+    expect((await cqSave(alice, attemptId, exam.cq[0].id, "Answer", 1)).status).toBe("saved");
+    const [state] = await db.sql<{ status: string }>("select status from public.exam_attempts where id = $1", [attemptId]);
+    expect(state.status).toBe("in_progress");
+
+    await db.as(alice, "select public.submit_attempt($1)", [attemptId]);
+    const [r] = await db.sql<Result>("select * from public.attempt_results where attempt_id = $1", [attemptId]);
+    expect(Number(r.mcq_score)).toBe(1); // only the in-time answer counts
+  });
+
+  it("lets the student hand in the MCQ section early, once, and only their own", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, {
+      durationMinutes: 60,
+      mcqDurationMinutes: 15,
+      mcq: [{ marks: 1 }],
+      cq: [{ marks: 5 }],
+    });
+    const attemptId = await start(bob, exam.examId);
+    await expect(db.as(alice, "select public.end_mcq_section($1)", [attemptId])).rejects.toThrow(/ATTEMPT_NOT_FOUND/);
+
+    const [{ end_mcq_section: first }] = await db.as<{ end_mcq_section: Date }>(bob, "select public.end_mcq_section($1)", [attemptId]);
+    const [{ end_mcq_section: second }] = await db.as<{ end_mcq_section: Date }>(bob, "select public.end_mcq_section($1)", [attemptId]);
+    expect(second.getTime()).toBe(first.getTime());
+    expect(first.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+
+    // Inside the network grace an in-flight MCQ save is still accepted; after it, refused.
+    expect((await save(bob, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("saved");
+    await db.sql(
+      "update public.exam_attempts set started_at = now() - interval '2 minutes', mcq_deadline_at = now() - interval '1 minute' where id = $1",
+      [attemptId],
+    );
+    expect((await save(bob, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1)).status).toBe("section_closed");
+    await expect(db.as(bob, "select public.end_mcq_section($1)", [attemptId])).resolves.toBeDefined();
+  });
+
+  it("rejects ending a section on exams without one", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }], cq: [{ marks: 1 }] });
+    const attemptId = await start(alice, exam.examId);
+    await expect(db.as(alice, "select public.end_mcq_section($1)", [attemptId])).rejects.toThrow(/NO_MCQ_SECTION/);
+    const [a] = await db.sql<{ mcq_deadline_at: Date | null }>("select mcq_deadline_at from public.exam_attempts where id = $1", [attemptId]);
+    expect(a.mcq_deadline_at).toBeNull();
+  });
+
+  it("freezes the section time after publishing and keeps it when duplicating", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, {
+      durationMinutes: 60,
+      mcqDurationMinutes: 20,
+      mcq: [{ marks: 1 }],
+      cq: [{ marks: 5 }],
+    });
+    await expect(
+      db.as(teacher, "update public.exams set mcq_duration_minutes = 30 where id = $1", [exam.examId]),
+    ).rejects.toThrow(/EXAM_SETTINGS_LOCKED/);
+    const [{ duplicate_exam: copyId }] = await db.as<{ duplicate_exam: string }>(teacher, "select public.duplicate_exam($1)", [exam.examId]);
+    const [copy] = await db.sql<{ mcq_duration_minutes: number }>("select mcq_duration_minutes from public.exams where id = $1", [copyId]);
+    expect(copy.mcq_duration_minutes).toBe(20);
   });
 });

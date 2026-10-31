@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireStudent } from "@/lib/auth/dal";
 import { formatDateTime, formatMinutes } from "@/lib/utils/datetime";
 import { uuid } from "@/lib/validations/courses";
-import { EXAM_TYPE_LABEL, PHASE_META, RELEASE_LABEL, examPhase } from "@/features/exams/status";
+import { EXAM_TYPE_LABEL, PHASE_META, STUDENT_RELEASE_LABEL, examPhase } from "@/features/exams/status";
 import { StartExamButton } from "@/features/attempts/components/start-exam-button";
 
 async function ExamOverview({ params }: { params: Promise<{ examId: string }> }) {
@@ -20,7 +20,7 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
   const { profile, supabase } = await requireStudent();
   const { data: exam } = await supabase
     .from("exams")
-    .select("id, title, description, instructions, exam_type, status, starts_at, ends_at, duration_minutes, total_marks, pass_marks, max_attempts, results_release, course:courses(id, title)")
+    .select("id, title, description, instructions, exam_type, status, starts_at, ends_at, duration_minutes, mcq_duration_minutes, total_marks, pass_marks, max_attempts, results_release, course:courses(id, title)")
     .eq("id", examId)
     .maybeSingle();
   if (!exam) notFound();
@@ -68,6 +68,11 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
               <Clock className="size-4 text-muted-foreground" aria-hidden />
               {formatMinutes(exam.duration_minutes)}
             </p>
+            {exam.mcq_duration_minutes ? (
+              <p className="-mt-1 ml-6 text-xs text-muted-foreground">
+                MCQ section first: {formatMinutes(exam.mcq_duration_minutes)}. MCQ answers lock when it ends, then the written part gets the rest of the time.
+              </p>
+            ) : null}
             <p className="flex items-start gap-2">
               <CalendarClock className="mt-0.5 size-4 text-muted-foreground" aria-hidden />
               <span>
@@ -78,14 +83,18 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
               <RotateCcw className="size-4 text-muted-foreground" aria-hidden />
               Attempts used {used} of {exam.max_attempts}
             </p>
-            <p className="text-xs text-muted-foreground">Results: {RELEASE_LABEL[exam.results_release].toLowerCase()}.</p>
+            <p className="text-xs text-muted-foreground">Results: {STUDENT_RELEASE_LABEL[exam.results_release]}.</p>
             <div className="pt-2">
               {info?.open_attempt_id ? (
                 <Button asChild size="lg" className="w-full">
                   <Link href={`/student/attempts/${info.open_attempt_id}`}>Resume exam</Link>
                 </Button>
               ) : canStart ? (
-                <StartExamButton examId={exam.id} durationMinutes={exam.duration_minutes} minutesUntilClose={(new Date(exam.ends_at).getTime() - now) / 60000} />
+                <StartExamButton
+                  examId={exam.id}
+                  durationMinutes={exam.duration_minutes}
+                  mcqMinutes={exam.mcq_duration_minutes}
+                  minutesUntilClose={(new Date(exam.ends_at).getTime() - now) / 60000} />
               ) : (
                 <p className="rounded-md bg-muted px-3 py-2 text-center text-sm text-muted-foreground">
                   {phase === "scheduled"

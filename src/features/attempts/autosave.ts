@@ -12,6 +12,8 @@ export type AnswerValue = { selectedOptionId: string | null; textAnswer: string 
 
 export type SaveResult =
   | { status: "saved" | "stale"; revision: number; savedAt: string | null }
+  // The question's section is closed (e.g. MCQ time is up): the change was refused, the attempt stays open.
+  | { status: "section_closed" }
   | { status: "deadline_passed" | "finalized" };
 
 export type SaveFn = (questionId: string, value: AnswerValue, revision: number) => Promise<SaveResult>;
@@ -20,6 +22,8 @@ export type QuestionSaveState = "saved" | "pending" | "saving" | "error";
 
 type Entry = {
   value: AnswerValue;
+  /** Last value the server is known to hold (null when unknown). */
+  savedValue: AnswerValue | null;
   revision: number;
   savedRevision: number;
   inFlight: boolean;
@@ -39,6 +43,8 @@ export class AutosaveQueue {
     private readonly options: {
       onState?: AutosaveListener;
       onClosed?: (reason: "deadline_passed" | "finalized") => void;
+      /** A change was refused because its section closed; `value` is what the server kept. */
+      onRefused?: (questionId: string, value: AnswerValue | null) => void;
       persist?: (questionId: string, value: AnswerValue, revision: number) => void;
       baseRetryMs?: number;
       maxRetryMs?: number;
@@ -47,7 +53,7 @@ export class AutosaveQueue {
 
   /** Seed with the server's saved state. */
   seed(questionId: string, value: AnswerValue, revision: number) {
-    this.entries.set(questionId, { value, revision, savedRevision: revision, inFlight: false, timer: null, retryDelay: 0, error: false });
+    this.entries.set(questionId, { value, savedValue: value, revision, savedRevision: revision, inFlight: false, timer: null, retryDelay: 0, error: false });
   }
 
   get isClosed() {
@@ -76,7 +82,7 @@ export class AutosaveQueue {
   /** Record a change. `delayMs` debounces typing; choices save immediately. */
   update(questionId: string, value: AnswerValue, delayMs = 0, minRevision = 0): number {
     if (this.closed) return -1;
-    const e = this.entries.get(questionId) ?? { value, revision: 0, savedRevision: 0, inFlight: false, timer: null, retryDelay: 0, error: false };
+    const e = this.entries.get(questionId) ?? { value, savedValue: null, revision: 0, savedRevision: 0, inFlight: false, timer: null, retryDelay: 0, error: false };
     e.value = value;
     e.revision = Math.max(e.revision, minRevision) + 1;
     e.error = false;
@@ -135,6 +141,19 @@ export class AutosaveQueue {
     try {
       const result = await this.save(questionId, value, revision);
       e.inFlight = false;
+      if (result.status === "section_closed") {
+        // Nothing to retry: drop every pending change for this question and fall back to the server's value.
+        if (e.timer) clearTimeout(e.timer);
+        e.timer = null;
+        e.savedRevision = e.revision;
+        e.error = false;
+        e.retryDelay = 0;
+        if (e.savedValue) e.value = e.savedValue;
+        this.options.persist?.(questionId, e.value, e.revision);
+        this.emit(questionId);
+        this.options.onRefused?.(questionId, e.savedValue);
+        return;
+      }
       if (!("revision" in result)) {
         this.close();
         this.emit(questionId);
@@ -143,6 +162,8 @@ export class AutosaveQueue {
       }
       // "stale" means the server already holds a newer revision (e.g. another tab).
       e.savedRevision = Math.max(e.savedRevision, result.status === "saved" ? revision : result.revision);
+      // On "stale" the stored value came from elsewhere (another tab) and is unknown here; keep the last known one.
+      if (result.status === "saved") e.savedValue = value;
       if (result.status === "stale" && result.revision >= e.revision) e.revision = result.revision;
       e.error = false;
       e.retryDelay = 0;

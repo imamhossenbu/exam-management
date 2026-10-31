@@ -100,4 +100,26 @@ describe("AutosaveQueue", () => {
     q.update("q1", v("a"), 0, 4);
     expect(persist).toHaveBeenCalledWith("q1", v("a"), 5);
   });
+
+  it("drops a change refused because its section closed, reverts to the saved value and keeps the queue open", async () => {
+    const refused = vi.fn();
+    const closed = vi.fn();
+    const save = vi.fn(async (q: string, _v: AnswerValue, rev: number): Promise<SaveResult> =>
+      q === "mcq" ? { status: "section_closed" } : { status: "saved", revision: rev, savedAt: null },
+    );
+    const q = new AutosaveQueue(save, { onRefused: refused, onClosed: closed });
+    q.seed("mcq", v("a"), 1);
+    q.update("mcq", v("b"));
+    await vi.runAllTimersAsync();
+    expect(refused).toHaveBeenCalledWith("mcq", v("a"));
+    expect(q.state("mcq")).toBe("saved");
+    expect(q.hasUnsaved()).toBe(false);
+    expect(save).toHaveBeenCalledTimes(1); // no retries
+
+    q.update("cq", { ...v(null), textAnswer: "still open" });
+    await vi.runAllTimersAsync();
+    expect(q.isClosed).toBe(false);
+    expect(closed).not.toHaveBeenCalled();
+    expect(q.state("cq")).toBe("saved");
+  });
 });
