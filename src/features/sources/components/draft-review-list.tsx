@@ -10,6 +10,7 @@ import { questionSchema } from "@/lib/validations/exams";
 import type { Enums } from "@/types/database";
 import { importReviewedQuestionsAction } from "../actions";
 import type { DraftQuestion } from "../parse-questions";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 export type EditableDraft = DraftQuestion & { key: string; reviewed: boolean; correctIndex: number; marksText: string };
 
@@ -121,7 +122,7 @@ export function DraftReviewList({
               {d.type === "mcq" ? (
                 <fieldset className="grid gap-2">
                   <legend className="text-xs font-medium">Options — select the correct one</legend>
-                  {d.options.map((opt, oi) => (
+                  {d.options.map((opt, oi, all) => (
                     <div key={oi} className="flex items-center gap-2">
                       <input
                         type="radio"
@@ -129,18 +130,18 @@ export function DraftReviewList({
                         className="size-4 accent-primary"
                         checked={d.correctIndex === oi}
                         onChange={() => update(d.key, { correctIndex: oi, reviewed: false })}
-                        aria-label={`Option ${String.fromCharCode(65 + oi)} is correct`}
+                        aria-label={`Option ${optionLabel(oi, hasBengali(d.body, ...all))} is correct`}
                       />
                       <Input
-                        aria-label={`Option ${String.fromCharCode(65 + oi)}`}
-                        placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                        aria-label={`Option ${optionLabel(oi, hasBengali(d.body, ...all))}`}
+                        placeholder={`Option ${optionLabel(oi, hasBengali(d.body, ...all))}`}
                         value={opt}
                         onChange={(e) => update(d.key, { options: d.options.map((o, j) => (j === oi ? e.target.value : o)), reviewed: false })}
                       />
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Remove option ${String.fromCharCode(65 + oi)}`}
+                        aria-label={`Remove option ${optionLabel(oi, hasBengali(d.body, ...all))}`}
                         disabled={d.options.length <= 2}
                         onClick={() =>
                           update(d.key, {

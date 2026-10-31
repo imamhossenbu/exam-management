@@ -14,6 +14,7 @@ import type { Enums } from "@/types/database";
 import { correctAnswerKeyAction, deleteQuestionAction, duplicateQuestionAction, reorderQuestionsAction } from "../actions";
 import type { BuilderQuestion } from "../queries";
 import { QuestionEditorDialog } from "./question-editor-dialog";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 function CorrectKeyDialog({ question }: { question: BuilderQuestion }) {
   const [open, setOpen] = React.useState(false);
@@ -36,7 +37,7 @@ function CorrectKeyDialog({ question }: { question: BuilderQuestion }) {
           {question.options.map((o, i) => (
             <label key={o.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
               <input type="radio" name={`key-${question.id}`} className="accent-primary" checked={choice === i} onChange={() => setChoice(i)} />
-              <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {o.body}
+              <span className="font-medium">{optionLabel(i, hasBengali(question.body, ...question.options.map((x) => x.body)))}.</span> {o.body}
             </label>
           ))}
         </fieldset>
@@ -102,7 +103,7 @@ function QuestionCard({
             <ol className="mt-3 grid gap-1 sm:grid-cols-2">
               {q.options.map((o, i) => (
                 <li key={o.id} className={cn("flex items-start gap-2 rounded-md px-2 py-1 text-sm", i === q.correctIndex && "bg-success-soft text-success-soft-foreground")}>
-                  <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                  <span className="font-medium">{optionLabel(i, hasBengali(q.body, ...q.options.map((x) => x.body)))}.</span>
                   <span className="flex-1">{o.body}</span>
                   {i === q.correctIndex ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-label="Correct answer" /> : null}
                 </li>

@@ -67,7 +67,8 @@ export function ImportWorkspace({
     try {
       // Loaded on demand; OCR runs in the browser so no image leaves the teacher's device except to private storage.
       const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("eng", 1, {
+      // Bangla + English: board papers mix both (e.g. Bangla questions with English terms).
+      const worker = await createWorker(["ben", "eng"], 1, {
         logger: (m: { status: string; progress: number }) => m.status === "recognizing text" && setOcrProgress(Math.round(m.progress * 100)),
       });
       const result = await worker.recognize(selected.url);
@@ -91,7 +92,7 @@ export function ImportWorkspace({
   function parse() {
     const found = parseQuestions(text);
     if (found.length === 0) {
-      toast.error("No numbered questions found. Make sure each question starts with “1.”, “2.”, … or add drafts manually.");
+      toast.error("No numbered questions found. Make sure each question starts with “1.” / “১.”, “2.” / “২.”, … or add drafts manually.");
       return;
     }
     setDrafts(toEditable(found, examType));

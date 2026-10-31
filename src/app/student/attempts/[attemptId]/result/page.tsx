@@ -14,6 +14,7 @@ import { uuid } from "@/lib/validations/courses";
 import { getStudentResult } from "@/features/attempts/result-queries";
 import { STUDENT_RELEASE_LABEL } from "@/features/exams/status";
 import { AnnotatedFile } from "@/features/grading/components/annotated-file";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
   const { attemptId } = await params;
@@ -139,7 +140,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
                       const correct = q.key?.correct_option_id === o.id;
                       return (
                         <div key={o.id} className={cn("flex items-center gap-2 rounded-md border px-3 py-2 text-sm", correct && "border-success bg-success-soft", chosen && keysReleased && !correct && "border-danger bg-danger-soft", chosen && !keysReleased && "border-primary bg-primary-soft/60")}>
-                          <span className="font-medium">{String.fromCharCode(65 + oi)}.</span>
+                          <span className="font-medium">{optionLabel(oi, hasBengali(q.body, ...q.options.map((x) => x.body)))}.</span>
                           <span className="flex-1">{o.body}</span>
                           {chosen ? <Badge>Your answer</Badge> : null}
                           {correct ? <Badge tone="success">Correct</Badge> : null}

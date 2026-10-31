@@ -15,6 +15,7 @@ import { AutosaveQueue, type AnswerValue, type QuestionSaveState } from "../auto
 import { submitAttemptAction } from "../actions";
 import type { TakingFile, TakingQuestion } from "../queries";
 import { AnswerUploads } from "./answer-uploads";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 type ServerAnswer = { question_id: string; selected_option_id: string | null; text_answer: string | null; marked_for_review: boolean; revision: number };
 
@@ -375,6 +376,7 @@ export function ExamRunner(props: Props) {
   const shownRemaining = mcqPhase ? mcqRemaining : remaining;
   const lowTime = mcqPhase ? mcqRemaining <= 60_000 : remaining <= 5 * 60_000;
   const qLocked = locked || (q.type === "mcq" && mcqLocked);
+  const qBangla = hasBengali(q.body, ...q.options.map((o) => o.body));
   const mcqAnswered = mcqIndexes.filter((i) => isAnswered(questions[i])).length;
   const isLastMcq = mcqPhase && current === mcqIndexes[mcqIndexes.length - 1];
 
@@ -491,7 +493,7 @@ export function ExamRunner(props: Props) {
                     )}
                   >
                     <input type="radio" name={`q-${q.id}`} className="mt-0.5 size-4 accent-primary" checked={checked} onChange={() => change(q.id, { selectedOptionId: o.id })} />
-                    <span className="font-medium">{String.fromCharCode(65 + i)}.</span>
+                    <span className="font-medium">{optionLabel(i, qBangla)}.</span>
                     <span className="flex-1">{o.body}</span>
                   </label>
                 );

@@ -22,3 +22,17 @@ describe("auth validation", () => {
     expect(parsed).not.toHaveProperty("role");
   });
 });
+
+describe("invite code validation", () => {
+  it("treats an empty max-uses / expiry box as unlimited, however the form sends it", async () => {
+    const { inviteSchema } = await import("./courses");
+    const base = { courseId: "6f1b8c2e-1f1a-4a3a-9a6e-2d3f4a5b6c7d", label: "" };
+    for (const empty of ["", null, undefined]) {
+      const r = inviteSchema.parse({ ...base, expiresInDays: empty, maxUses: empty });
+      expect(r.maxUses).toBeNull();
+      expect(r.expiresInDays).toBeNull();
+    }
+    expect(inviteSchema.parse({ ...base, expiresInDays: "14", maxUses: "5" })).toMatchObject({ expiresInDays: 14, maxUses: 5 });
+    expect(inviteSchema.safeParse({ ...base, expiresInDays: "", maxUses: "0" }).success).toBe(false);
+  });
+});

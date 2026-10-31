@@ -14,6 +14,7 @@ import type { Enums } from "@/types/database";
 import { saveQuestionAction } from "../actions";
 import type { BuilderQuestion } from "../queries";
 import { QuestionImageUpload } from "./question-image-upload";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 const EMPTY_MCQ: QuestionInput = {
   type: "mcq",
@@ -72,6 +73,9 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
   const type = useWatch({ control: form.control, name: "type" });
   const correctIndex = Number(useWatch({ control: form.control, name: "correctIndex" }));
   const imagePath = useWatch({ control: form.control, name: "imagePath" }) ?? null;
+  const watchedBody = useWatch({ control: form.control, name: "body" });
+  const watchedOptions = useWatch({ control: form.control, name: "options" });
+  const bangla = hasBengali(watchedBody, ...(watchedOptions ?? []).map((o) => o?.body));
   const { errors } = form.formState;
 
   // Clear the other type's fields: they're hidden, so leftover empty options or
@@ -162,13 +166,13 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
                     className="mt-2.5 size-4 accent-primary"
                     checked={correctIndex === i}
                     onChange={() => form.setValue("correctIndex", i, { shouldDirty: true, shouldValidate: true })}
-                    aria-label={`Mark option ${String.fromCharCode(65 + i)} as correct`}
+                    aria-label={`Mark option ${optionLabel(i, bangla)} as correct`}
                   />
-                  <span className="mt-2 w-5 text-sm font-medium text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
+                  <span className="mt-2 w-5 text-sm font-medium text-muted-foreground">{optionLabel(i, bangla)}.</span>
                   <div className="flex-1">
                     <Input
-                      aria-label={`Option ${String.fromCharCode(65 + i)}`}
-                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                      aria-label={`Option ${optionLabel(i, bangla)}`}
+                      placeholder={`Option ${optionLabel(i, bangla)}`}
                       aria-invalid={Boolean(errors.options?.[i]?.body)}
                       {...form.register(`options.${i}.body`)}
                     />
@@ -178,7 +182,7 @@ export function QuestionEditorDialog({ examId, examType, trigger, question, init
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label={`Remove option ${String.fromCharCode(65 + i)}`}
+                    aria-label={`Remove option ${optionLabel(i, bangla)}`}
                     disabled={options.fields.length <= 2}
                     onClick={() => {
                       options.remove(i);

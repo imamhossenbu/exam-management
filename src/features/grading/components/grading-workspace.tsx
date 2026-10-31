@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils/cn";
 import { attemptGradingAction, returnAttemptAction, saveGradeAction } from "../actions";
 import type { Annotation, GradingData, GradingQuestion } from "../queries";
 import { AnnotatedFile } from "./annotated-file";
+import { hasBengali, optionLabel } from "@/lib/utils/bangla";
 
 type Grade = GradingData["grades"][number];
 
@@ -195,7 +196,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
                         key={o.id}
                         className={cn("flex items-center gap-2 rounded-md border px-3 py-2 text-sm", correct && "border-success bg-success-soft", chosen && !correct && "border-danger bg-danger-soft")}
                       >
-                        <span className="font-medium">{String.fromCharCode(65 + oi)}.</span>
+                        <span className="font-medium">{optionLabel(oi, hasBengali(q.body, ...q.options.map((x) => x.body)))}.</span>
                         <span className="flex-1">{o.body}</span>
                         {chosen ? <Badge tone={correct ? "success" : "danger"}>Student&apos;s answer</Badge> : null}
                         {correct ? <CheckCircle2 className="size-4 text-success" aria-label="Correct answer" /> : null}

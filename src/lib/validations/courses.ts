@@ -14,6 +14,10 @@ export const courseSchema = z.object({
 });
 export type CourseInput = z.input<typeof courseSchema>;
 
+/** A whole number from an optional number input. The form may send "", null or undefined for an empty box. */
+const optionalCount = (max: number) =>
+  z.preprocess((v) => (v === null || v === undefined ? "" : v), z.union([z.literal(""), z.coerce.number().int().min(1).max(max)])).transform((v) => (v === "" ? null : v));
+
 export const inviteSchema = z.object({
   courseId: uuid,
   label: z
@@ -23,8 +27,9 @@ export const inviteSchema = z.object({
     .transform((v) => v || null)
     .nullable(),
   /** Days until expiry; empty means no expiry. */
-  expiresInDays: z.union([z.literal(""), z.coerce.number().int().min(1).max(365)]).transform((v) => (v === "" ? null : v)),
-  maxUses: z.union([z.literal(""), z.coerce.number().int().min(1).max(10000)]).transform((v) => (v === "" ? null : v)),
+  expiresInDays: optionalCount(365),
+  /** Empty means unlimited. */
+  maxUses: optionalCount(10000),
 });
 export type InviteInput = z.input<typeof inviteSchema>;
 
