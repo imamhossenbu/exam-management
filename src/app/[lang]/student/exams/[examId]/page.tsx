@@ -26,9 +26,10 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
     .eq("id", examId)
     .maybeSingle();
   if (!exam) notFound();
-  const [{ data: overview }, { data: attempts }] = await Promise.all([
+  const [{ data: overview }, { data: attempts }, { data: lateWindows }] = await Promise.all([
     supabase.rpc("get_exam_overview", { p_exam_id: exam.id }),
     supabase.from("exam_attempts").select("id, attempt_number, status, submitted_at").eq("exam_id", exam.id).eq("student_id", profile.id).order("attempt_number"),
+    supabase.rpc("my_late_window", { p_exam_id: exam.id }),
   ]);
   const info = overview?.[0];
   const now = info ? new Date(info.server_now).getTime() : requestTime();
@@ -36,7 +37,12 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
   const meta = PHASE_META[phase];
   const tz = profile.timezone;
   const used = info?.attempts_used ?? 0;
-  const canStart = phase === "live" && used < exam.max_attempts && !info?.open_attempt_id;
+  // A teacher-granted personal window for a late attempt (exam ended, missed, or attempts used up).
+  const late = lateWindows?.[0] ?? null;
+  const lateOpen = Boolean(late && new Date(late.starts_at).getTime() <= now);
+  const normalStart = phase === "live" && used < exam.max_attempts;
+  const canStart = (normalStart || lateOpen) && !info?.open_attempt_id;
+  const closesAt = !normalStart && late ? late.ends_at : exam.ends_at;
 
   return (
     <>
@@ -83,9 +89,18 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
             </p>
             <p className="flex items-center gap-2">
               <RotateCcw className="size-4 text-muted-foreground" aria-hidden />
-              Attempts used {used} of {exam.max_attempts}
+              {t("Attempts used {used} of {max}", { used, max: exam.max_attempts })}
             </p>
-            <p className="text-xs text-muted-foreground">Results: {STUDENT_RELEASE_LABEL[exam.results_release]}.</p>
+            <p className="text-xs text-muted-foreground">{t("Results: {release}.", { release: t(STUDENT_RELEASE_LABEL[exam.results_release]) })}</p>
+            {late && !info?.open_attempt_id ? (
+              <div role="note" className="rounded-md border border-info/30 bg-info-soft px-3 py-2 text-xs text-info-soft-foreground">
+                <p className="font-medium">{t("Your teacher allowed you a late attempt")}</p>
+                <p className="mt-0.5">
+                  {f.dateTime(late.starts_at, tz)} – {f.dateTime(late.ends_at, tz, { withZone: true })}
+                  {late.note ? ` · ${late.note}` : ""}
+                </p>
+              </div>
+            ) : null}
             <div className="pt-2">
               {info?.open_attempt_id ? (
                 <Button asChild size="lg" className="w-full">
@@ -96,14 +111,16 @@ async function ExamOverview({ params }: { params: Promise<{ examId: string }> })
                   examId={exam.id}
                   durationMinutes={exam.duration_minutes}
                   mcqMinutes={exam.mcq_duration_minutes}
-                  minutesUntilClose={(new Date(exam.ends_at).getTime() - now) / 60000} />
+                  minutesUntilClose={(new Date(closesAt).getTime() - now) / 60000} />
               ) : (
                 <p className="rounded-md bg-muted px-3 py-2 text-center text-sm text-muted-foreground">
-                  {phase === "scheduled"
-                    ? t("Opens {when}", { when: f.dateTime(exam.starts_at, tz) })
-                    : phase === "live"
-                      ? "You've used all your attempts."
-                      : "This exam has ended."}
+                  {late && !lateOpen
+                    ? t("Opens {when}", { when: f.dateTime(late.starts_at, tz) })
+                    : phase === "scheduled"
+                      ? t("Opens {when}", { when: f.dateTime(exam.starts_at, tz) })
+                      : phase === "live"
+                        ? t("You've used all your attempts.")
+                        : t("This exam has ended.")}
                 </p>
               )}
             </div>

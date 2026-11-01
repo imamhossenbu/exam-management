@@ -1,8 +1,9 @@
 import "server-only";
 import type { ServerSupabase } from "@/lib/supabase/server";
+import { requestTime } from "@/lib/utils/now";
 
 const ATTEMPT_SELECT =
-  "id, attempt_number, status, started_at, submitted_at, submitted_via, deadline_at, exam:exams!inner(id, title, exam_type, total_marks, course_id, course:courses(id, title)), student:profiles!exam_attempts_student_id_fkey(id, full_name, email), result:attempt_results(total_score, max_score, percentage, passed, grading_status, mcq_score, cq_score), attempt_events(event_type)";
+  "id, attempt_number, status, started_at, submitted_at, submitted_via, deadline_at, extended_at, exam:exams!inner(id, title, exam_type, total_marks, course_id, course:courses(id, title)), student:profiles!exam_attempts_student_id_fkey(id, full_name, email), result:attempt_results(total_score, max_score, percentage, passed, grading_status, mcq_score, cq_score), attempt_events(event_type)";
 const CHUNK = 1000;
 
 export type AttemptFilter = {
@@ -42,6 +43,8 @@ function toRow(a: RawAttempt) {
     startedAt: a.started_at,
     submittedAt: a.submitted_at,
     submittedVia: a.submitted_via,
+    /** The teacher reopened it or allowed it late. */
+    extended: Boolean(a.extended_at),
     examId: a.exam.id,
     examTitle: a.exam.title,
     examType: a.exam.exam_type,
@@ -104,7 +107,7 @@ export type AttemptRow = Awaited<ReturnType<typeof listAttempts>>[number];
 export async function getAttemptForGrading(supabase: ServerSupabase, attemptId: string) {
   const { data: attempt, error } = await supabase
     .from("exam_attempts")
-    .select("*, student:profiles!exam_attempts_student_id_fkey(id, full_name, email), exam:exams(id, title, exam_type, total_marks, pass_marks, allow_resubmission, course:courses(title))")
+    .select("*, student:profiles!exam_attempts_student_id_fkey(id, full_name, email), exam:exams(id, title, exam_type, total_marks, pass_marks, allow_resubmission, status, ends_at, course:courses(title))")
     .eq("id", attemptId)
     .maybeSingle();
   if (error) throw error;
@@ -135,8 +138,11 @@ export async function getAttemptForGrading(supabase: ServerSupabase, attemptId: 
   const qUrls = new Map((qs.data ?? []).map((s) => [s.path, s.signedUrl]));
   const order = new Map(attempt.question_order.map((id, i) => [id, i]));
 
+  const exam = attempt.exam;
   return {
     attempt,
+    // Once the window has ended for everyone, results or correct answers may be out.
+    answersMayBeOut: exam.status === "closed" || exam.status === "archived" || new Date(exam.ends_at).getTime() <= requestTime(),
     result: result.data,
     events: events.data ?? [],
     questions: (questions.data ?? []).map((q) => ({

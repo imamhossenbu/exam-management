@@ -9,7 +9,7 @@ import type { ServerSupabase } from "@/lib/supabase/server";
 export async function getStudentResult(supabase: ServerSupabase, attemptId: string, studentId: string) {
   const { data: attempt, error } = await supabase
     .from("exam_attempts")
-    .select("id, exam_id, status, attempt_number, submitted_at, submitted_via, question_order, return_note, resubmit_deadline_at, exam:exams(id, title, exam_type, total_marks, pass_marks, results_release, ends_at, status, reveal_answers, results_published_at, course:courses(title))")
+    .select("id, exam_id, status, attempt_number, submitted_at, submitted_via, question_order, return_note, resubmit_deadline_at, extended_at, extension_note, exam:exams(id, title, exam_type, total_marks, pass_marks, results_release, ends_at, status, reveal_answers, results_published_at, course:courses(title))")
     .eq("id", attemptId)
     .eq("student_id", studentId)
     .maybeSingle();

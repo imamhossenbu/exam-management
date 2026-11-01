@@ -50,6 +50,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
             <T vars={{ when: f.dateTime(attempt.submitted_at, tz) }}>
               {attempt.submitted_via === "timeout" ? "Submitted {when} automatically when time ran out" : "Submitted {when}"}
             </T>
+            {attempt.extended_at ? <> · {t("with extra time from your teacher")}</> : null}
           </>
         }
       />

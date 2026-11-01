@@ -28,7 +28,7 @@ export function Textarea({ className, ...props }: React.ComponentProps<"textarea
 
 export function NativeSelect({ className, children, ...props }: React.ComponentProps<"select">) {
   const t = useT();
-  // <option> <T>only accepts plain text, so translate it here rather than with</T> <T>.
+  // <option> only accepts plain text, so translate it here rather than with the T component.
   const options = React.Children.map(children, (child) =>
     React.isValidElement<{ children?: React.ReactNode }>(child) && child.type === "option" && typeof child.props.children === "string"
       ? React.cloneElement(child, undefined, t(child.props.children))

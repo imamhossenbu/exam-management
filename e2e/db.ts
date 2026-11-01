@@ -57,6 +57,7 @@ export function cleanupE2EData() {
     create temp table x_attempts on commit drop as
       select id from public.exam_attempts where exam_id in (select id from x_exams) or student_id in (select id from x_users);
     create temp table x_questions on commit drop as select id from public.questions where exam_id in (select id from x_exams);
+    delete from public.exam_extensions where exam_id in (select id from x_exams) or student_id in (select id from x_users);
     delete from app_private.notifications_sent where exam_id in (select id from x_exams) or student_id in (select id from x_users);
     delete from public.answer_annotations where attempt_id in (select id from x_attempts);
     delete from public.grades where attempt_id in (select id from x_attempts);

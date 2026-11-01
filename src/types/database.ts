@@ -449,6 +449,9 @@ export type Database = {
           updated_at: string;
           mcq_deadline_at: string | null;
           mcq_handed_in_at: string | null;
+          extended_at: string | null;
+          extended_by: string | null;
+          extension_note: string | null;
         };
         Insert: {
           id?: string;
@@ -469,6 +472,9 @@ export type Database = {
           updated_at?: string;
           mcq_deadline_at?: string | null;
           mcq_handed_in_at?: string | null;
+          extended_at?: string | null;
+          extended_by?: string | null;
+          extension_note?: string | null;
         };
         Update: {
           id?: string;
@@ -489,6 +495,9 @@ export type Database = {
           updated_at?: string;
           mcq_deadline_at?: string | null;
           mcq_handed_in_at?: string | null;
+          extended_at?: string | null;
+          extended_by?: string | null;
+          extension_note?: string | null;
         };
         Relationships: [
           {
@@ -496,6 +505,13 @@ export type Database = {
             columns: ["exam_id"];
             isOneToOne: false;
             referencedRelation: "exams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exam_attempts_extended_by_fkey";
+            columns: ["extended_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
@@ -533,6 +549,77 @@ export type Database = {
             columns: ["exam_id"];
             isOneToOne: false;
             referencedRelation: "exams";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exam_extensions: {
+        Row: {
+          id: string;
+          exam_id: string;
+          student_id: string;
+          starts_at: string;
+          ends_at: string;
+          note: string | null;
+          used_at: string | null;
+          attempt_id: string | null;
+          revoked_at: string | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          exam_id: string;
+          student_id: string;
+          starts_at: string;
+          ends_at: string;
+          note?: string | null;
+          used_at?: string | null;
+          attempt_id?: string | null;
+          revoked_at?: string | null;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          exam_id?: string;
+          student_id?: string;
+          starts_at?: string;
+          ends_at?: string;
+          note?: string | null;
+          used_at?: string | null;
+          attempt_id?: string | null;
+          revoked_at?: string | null;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exam_extensions_attempt_id_fkey";
+            columns: ["attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "exam_attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exam_extensions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exam_extensions_exam_id_fkey";
+            columns: ["exam_id"];
+            isOneToOne: false;
+            referencedRelation: "exams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exam_extensions_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1226,17 +1313,21 @@ export type Database = {
       finalize_grading: { Args: { p_attempt_id: string }; Returns: undefined };
       get_exam_overview: { Args: { p_exam_id: string }; Returns: { question_count: number; mcq_count: number; cq_count: number; attempts_used: number; open_attempt_id: string | null; server_now: string }[] };
       get_released_answer_keys: { Args: { p_attempt_id: string }; Returns: { question_id: string; correct_option_id: string | null; explanation: string | null; model_answer: string | null }[] };
+      grant_late_start: { Args: { p_exam_id: string; p_student_id: string; p_starts_at: string; p_ends_at: string; p_note: string | null }; Returns: string };
       log_attempt_event: { Args: { p_attempt_id: string; p_event_type: string }; Returns: undefined };
+      my_late_window: { Args: { p_exam_id: string }; Returns: { starts_at: string; ends_at: string; note: string }[] };
       publish_exam: { Args: { p_exam_id: string }; Returns: undefined };
       publish_results: { Args: { p_exam_id: string }; Returns: undefined };
       redeem_course_invite: { Args: { p_code: string }; Returns: { status: string; course_id: string | null; course_title: string | null }[] };
       register_answer_file: { Args: { p_attempt_id: string; p_question_id: string; p_part_id: string | null; p_storage_path: string; p_file_name: string; p_mime_type: string; p_size_bytes: number }; Returns: string };
       release_notifications: { Args: { p_kind: string; p_exam_id: string; p_student_ids: string[] }; Returns: undefined };
+      reopen_attempt: { Args: { p_attempt_id: string; p_minutes: number; p_note: string | null }; Returns: string };
       reopen_grading: { Args: { p_attempt_id: string }; Returns: undefined };
       reorder_questions: { Args: { p_exam_id: string; p_question_ids: string[] }; Returns: undefined };
       restore_exam: { Args: { p_exam_id: string }; Returns: undefined };
       results_overview: { Args: { p_course_id?: string; p_exam_id?: string; p_from?: string; p_to?: string }; Returns: Json };
       return_attempt: { Args: { p_attempt_id: string; p_note: string | null; p_resubmit_deadline: string }; Returns: undefined };
+      revoke_extension: { Args: { p_extension_id: string }; Returns: undefined };
       save_answer: { Args: { p_attempt_id: string; p_question_id: string; p_selected_option_id: string | null; p_text_answer: string | null; p_marked_for_review: boolean; p_revision: number }; Returns: { status: string; saved_at: string | null; revision: number | null }[] };
       save_cq_grade: { Args: { p_attempt_id: string; p_question_id: string; p_part_id: string | null; p_marks: number; p_feedback: string | null }; Returns: undefined };
       save_question: { Args: { p_exam_id: string; p_question_id: string | null; p_data: Json }; Returns: string };

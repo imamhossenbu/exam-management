@@ -116,3 +116,59 @@ export async function deleteAnnotationAction(annotationId: string): Promise<Acti
   if (!data.length) return fail("Annotation not found.");
   return ok(undefined);
 }
+
+const reopenSchema = z.object({
+  attemptId: uuid,
+  minutes: z.coerce.number().int().min(1, { message: "At least 1 minute" }).max(1440),
+  note: z.string().trim().max(500).default(""),
+});
+
+/** Reopen a submitted attempt with extra minutes (power cut, accommodation…). */
+export async function reopenAttemptAction(input: unknown): Promise<ActionResult> {
+  const parsed = reopenSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { supabase } = await requireTeacher();
+  const { error } = await supabase.rpc("reopen_attempt", { p_attempt_id: parsed.data.attemptId, p_minutes: parsed.data.minutes, p_note: parsed.data.note || null });
+  if (error) return dbFail(error, "reopenAttempt");
+  refresh();
+  return ok(undefined, "Attempt reopened with extra time");
+}
+
+const lateSchema = z.object({
+  examId: uuid,
+  studentId: uuid,
+  startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, { message: "Choose a start date and time" }),
+  endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, { message: "Choose an end date and time" }),
+  note: z.string().trim().max(500).default(""),
+});
+
+/** Let one student start an attempt in a personal window (after the exam ended, attempts used up…). */
+export async function grantLateStartAction(input: unknown): Promise<ActionResult> {
+  const parsed = lateSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { profile, supabase } = await requireTeacher();
+  const startsAt = zonedInputToUtc(parsed.data.startsAt, profile.timezone);
+  const endsAt = zonedInputToUtc(parsed.data.endsAt, profile.timezone);
+  if (!startsAt || !endsAt) return fail("Invalid start or end time.");
+  if (endsAt <= startsAt) return fail("The window must end after it starts", { endsAt: ["The window must end after it starts"] });
+  const { error } = await supabase.rpc("grant_late_start", {
+    p_exam_id: parsed.data.examId,
+    p_student_id: parsed.data.studentId,
+    p_starts_at: startsAt,
+    p_ends_at: endsAt,
+    p_note: parsed.data.note || null,
+  });
+  if (error) return dbFail(error, "grantLateStart");
+  refresh();
+  return ok(undefined, "Late attempt allowed");
+}
+
+export async function revokeExtensionAction(extensionId: string): Promise<ActionResult> {
+  const id = uuid.safeParse(extensionId);
+  if (!id.success) return invalid(id.error);
+  const { supabase } = await requireTeacher();
+  const { error } = await supabase.rpc("revoke_extension", { p_extension_id: id.data });
+  if (error) return dbFail(error, "revokeExtension");
+  refresh();
+  return ok(undefined, "Late attempt permission revoked");
+}

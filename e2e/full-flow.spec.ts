@@ -327,6 +327,63 @@ test("students see their released results", async ({ browser }) => {
   }
 });
 
+test("teacher reopens Bob's submitted attempt with extra time; Bob fixes his answer", async ({ browser }) => {
+  const bobAttempt = attemptIdFor(bob.id);
+  const teacherPage = await signIn(browser, teacher.email, teacher.password);
+  await teacherPage.goto(`/teacher/attempts/${bobAttempt}`);
+  await teacherPage.getByRole("button", { name: "Give extra time" }).click();
+  await teacherPage.getByRole("dialog").getByRole("button", { name: "10 minutes" }).click();
+  await teacherPage.locator("#extra-note").fill("Power cut during the exam");
+  await teacherPage.getByRole("button", { name: "Reopen with extra time" }).click();
+  await expect(teacherPage.getByText("Attempt reopened with extra time").first()).toBeVisible();
+  await teacherPage.context().close();
+
+  const page = await signIn(browser, bob.email, bob.password);
+  await page.goto(`/student/exams/${examId}`);
+  await page.getByRole("link", { name: "Resume exam" }).click();
+  await expect(page).toHaveURL(/\/student\/attempts\//, { timeout: 60_000 });
+  await page.getByRole("radio", { name: /^[A-D]\. Newton$/ }).check();
+  await expect(page.getByText("All answers saved")).toBeVisible();
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.getByRole("button", { name: "Submit final answers" }).click();
+  await expect(page).toHaveURL(/\/result$/, { timeout: 60_000 });
+  await page.context().close();
+
+  const [r] = sql<{ mcq: number; extended: boolean }>(`
+    select r.mcq_score::float as mcq, a.extended_at is not null as extended
+    from public.exam_attempts a join public.attempt_results r on r.attempt_id = a.id where a.id = '${bobAttempt}'`);
+  expect(r).toEqual({ mcq: 2, extended: true });
+});
+
+test("teacher allows Alice a late attempt after her only attempt", async ({ browser }) => {
+  const teacherPage = await signIn(browser, teacher.email, teacher.password);
+  await teacherPage.goto(`/teacher/exams/${examId}/attempts`);
+  await teacherPage.getByRole("button", { name: "Allow a late attempt" }).click();
+  const dialog = teacherPage.getByRole("dialog");
+  await dialog.locator("#late-student").selectOption(alice.id);
+  await dialog.locator("#late-note").fill("Medical leave");
+  await dialog.getByRole("button", { name: "Allow late attempt" }).click();
+  await expect(teacherPage.getByText("Open now").first()).toBeVisible();
+  await teacherPage.context().close();
+
+  const page = await signIn(browser, alice.email, alice.password);
+  await page.goto(`/student/exams/${examId}`);
+  await expect(page.getByText("Your teacher allowed you a late attempt")).toBeVisible();
+  await page.getByRole("button", { name: "Start exam" }).click();
+  await page.getByRole("dialog").getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Begin now" }).click();
+  await expect(page).toHaveURL(/\/student\/attempts\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+  await page.getByRole("button", { name: "Submit", exact: true }).click();
+  await page.getByRole("button", { name: "Submit final answers" }).click();
+  await expect(page).toHaveURL(/\/result$/, { timeout: 60_000 });
+  await page.context().close();
+
+  const rows = sql<{ n: number; extended: boolean }>(`
+    select attempt_number as n, extended_at is not null as extended from public.exam_attempts
+    where exam_id = '${examId}' and student_id = '${alice.id}' order by attempt_number`);
+  expect(rows).toEqual([{ n: 1, extended: false }, { n: 2, extended: true }]);
+});
+
 test("sign out works from the user menu", async ({ browser }) => {
   const page = await signIn(browser, alice.email, alice.password);
   await page.getByRole("button", { name: "Account menu" }).click();

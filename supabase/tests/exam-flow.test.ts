@@ -844,3 +844,87 @@ describe("email notification claims", () => {
     await expect(db.as(alice, "select public.release_notifications('result_released', $1, $2)", [exam.examId, [bob]])).rejects.toThrow(/FORBIDDEN/);
   });
 });
+
+describe("extra time for individual students", () => {
+  const status = async (id: string) =>
+    (await db.sql<{ status: string; extended: boolean }>("select status::text, extended_at is not null as extended from public.exam_attempts where id = $1", [id]))[0];
+
+  it("reopens a submitted attempt with extra minutes; answers can change and are regraded", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 2 }] });
+    const attemptId = await start(alice, exam.examId);
+    await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].wrong, 1);
+    await db.as(alice, "select public.submit_attempt($1)", [attemptId]);
+    // Time is over: the student can't change anything on their own.
+    expect((await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 2)).status).toBe("finalized");
+
+    await expect(db.as(alice, "select public.reopen_attempt($1, 15, null)", [attemptId])).rejects.toThrow(/FORBIDDEN/);
+    await db.as(teacher, "select public.reopen_attempt($1, 15, 'Power cut during the exam')", [attemptId]);
+    expect(await status(attemptId)).toEqual({ status: "in_progress", extended: true });
+    // Hidden from the student while reopened.
+    expect(await db.as(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(0);
+
+    expect((await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 3)).status).toBe("saved");
+    await db.as(alice, "select public.submit_attempt($1)", [attemptId]);
+    const [r] = await db.sql<{ mcq: string }>("select mcq_score as mcq from public.attempt_results where attempt_id = $1", [attemptId]);
+    expect(Number(r.mcq)).toBe(2);
+    await expect(db.as(teacher, "select public.reopen_attempt($1, 0, null)", [attemptId])).rejects.toThrow(/INVALID_EXTENSION/);
+  });
+
+  it("keeps answer keys hidden from everyone while an extension is open", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { release: "after_close", mcq: [{ marks: 1 }] });
+    const a = await start(alice, exam.examId);
+    await db.as(alice, "select public.submit_attempt($1)", [a]);
+    const b = await start(bob, exam.examId);
+    await db.as(bob, "select public.submit_attempt($1)", [b]);
+    await db.as(teacher, "select public.close_exam($1)", [exam.examId]);
+    expect(await db.as(alice, "select * from public.get_released_answer_keys($1)", [a])).toHaveLength(1);
+    await db.as(teacher, "select public.reopen_attempt($1, 30, null)", [b]);
+    expect(await db.as(alice, "select * from public.get_released_answer_keys($1)", [a])).toHaveLength(0);
+  });
+
+  it("lets a student who missed the exam start one attempt in a personal late window", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { durationMinutes: 30, mcq: [{ marks: 1 }] });
+    await db.sql("update public.exams set ends_at = now() - interval '1 minute' where id = $1", [exam.examId]);
+    await expect(start(bob, exam.examId)).rejects.toThrow(/EXAM_ENDED/);
+    // Students can't grant themselves time; the window must be valid and the student enrolled.
+    await expect(db.as(bob, "select public.grant_late_start($1, $2, now(), now() + interval '1 day', null)", [exam.examId, bob])).rejects.toThrow(/FORBIDDEN/);
+    await expect(db.as(teacher, "select public.grant_late_start($1, $2, now(), now() - interval '1 hour', null)", [exam.examId, bob])).rejects.toThrow(/INVALID_DEADLINE/);
+    await expect(db.as(teacher, "select public.grant_late_start($1, $2, now(), now() + interval '1 day', null)", [exam.examId, outsider])).rejects.toThrow(/STUDENT_NOT_FOUND/);
+
+    await db.as(teacher, "select public.grant_late_start($1, $2, now() - interval '1 minute', now() + interval '2 hours', 'Was ill')", [exam.examId, bob]);
+    expect(await db.as(bob, "select * from public.my_late_window($1)", [exam.examId])).toHaveLength(1);
+    expect(await db.as(alice, "select * from public.my_late_window($1)", [exam.examId])).toHaveLength(0);
+    const attemptId = await start(bob, exam.examId);
+    const [x] = await db.sql<{ mins: number; extended: boolean }>(
+      "select extract(epoch from deadline_at - started_at) / 60 as mins, extended_at is not null as extended from public.exam_attempts where id = $1",
+      [attemptId],
+    );
+    expect(Math.round(x.mins)).toBe(30);
+    expect(x.extended).toBe(true);
+    await db.as(bob, "select public.submit_attempt($1)", [attemptId]);
+    // Used once.
+    expect(await db.as(bob, "select * from public.my_late_window($1)", [exam.examId])).toHaveLength(0);
+    await expect(start(bob, exam.examId)).rejects.toThrow(/EXAM_ENDED/);
+  });
+
+  it("doesn't open a late window before its start, and a revoked window can't be used", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    await db.as(teacher, "select public.close_exam($1)", [exam.examId]);
+    await db.as(teacher, "select public.grant_late_start($1, $2, now() + interval '1 hour', now() + interval '3 hours', null)", [exam.examId, alice]);
+    await expect(start(alice, exam.examId)).rejects.toThrow(/EXAM_NOT_AVAILABLE/);
+    const [{ id }] = await db.sql<{ id: string }>("select id from public.exam_extensions where exam_id = $1 and student_id = $2", [exam.examId, alice]);
+    await db.sql("update public.exam_extensions set starts_at = now() - interval '1 minute' where id = $1", [id]);
+    await db.as(teacher, "select public.revoke_extension($1)", [id]);
+    await expect(start(alice, exam.examId)).rejects.toThrow(/EXAM_NOT_AVAILABLE/);
+  });
+
+  it("doesn't cut granted extra time short when the exam's end time changes", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    const a = await start(alice, exam.examId);
+    await db.as(alice, "select public.submit_attempt($1)", [a]);
+    await db.as(teacher, "select public.reopen_attempt($1, 60, null)", [a]);
+    await db.as(teacher, "update public.exams set ends_at = now() + interval '5 minutes' where id = $1", [exam.examId]);
+    const [r] = await db.sql<{ mins: number }>("select extract(epoch from deadline_at - now()) / 60 as mins from public.exam_attempts where id = $1", [a]);
+    expect(Math.round(r.mins)).toBe(60);
+  });
+});

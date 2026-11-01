@@ -30,6 +30,11 @@ function buildColumns(showExam: boolean) {
           <Link href={`/teacher/students/${info.row.original.studentId}`} className="font-medium hover:underline">
             {info.getValue()}
           </Link>
+          {info.row.original.extended ? (
+            <Badge tone="warning" className="ml-2">
+              Extra time
+            </Badge>
+          ) : null}
           <p className="text-xs text-muted-foreground">{info.row.original.studentEmail}</p>
         </div>
       ),

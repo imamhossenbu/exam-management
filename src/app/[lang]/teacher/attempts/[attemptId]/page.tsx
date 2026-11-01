@@ -39,6 +39,7 @@ async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
             {attempt.student?.full_name || "Student"}
             {attempt.status === "in_progress" ? <Badge tone="info"><T>In progress</T></Badge> : attempt.status === "returned" ? <Badge tone="warning"><T>Returned for correction</T></Badge> : null}
             {result ? <Badge tone={GRADING_META[result.grading_status].tone}>{GRADING_META[result.grading_status].label}</Badge> : null}
+            {attempt.extended_at ? <Badge tone="warning"><T>Extra time</T></Badge> : null}
           </span>
         }
         description={[
@@ -74,6 +75,12 @@ async function Grading({ params }: { params: Promise<{ attemptId: string }> }) {
           </p>
         </div>
       </div>
+      {attempt.extended_at ? (
+        <p className="mb-4 rounded-md bg-info-soft px-3 py-2 text-sm text-info-soft-foreground">
+          {t("Extra time given {when}", { when: f.dateTime(attempt.extended_at, tz) })}
+          {attempt.extension_note ? ` · ${attempt.extension_note}` : ""}
+        </p>
+      ) : null}
       {attempt.status === "returned" && attempt.return_note ? (
         <p className="mb-4 rounded-md bg-warning-soft px-3 py-2 text-sm text-warning-soft-foreground">
           {t("Returned with note: {note} (due {when})", { note: attempt.return_note, when: f.dateTime(attempt.resubmit_deadline_at, tz) })}

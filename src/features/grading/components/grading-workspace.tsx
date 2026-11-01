@@ -11,6 +11,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { useServerAction } from "@/components/forms/use-server-action";
 import { cn } from "@/lib/utils/cn";
 import { attemptGradingAction, returnAttemptAction, saveGradeAction } from "../actions";
+import { ReopenAttemptDialog } from "./extra-time";
 import type { Annotation, GradingData, GradingQuestion } from "../queries";
 import { AnnotatedFile } from "./annotated-file";
 import { hasBengali, optionLabel } from "@/lib/utils/bangla";
@@ -136,6 +137,7 @@ export function GradingWorkspace({ data }: { data: GradingData }) {
           {!submitted ? <p className="text-muted-foreground"><T>Grading opens once the attempt is submitted.</T></p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
+          {submitted ? <ReopenAttemptDialog attemptId={attempt.id} answersMayBeOut={data.answersMayBeOut} /> : null}
           {submitted && data.attempt.exam?.allow_resubmission && cqItems.length ? <ReturnDialog attemptId={attempt.id} /> : null}
           {finalized ? (
             cqItems.length ? (
