@@ -32,6 +32,7 @@ function toExamRow(v: ExamSettingsOutput, timezone: string) {
     results_release: v.resultsRelease,
     result_policy: v.resultPolicy,
     reveal_answers: v.revealAnswers,
+    show_mcq_early: v.examType === "mixed" && v.showMcqEarly,
     allow_resubmission: v.allowResubmission,
   };
 }

@@ -24,7 +24,7 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
   const { profile, supabase } = await requireStudent();
   const data = await getStudentResult(supabase, attemptId, profile.id);
   if (!data) notFound();
-  const { attempt, exam, result, questions, annotations, keysReleased } = data;
+  const { attempt, exam, result, questions, annotations, keysReleased, provisionalMcq } = data;
   const tz = profile.timezone;
   const crumbs = [{ label: "Results", href: "/student/results" }, { label: exam.title }];
 
@@ -73,9 +73,18 @@ async function Result({ params }: { params: Promise<{ attemptId: string }> }) {
         <div className="surface flex flex-col items-center gap-2 p-8 text-center">
           <CheckCircle2 className="size-8 text-success" aria-hidden />
           <h2 className="section-title"><T>Your answers were submitted</T></h2>
+          {provisionalMcq ? (
+            <div className="mt-2 w-full max-w-sm rounded-lg border bg-muted/40 p-4">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{t("MCQ score (provisional)")}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {provisionalMcq.score} / {provisionalMcq.max}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("Written part: being graded. Your final result appears once your teacher finishes grading.")}</p>
+            </div>
+          ) : null}
           <p className="text-subtle max-w-md">
-            {exam.exam_type !== "mcq" ? "Written answers need to be graded by your teacher. " : ""}
-            Results will be released {STUDENT_RELEASE_LABEL[exam.results_release]}.
+            {exam.exam_type !== "mcq" ? `${t("Written answers need to be graded by your teacher.")} ` : ""}
+            {t("Results will be released {when}.", { when: t(STUDENT_RELEASE_LABEL[exam.results_release]) })}
           </p>
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <Hourglass className="size-3.5" aria-hidden /> <T>Check back later.</T>

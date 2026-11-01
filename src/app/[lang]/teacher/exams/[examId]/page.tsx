@@ -134,6 +134,7 @@ async function ExamDetail({ params }: { params: Promise<{ examId: string }> }) {
               resultsRelease: exam.results_release,
               resultPolicy: exam.result_policy,
               revealAnswers: exam.reveal_answers,
+              showMcqEarly: exam.show_mcq_early,
               allowResubmission: exam.allow_resubmission,
             }}
           />

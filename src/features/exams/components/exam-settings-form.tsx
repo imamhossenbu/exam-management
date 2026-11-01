@@ -281,6 +281,14 @@ export function ExamSettingsForm({ courses, defaultValues, examId, locked = fals
             description="Never revealed until the exam window has closed for everyone."
             {...form.register("revealAnswers")}
           />
+          {examType === "mixed" ? (
+            <CheckboxField
+              id="showMcqEarly"
+              label="Show the MCQ score right after submission"
+              description="Students see their MCQ total as soon as they submit, marked provisional, while you grade the written part. Correct answers stay hidden until the exam closes."
+              {...form.register("showMcqEarly")}
+            />
+          ) : null}
           {examType !== "mcq" ? (
             <div>
               <CheckboxField

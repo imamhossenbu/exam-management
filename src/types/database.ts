@@ -652,6 +652,7 @@ export type Database = {
           updated_at: string;
           mcq_duration_minutes: number | null;
           result_policy: Database["public"]["Enums"]["result_policy"];
+          show_mcq_early: boolean;
         };
         Insert: {
           id?: string;
@@ -680,6 +681,7 @@ export type Database = {
           updated_at?: string;
           mcq_duration_minutes?: number | null;
           result_policy?: Database["public"]["Enums"]["result_policy"];
+          show_mcq_early?: boolean;
         };
         Update: {
           id?: string;
@@ -708,6 +710,7 @@ export type Database = {
           updated_at?: string;
           mcq_duration_minutes?: number | null;
           result_policy?: Database["public"]["Enums"]["result_policy"];
+          show_mcq_early?: boolean;
         };
         Relationships: [
           {
@@ -1312,6 +1315,7 @@ export type Database = {
       finalize_expired_attempts: { Args: Record<PropertyKey, never>; Returns: number };
       finalize_grading: { Args: { p_attempt_id: string }; Returns: undefined };
       get_exam_overview: { Args: { p_exam_id: string }; Returns: { question_count: number; mcq_count: number; cq_count: number; attempts_used: number; open_attempt_id: string | null; server_now: string }[] };
+      get_provisional_mcq: { Args: { p_attempt_id: string }; Returns: { mcq_score: number; mcq_max: number }[] };
       get_released_answer_keys: { Args: { p_attempt_id: string }; Returns: { question_id: string; correct_option_id: string | null; explanation: string | null; model_answer: string | null }[] };
       grant_late_start: { Args: { p_exam_id: string; p_student_id: string; p_starts_at: string; p_ends_at: string; p_note: string | null }; Returns: string };
       log_attempt_event: { Args: { p_attempt_id: string; p_event_type: string }; Returns: undefined };

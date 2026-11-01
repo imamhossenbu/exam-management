@@ -16,7 +16,7 @@ export async function getStudentResult(supabase: ServerSupabase, attemptId: stri
   if (error) throw error;
   if (!attempt || !attempt.exam) return null;
 
-  const [result, grades, answers, files, annotations, keys, questions] = await Promise.all([
+  const [result, grades, answers, files, annotations, keys, questions, provisional] = await Promise.all([
     supabase.from("attempt_results").select("*").eq("attempt_id", attemptId).maybeSingle(),
     supabase.from("grades").select("question_id, part_id, marks_awarded, max_marks, feedback, is_auto").eq("attempt_id", attemptId),
     supabase.from("student_answers").select("question_id, selected_option_id, text_answer").eq("attempt_id", attemptId),
@@ -24,8 +24,9 @@ export async function getStudentResult(supabase: ServerSupabase, attemptId: stri
     supabase.from("answer_annotations").select("id, answer_file_id, page, kind, x, y, x2, y2, body").eq("attempt_id", attemptId),
     supabase.rpc("get_released_answer_keys", { p_attempt_id: attemptId }),
     supabase.from("questions").select("id, type, body, marks, question_options(id, body, position), question_parts(id, label, body, marks, position)").eq("exam_id", attempt.exam_id),
+    supabase.rpc("get_provisional_mcq", { p_attempt_id: attemptId }),
   ]);
-  for (const r of [result, grades, answers, files, annotations, keys, questions]) if (r.error) throw r.error;
+  for (const r of [result, grades, answers, files, annotations, keys, questions, provisional]) if (r.error) throw r.error;
 
   const paths = (files.data ?? []).map((f) => f.storage_path);
   const signed = paths.length ? ((await supabase.storage.from("answer-sheets").createSignedUrls(paths, 3600)).data ?? []) : [];
@@ -37,6 +38,8 @@ export async function getStudentResult(supabase: ServerSupabase, attemptId: stri
     attempt,
     exam: attempt.exam,
     result: result.data,
+    /** Mixed exams with "show MCQ score early": the MCQ total before the written part is graded. */
+    provisionalMcq: provisional.data?.[0] ? { score: Number(provisional.data[0].mcq_score), max: Number(provisional.data[0].mcq_max) } : null,
     keysReleased: (keys.data ?? []).length > 0,
     questions: attempt.question_order
       .map((id) => byId.get(id))

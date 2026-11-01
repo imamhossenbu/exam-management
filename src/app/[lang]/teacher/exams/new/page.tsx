@@ -58,6 +58,7 @@ async function NewExam({ searchParams }: { searchParams: Promise<{ course?: stri
         resultsRelease: "after_close",
         resultPolicy: "best",
         revealAnswers: true,
+        showMcqEarly: false,
         allowResubmission: false,
       }}
     />

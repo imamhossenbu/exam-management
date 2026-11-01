@@ -928,3 +928,34 @@ describe("extra time for individual students", () => {
     expect(Math.round(r.mins)).toBe(60);
   });
 });
+
+describe("provisional MCQ score (mixed exams)", () => {
+  type P = { mcq_score: string; mcq_max: string };
+  const provisional = (uid: Uid, attemptId: string) => db.as<P>(uid, "select * from public.get_provisional_mcq($1)", [attemptId]);
+
+  it("shows only the student's own MCQ total after submitting, while the written part waits", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { release: "immediate", mcq: [{ marks: 2, negative: 0.5 }, { marks: 2 }], cq: [{ marks: 6 }] });
+    await db.as(teacher, "update public.exams set show_mcq_early = true where id = $1", [exam.examId]);
+    const attemptId = await start(alice, exam.examId);
+    await save(alice, attemptId, exam.mcq[0].id, exam.mcq[0].correct, 1);
+    await save(alice, attemptId, exam.mcq[1].id, exam.mcq[1].wrong, 1);
+    expect(await provisional(alice, attemptId)).toHaveLength(0); // not before submitting
+    await db.as(alice, "select public.submit_attempt($1)", [attemptId]);
+
+    const [p] = await provisional(alice, attemptId);
+    expect({ score: Number(p.mcq_score), max: Number(p.mcq_max) }).toEqual({ score: 2, max: 4 });
+    expect(await provisional(bob, attemptId)).toHaveLength(0);
+    // The full result and per-question marks still wait for the written part.
+    expect(await db.as(alice, "select * from public.attempt_results where attempt_id = $1", [attemptId])).toHaveLength(0);
+    expect(await db.as(alice, "select * from public.grades where attempt_id = $1", [attemptId])).toHaveLength(0);
+  });
+
+  it("is off unless the teacher enables it, and only for mixed exams", async () => {
+    const exam = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }], cq: [{ marks: 1 }] });
+    const attemptId = await start(bob, exam.examId);
+    await db.as(bob, "select public.submit_attempt($1)", [attemptId]);
+    expect(await provisional(bob, attemptId)).toHaveLength(0);
+    const mcqOnly = await seedPublishedExam(db, teacher, courseId, { mcq: [{ marks: 1 }] });
+    await expect(db.as(teacher, "update public.exams set show_mcq_early = true where id = $1", [mcqOnly.examId])).rejects.toThrow(/exams_show_mcq_early_check/);
+  });
+});

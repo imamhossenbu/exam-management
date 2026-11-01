@@ -31,6 +31,8 @@ export const examSettingsSchema = z
     /** With several attempts: which one is the student's result. */
     resultPolicy: z.enum(["best", "latest"]).default("best"),
     revealAnswers: z.boolean().default(true),
+    /** Mixed exams: show the MCQ total right after submission, before the written part is graded. */
+    showMcqEarly: z.boolean().default(false),
     allowResubmission: z.boolean().default(false),
   })
   .superRefine((v, ctx) => {

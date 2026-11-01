@@ -173,6 +173,7 @@ test("teacher builds and publishes a mixed exam", async ({ browser }) => {
   await page.locator("#durationMinutes").fill("30");
   await page.locator("#resultsRelease").selectOption("manual");
   await page.locator("#revealAnswers").uncheck();
+  await page.locator("#showMcqEarly").check();
   await page.getByRole("button", { name: "Create exam and add questions" }).click();
   await expect(page).toHaveURL(/\/teacher\/exams\/[0-9a-f-]{36}$/, { timeout: 60_000 });
   examId = page.url().split("/").pop()!;
@@ -248,8 +249,10 @@ async function takeExam(browser: Browser, student: TestUser, choice: string, upl
   await page.getByRole("button", { name: "Submit final answers" }).click();
   await expect(page).toHaveURL(/\/result$/, { timeout: 60_000 });
   await expect(page.getByText("Your answers were submitted")).toBeVisible();
-  // Results are manual: no score is visible yet.
+  // Results are manual: no final score yet, but the MCQ total shows right away (provisional).
   await expect(page.getByText("Your score")).toBeHidden();
+  await expect(page.getByText("MCQ score (provisional)")).toBeVisible();
+  await expect(page.getByText(choice === "Newton" ? "2 / 2" : "-0.5 / 2", { exact: true })).toBeVisible();
   return page;
 }
 
